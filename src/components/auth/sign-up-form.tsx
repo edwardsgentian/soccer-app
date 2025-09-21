@@ -43,6 +43,13 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            name: formData.name,
+            phone: formData.phone,
+          }
+        }
       })
 
       if (authError) {
@@ -50,7 +57,20 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
       }
 
       if (authData.user) {
-        // Create player profile
+        // Check if email confirmation is required
+        if (authData.user.email_confirmed_at === null) {
+          // Email confirmation required - show success message
+          setError(null)
+          // Show a more user-friendly message instead of alert
+          setError('✅ Account created! Please check your email and click the confirmation link to complete your registration.')
+          // Don't close the modal immediately, let user see the message
+          setTimeout(() => {
+            onSuccess?.()
+          }, 3000)
+          return
+        }
+
+        // Email already confirmed - create player profile
         const { error: profileError } = await supabase
           .from('players')
           .insert({
@@ -163,7 +183,11 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
           </div>
 
           {error && (
-            <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
+            <div className={`text-sm p-3 rounded-md ${
+              error.startsWith('✅') 
+                ? 'text-green-600 bg-green-50' 
+                : 'text-red-600 bg-red-50'
+            }`}>
               {error}
             </div>
           )}
