@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://*.supabase.co https://*.supabase.io https://js.stripe.com https://*.stripe.com; object-src 'none'; base-uri 'self';",
+            value: "script-src 'self' 'unsafe-eval' 'unsafe-inline' https: data:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self';",
           },
         ],
       },
