@@ -1,4 +1,4 @@
-'use client'
+&apos;use client&apos;
 
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/game-card";
@@ -23,14 +23,14 @@ export default function Home() {
             <Button 
               size="lg" 
               className="bg-green-600 hover:bg-green-700"
-              onClick={() => window.location.href = '/games'}
+              onClick={() => window.location.href = &apos;/games&apos;}
             >
               Find Games Near You
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => window.location.href = '/groups'}
+              onClick={() => window.location.href = &apos;/groups&apos;}
             >
               Create a Group
             </Button>
@@ -45,7 +45,7 @@ export default function Home() {
             </h2>
             <Button 
               variant="outline"
-              onClick={() => window.location.href = '/games'}
+              onClick={() => window.location.href = &apos;/games&apos;}
             >
               View All Games
             </Button>
