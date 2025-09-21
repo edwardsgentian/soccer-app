@@ -1,18 +1,31 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Only create client if we have the required values
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+// Debug logging
+if (typeof window !== 'undefined') {
+  console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Not set')
+  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Set' : 'Not set')
+}
+
+// Fallback values if environment variables aren't loaded
+const fallbackUrl = 'https://xrhjexjgjhdgxzumngpj.supabase.co'
+const fallbackKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhyaGpleGpnamhkZ3h6dW1uZ3BqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg0NjEwNzAsImV4cCI6MjA3NDAzNzA3MH0.Ast_hvS8_NGwgAcOuUL_F4voW12ucCXdyjT8AXeXsCw'
+
+// Use environment variables or fallback to hardcoded values
+const finalUrl = supabaseUrl || fallbackUrl
+const finalKey = supabaseAnonKey || fallbackKey
+
+// Create client with final values
+export const supabase = createClient(finalUrl, finalKey)
 
 // For server-side operations that require service role
-export const supabaseAdmin = supabaseUrl && process.env.SUPABASE_SERVICE_ROLE_KEY
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+export const supabaseAdmin = serviceRoleKey
   ? createClient(
-      supabaseUrl,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      finalUrl,
+      serviceRoleKey,
       {
         auth: {
           autoRefreshToken: false,
