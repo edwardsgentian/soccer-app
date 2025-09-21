@@ -1,6 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { Button } from "@/components/ui/button"
+import { PaymentModal } from "@/components/payment/payment-modal"
 import { Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react"
 
 interface GameCardProps {
@@ -12,6 +14,7 @@ interface GameCardProps {
   attendees: number
   maxAttendees: number
   groupName: string
+  gameId?: string
 }
 
 export function GameCard({
@@ -22,8 +25,10 @@ export function GameCard({
   location,
   attendees,
   maxAttendees,
-  groupName
+  groupName,
+  gameId = 'sample-game-id'
 }: GameCardProps) {
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
@@ -36,7 +41,25 @@ export function GameCard({
   const isFullyBooked = attendees >= maxAttendees
   const spotsLeft = maxAttendees - attendees
 
+  const game = {
+    id: gameId,
+    name: gameName,
+    price,
+    location,
+    game_date: date,
+    game_time: time,
+    groups: {
+      name: groupName
+    }
+  }
+
+  const handlePaymentSuccess = () => {
+    // Refresh the page or update the attendees count
+    window.location.reload()
+  }
+
   return (
+    <>
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
       <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
@@ -100,11 +123,20 @@ export function GameCard({
             }`}
             size="sm"
             disabled={isFullyBooked}
+            onClick={() => setShowPaymentModal(true)}
           >
             {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
           </Button>
         </div>
       </div>
     </div>
+
+    <PaymentModal
+      isOpen={showPaymentModal}
+      onClose={() => setShowPaymentModal(false)}
+      game={game}
+      onSuccess={handlePaymentSuccess}
+    />
+    </>
   )
 }
