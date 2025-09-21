@@ -1,9 +1,9 @@
-&apos;use client&apos;
+'use client'
 
-import { useState } from &apos;react&apos;
-import { Button } from &apos;@/components/ui/button&apos;
-import { CreateGameForm } from &apos;./create-game-form&apos;
-import { X } from &apos;lucide-react&apos;
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { CreateGameForm } from './create-game-form'
+import { X } from 'lucide-react'
 
 interface GameManagementModalProps {
   isOpen: boolean
@@ -89,7 +89,7 @@ export function GameManagementModal({
                   variant="outline"
                   onClick={() => {
                     // TODO: Implement manage existing games
-                    alert(&apos;Manage existing games feature coming soon!&apos;)
+                    alert('Manage existing games feature coming soon!')
                   }}
                 >
                   Manage Existing Games

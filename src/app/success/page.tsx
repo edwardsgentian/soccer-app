@@ -28,7 +28,7 @@ export default function SuccessPage() {
         date: '2024-01-25',
         time: '18:00',
         location: 'Central Park, NYC',
-        group: 'NYC Women&apos;s Soccer'
+        group: 'NYC Women\'s Soccer'
       })
       setLoading(false)
     }, 1000)

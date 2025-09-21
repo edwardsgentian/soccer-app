@@ -62,7 +62,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
 
         if (profileError) {
           console.error('Error creating player profile:', profileError)
-          // Don't throw here - user is created, profile can be updated later
+          // Don&apos;t throw here - user is created, profile can be updated later
         }
       }
 
