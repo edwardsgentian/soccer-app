@@ -1,9 +1,9 @@
-'use client'
+&apos;use client&apos;
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { CreateGroupForm } from './create-group-form'
-import { X } from 'lucide-react'
+import { useState } from &apos;react&apos;
+import { Button } from &apos;@/components/ui/button&apos;
+import { CreateGroupForm } from &apos;./create-group-form&apos;
+import { X } from &apos;lucide-react&apos;
 
 interface GroupManagementModalProps {
   isOpen: boolean
@@ -60,7 +60,7 @@ export function GroupManagementModal({
                   </h3>
                   <p className="text-green-700 text-sm">
                     Start a new soccer group to organize games and connect with players.
-                    You'll set up an admin password to manage the group.
+                    You&apos;ll set up an admin password to manage the group.
                   </p>
                 </div>
 
@@ -86,7 +86,7 @@ export function GroupManagementModal({
                   variant="outline"
                   onClick={() => {
                     // TODO: Implement manage existing group
-                    alert('Manage existing group feature coming soon!')
+                    alert(&apos;Manage existing group feature coming soon!&apos;)
                   }}
                 >
                   Manage Existing Group

@@ -1,11 +1,11 @@
-'use client'
+&apos;use client&apos;
 
-import { useState, useEffect } from 'react'
-import { useParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
-import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, DollarSign, ArrowLeft } from 'lucide-react'
+import { useState, useEffect } from &apos;react&apos;
+import { useParams } from &apos;next/navigation&apos;
+import { Button } from &apos;@/components/ui/button&apos;
+import { supabase } from &apos;@/lib/supabase&apos;
+import { Header } from &apos;@/components/header&apos;
+import { Calendar, Clock, MapPin, Users, DollarSign, ArrowLeft } from &apos;lucide-react&apos;
 
 interface Game {
   id: string
@@ -58,7 +58,7 @@ export default function GameDetailPage() {
     try {
       // Fetch game details
       const { data: gameData, error: gameError } = await supabase
-        .from('games')
+        .from(&apos;games&apos;)
         .select(`
           *,
           groups (
@@ -67,7 +67,7 @@ export default function GameDetailPage() {
             description
           )
         `)
-        .eq('id', gameId)
+        .eq(&apos;id&apos;, gameId)
         .single()
 
       if (gameError) {
@@ -78,7 +78,7 @@ export default function GameDetailPage() {
 
       // Fetch attendees
       const { data: attendeesData, error: attendeesError } = await supabase
-        .from('game_attendees')
+        .from(&apos;game_attendees&apos;)
         .select(`
           id,
           created_at,
@@ -87,17 +87,17 @@ export default function GameDetailPage() {
             photo_url
           )
         `)
-        .eq('game_id', gameId)
-        .eq('payment_status', 'completed')
-        .order('created_at', { ascending: true })
+        .eq(&apos;game_id&apos;, gameId)
+        .eq(&apos;payment_status&apos;, &apos;completed&apos;)
+        .order(&apos;created_at&apos;, { ascending: true })
 
       if (attendeesError) {
-        console.error('Error fetching attendees:', attendeesError)
+        console.error(&apos;Error fetching attendees:&apos;, attendeesError)
       } else {
         setAttendees(attendeesData || [])
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Game not found')
+      setError(err instanceof Error ? err.message : &apos;Game not found&apos;)
     } finally {
       setLoading(false)
     }
@@ -105,18 +105,18 @@ export default function GameDetailPage() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString(&apos;en-US&apos;, { 
+      weekday: &apos;long&apos;,
+      year: &apos;numeric&apos;,
+      month: &apos;long&apos;, 
+      day: &apos;numeric&apos; 
     })
   }
 
   const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':')
+    const [hours, minutes] = timeString.split(&apos;:&apos;)
     const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
+    const ampm = hour >= 12 ? &apos;PM&apos; : &apos;AM&apos;
     const displayHour = hour % 12 || 12
     return `${displayHour}:${minutes} ${ampm}`
   }
@@ -146,10 +146,10 @@ export default function GameDetailPage() {
               Game Not Found
             </h3>
             <p className="text-gray-600 mb-6">
-              The game you're looking for doesn't exist or has been removed.
+              The game you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
             <Button
-              onClick={() => window.location.href = '/games'}
+              onClick={() => window.location.href = &apos;/games&apos;}
               className="bg-green-600 hover:bg-green-700"
             >
               Back to Games
@@ -172,7 +172,7 @@ export default function GameDetailPage() {
         {/* Back Button */}
         <Button
           variant="outline"
-          onClick={() => window.location.href = '/games'}
+          onClick={() => window.location.href = &apos;/games&apos;}
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
@@ -274,8 +274,8 @@ export default function GameDetailPage() {
                 
                 <div className="flex items-center justify-between">
                   <span className="text-gray-600">Available spots:</span>
-                  <span className={`font-semibold ${isFullyBooked ? 'text-red-600' : 'text-green-600'}`}>
-                    {isFullyBooked ? 'Fully booked' : `${spotsLeft} left`}
+                  <span className={`font-semibold ${isFullyBooked ? &apos;text-red-600&apos; : &apos;text-green-600&apos;}`}>
+                    {isFullyBooked ? &apos;Fully booked&apos; : `${spotsLeft} left`}
                   </span>
                 </div>
               </div>
@@ -283,13 +283,13 @@ export default function GameDetailPage() {
               <Button 
                 className={`w-full ${
                   isFullyBooked 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-green-600 hover:bg-green-700'
+                    ? &apos;bg-gray-400 cursor-not-allowed&apos; 
+                    : &apos;bg-green-600 hover:bg-green-700&apos;
                 }`}
                 disabled={isFullyBooked}
                 size="lg"
               >
-                {isFullyBooked ? 'Fully Booked' : 'Buy Game - $' + game.price}
+                {isFullyBooked ? &apos;Fully Booked&apos; : &apos;Buy Game - $&apos; + game.price}
               </Button>
 
               {game.groups.whatsapp_group && (

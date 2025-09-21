@@ -1,8 +1,8 @@
-'use client'
+&apos;use client&apos;
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
+import { useState } from &apos;react&apos;
+import { Button } from &apos;@/components/ui/button&apos;
+import { supabase } from &apos;@/lib/supabase&apos;
 
 interface SignInFormProps {
   onSuccess?: () => void
@@ -10,8 +10,8 @@ interface SignInFormProps {
 }
 
 export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState(&apos;&apos;)
+  const [password, setPassword] = useState(&apos;&apos;)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -22,7 +22,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
 
     try {
       if (!supabase) {
-        throw new Error('Supabase client not initialized')
+        throw new Error(&apos;Supabase client not initialized&apos;)
       }
 
       const { error } = await supabase.auth.signInWithPassword({
@@ -36,7 +36,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
 
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : &apos;An error occurred&apos;)
     } finally {
       setLoading(false)
     }
@@ -91,13 +91,13 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
             disabled={loading}
             className="w-full bg-green-600 hover:bg-green-700"
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? &apos;Signing In...&apos; : &apos;Sign In&apos;}
           </Button>
         </form>
 
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{&apos; &apos;}
             <button
               onClick={onSwitchToSignUp}
               className="text-green-600 hover:text-green-700 font-medium"
@@ -109,7 +109,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
 
         <div className="mt-4 text-center">
           <p className="text-sm text-gray-500">
-            Or{' '}
+            Or{&apos; &apos;}
             <button className="text-green-600 hover:text-green-700 font-medium">
               continue as guest
             </button>

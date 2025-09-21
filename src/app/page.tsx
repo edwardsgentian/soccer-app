@@ -1,4 +1,4 @@
-'use client'
+&apos;use client&apos;
 
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/game-card";
@@ -13,7 +13,7 @@ export default function Home() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-            ⚽ Women's Soccer Meetups
+            ⚽ Women&apos;s Soccer Meetups
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
             Join pickup soccer games in New York. Connect with fellow players, 
@@ -23,14 +23,14 @@ export default function Home() {
             <Button 
               size="lg" 
               className="bg-green-600 hover:bg-green-700"
-              onClick={() => window.location.href = '/games'}
+              onClick={() => window.location.href = &apos;/games&apos;}
             >
               Find Games Near You
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              onClick={() => window.location.href = '/groups'}
+              onClick={() => window.location.href = &apos;/groups&apos;}
             >
               Create a Group
             </Button>
@@ -45,7 +45,7 @@ export default function Home() {
             </h2>
             <Button 
               variant="outline"
-              onClick={() => window.location.href = '/games'}
+              onClick={() => window.location.href = &apos;/games&apos;}
             >
               View All Games
             </Button>
@@ -62,7 +62,7 @@ export default function Home() {
               location="Central Park, NYC"
               attendees={8}
               maxAttendees={12}
-              groupName="NYC Women's Soccer"
+              groupName="NYC Women&apos;s Soccer"
             />
             <GameCard 
               gameName="Brooklyn Bridge Park"
@@ -100,7 +100,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold mb-2">Find Games</h3>
               <p className="text-gray-600">
                 Browse upcoming soccer games in your area. See details like 
-                location, time, price, and who's attending.
+                location, time, price, and who&apos;s attending.
               </p>
             </div>
             <div className="text-center">

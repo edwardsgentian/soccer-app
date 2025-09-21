@@ -1,11 +1,11 @@
-'use client'
+&apos;use client&apos;
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/contexts/auth-context'
-import { AuthModal } from '@/components/auth/auth-modal'
-import { supabase } from '@/lib/supabase'
-import { getStripe } from '@/lib/stripe'
+import { useState, useEffect } from &apos;react&apos;
+import { Button } from &apos;@/components/ui/button&apos;
+import { useAuth } from &apos;@/contexts/auth-context&apos;
+import { AuthModal } from &apos;@/components/auth/auth-modal&apos;
+import { supabase } from &apos;@/lib/supabase&apos;
+import { getStripe } from &apos;@/lib/stripe&apos;
 
 interface Game {
   id: string
@@ -28,9 +28,9 @@ interface PaymentFormProps {
 export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
   const { user, player } = useAuth()
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
+    name: &apos;&apos;,
+    email: &apos;&apos;,
+    phone: &apos;&apos;,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -40,9 +40,9 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
     // Pre-fill form data if user is logged in
     if (user && player) {
       setFormData({
-        name: player.name || '',
-        email: player.email || '',
-        phone: player.phone || '',
+        name: player.name || &apos;&apos;,
+        email: player.email || &apos;&apos;,
+        phone: player.phone || &apos;&apos;,
       })
     }
   }, [user, player])
@@ -54,14 +54,14 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
 
     try {
       if (!supabase) {
-        throw new Error('Supabase client not initialized')
+        throw new Error(&apos;Supabase client not initialized&apos;)
       }
 
       // Create checkout session
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
+      const response = await fetch(&apos;/api/create-checkout-session&apos;, {
+        method: &apos;POST&apos;,
         headers: {
-          'Content-Type': 'application/json',
+          &apos;Content-Type&apos;: &apos;application/json&apos;,
         },
         body: JSON.stringify({
           gameId: game.id,
@@ -74,7 +74,7 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        throw new Error(&apos;Failed to create checkout session&apos;)
       }
 
       const { sessionId } = await response.json()
@@ -82,7 +82,7 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
       // Redirect to Stripe Checkout
       const stripe = await getStripe()
       if (!stripe) {
-        throw new Error('Stripe not initialized')
+        throw new Error(&apos;Stripe not initialized&apos;)
       }
 
       const { error: stripeError } = await stripe.redirectToCheckout({
@@ -93,7 +93,7 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
         throw stripeError
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : &apos;An error occurred&apos;)
     } finally {
       setLoading(false)
     }
@@ -137,7 +137,7 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
               <div className="flex items-center">
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3">
                   <span className="text-green-600 font-semibold">
-                    {player.name?.charAt(0).toUpperCase() || 'U'}
+                    {player.name?.charAt(0).toUpperCase() || &apos;U&apos;}
                   </span>
                 </div>
                 <div>
@@ -148,7 +148,7 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
               <Button
                 onClick={() => {
                   // Clear form data and sign out
-                  setFormData({ name: '', email: '', phone: '' })
+                  setFormData({ name: &apos;&apos;, email: &apos;&apos;, phone: &apos;&apos; })
                   // You could add a sign out function here if needed
                 }}
                 variant="outline"
@@ -182,11 +182,11 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
               id="name"
               type="text"
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;name&apos;, e.target.value)}
               required
               readOnly={!!user}
               className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                user ? 'bg-gray-50 cursor-not-allowed' : ''
+                user ? &apos;bg-gray-50 cursor-not-allowed&apos; : &apos;&apos;
               }`}
               placeholder="Enter your full name"
             />
@@ -200,11 +200,11 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => handleInputChange('email', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;email&apos;, e.target.value)}
               required
               readOnly={!!user}
               className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                user ? 'bg-gray-50 cursor-not-allowed' : ''
+                user ? &apos;bg-gray-50 cursor-not-allowed&apos; : &apos;&apos;
               }`}
               placeholder="Enter your email"
             />
@@ -218,11 +218,11 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
               id="phone"
               type="tel"
               value={formData.phone}
-              onChange={(e) => handleInputChange('phone', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;phone&apos;, e.target.value)}
               required
               readOnly={!!user}
               className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                user ? 'bg-gray-50 cursor-not-allowed' : ''
+                user ? &apos;bg-gray-50 cursor-not-allowed&apos; : &apos;&apos;
               }`}
               placeholder="Enter your phone number"
             />
@@ -248,7 +248,7 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
               disabled={loading}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {loading ? 'Processing...' : `Pay $${game.price}`}
+              {loading ? &apos;Processing...&apos; : `Pay $${game.price}`}
             </Button>
           </div>
         </form>
@@ -256,8 +256,8 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
         {!user && (
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Don't have an account?</strong> No problem! You can purchase this game as a guest. 
-              After payment, you'll have the option to create an account to track your game history.
+              <strong>Don&apos;t have an account?</strong> No problem! You can purchase this game as a guest. 
+              After payment, you&apos;ll have the option to create an account to track your game history.
             </p>
           </div>
         )}

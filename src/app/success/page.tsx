@@ -9,20 +9,26 @@ import { Calendar, MapPin, Users } from 'lucide-react'
 
 export default function SuccessPage() {
   const searchParams = useSearchParams()
-  const sessionId = searchParams.get('session_id')
+  // const sessionId = searchParams.get('session_id')
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [gameDetails, setGameDetails] = useState<any>(null)
+  const [gameDetails, setGameDetails] = useState<{
+    name: string
+    date: string
+    time: string
+    location: string
+    group: string
+  } | null>(null)
 
   useEffect(() => {
     // Simulate processing time
     setTimeout(() => {
       setGameDetails({
-        name: 'Central Park Pickup',
-        date: '2024-01-25',
-        time: '18:00',
-        location: 'Central Park, NYC',
-        group: 'NYC Women\'s Soccer'
+        name: &apos;Central Park Pickup&apos;,
+        date: &apos;2024-01-25&apos;,
+        time: &apos;18:00&apos;,
+        location: &apos;Central Park, NYC&apos;,
+        group: &apos;NYC Women\&apos;s Soccer&apos;
       })
       setLoading(false)
     }, 1000)
@@ -54,7 +60,7 @@ export default function SuccessPage() {
               Payment Successful!
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Congratulations! You're now registered for the game.
+              Congratulations! You&apos;re now registered for the game.
             </p>
 
             {gameDetails && (
@@ -79,7 +85,7 @@ export default function SuccessPage() {
 
             <div className="space-y-4">
               <Button
-                onClick={() => window.location.href = '/games'}
+                onClick={() => window.location.href = &apos;/games&apos;}
                 className="w-full bg-green-600 hover:bg-green-700"
                 size="lg"
               >
@@ -93,7 +99,7 @@ export default function SuccessPage() {
                     Track your game history and get faster checkout for future games.
                   </p>
                   <Button
-                    onClick={() => window.location.href = '/profile'}
+                    onClick={() => window.location.href = &apos;/profile&apos;}
                     variant="outline"
                     className="w-full"
                   >
@@ -103,7 +109,7 @@ export default function SuccessPage() {
               )}
               
               <Button
-                onClick={() => window.location.href = '/'}
+                onClick={() => window.location.href = &apos;/&apos;}
                 variant="outline"
                 className="w-full"
               >
