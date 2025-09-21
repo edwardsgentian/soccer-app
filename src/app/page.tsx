@@ -21,7 +21,11 @@ export default function Home() {
             <Button size="lg" className="bg-green-600 hover:bg-green-700">
               Find Games Near You
             </Button>
-            <Button size="lg" variant="outline">
+            <Button 
+              size="lg" 
+              variant="outline"
+              onClick={() => window.location.href = '/groups'}
+            >
               Create a Group
             </Button>
           </div>

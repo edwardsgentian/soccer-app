@@ -23,10 +23,10 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <a href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
               Games
             </a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <a href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
               Groups
             </a>
             <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
@@ -96,10 +96,10 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <nav className="flex flex-col space-y-4">
-              <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <a href="/" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Games
               </a>
-              <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <a href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Groups
               </a>
               <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
