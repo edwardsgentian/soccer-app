@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/auth-context'
+// import { useAuth } from '@/contexts/auth-context'
 
 interface CreateGroupFormProps {
   onSuccess?: () => void

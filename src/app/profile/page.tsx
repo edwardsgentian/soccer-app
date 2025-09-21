@@ -28,14 +28,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
 
-  useEffect(() => {
-    if (user && player) {
-      fetchGameHistory()
-    } else if (!authLoading) {
-      setLoading(false)
-    }
-  }, [user, player, authLoading, fetchGameHistory])
-
   const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
       setLoading(false)
@@ -65,7 +57,7 @@ export default function ProfilePage() {
       if (error) {
         console.error('Error fetching game history:', error)
       } else {
-        setGameHistory(data || [])
+        setGameHistory((data as unknown as GameHistory[]) || [])
       }
     } catch (err) {
       console.error('Error fetching game history:', err)
@@ -73,6 +65,14 @@ export default function ProfilePage() {
       setLoading(false)
     }
   }, [user])
+
+  useEffect(() => {
+    if (user && player) {
+      fetchGameHistory()
+    } else if (!authLoading) {
+      setLoading(false)
+    }
+  }, [user, player, authLoading, fetchGameHistory])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

@@ -43,12 +43,6 @@ export default function GameDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (gameId) {
-      fetchGameDetails()
-    }
-  }, [gameId, fetchGameDetails])
-
   const fetchGameDetails = useCallback(async () => {
     if (!supabase) {
       setLoading(false)
@@ -94,7 +88,7 @@ export default function GameDetailPage() {
       if (attendeesError) {
         console.error('Error fetching attendees:', attendeesError)
       } else {
-        setAttendees(attendeesData || [])
+        setAttendees((attendeesData as unknown as Attendee[]) || [])
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Game not found')
@@ -102,6 +96,12 @@ export default function GameDetailPage() {
       setLoading(false)
     }
   }, [gameId])
+
+  useEffect(() => {
+    if (gameId) {
+      fetchGameDetails()
+    }
+  }, [gameId, fetchGameDetails])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

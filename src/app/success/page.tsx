@@ -1,18 +1,24 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+// import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/header'
 import { useAuth } from '@/contexts/auth-context'
 import { Calendar, MapPin, Users } from 'lucide-react'
 
 export default function SuccessPage() {
-  const searchParams = useSearchParams()
-  const sessionId = searchParams.get('session_id')
+  // const searchParams = useSearchParams()
+  // const sessionId = searchParams.get('session_id')
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [gameDetails, setGameDetails] = useState<any>(null)
+  const [gameDetails, setGameDetails] = useState<{
+    name: string
+    date: string
+    time: string
+    location: string
+    group: string
+  } | null>(null)
 
   useEffect(() => {
     // Simulate processing time

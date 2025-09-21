@@ -1,10 +1,11 @@
 'use client'
 
+import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/header'
 
-export default function CancelPage() {
+function CancelPageContent() {
   const searchParams = useSearchParams()
   const gameId = searchParams.get('game_id')
 
@@ -61,5 +62,13 @@ export default function CancelPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function CancelPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CancelPageContent />
+    </Suspense>
   )
 }

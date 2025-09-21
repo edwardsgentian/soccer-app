@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { AuthModal } from "@/components/auth/auth-modal"
 
@@ -23,15 +24,15 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="/games" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link href="/games" className="text-gray-600 hover:text-gray-900 transition-colors">
               Games
-            </a>
-            <a href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
+            </Link>
+            <Link href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
               Groups
-            </a>
-            <a href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
+            </Link>
+            <Link href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
               My Profile
-            </a>
+            </Link>
           </nav>
 
           {/* Desktop Actions */}
@@ -96,15 +97,15 @@ export function Header() {
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t">
             <nav className="flex flex-col space-y-4">
-              <a href="/games" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <Link href="/games" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Games
-              </a>
-              <a href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
+              </Link>
+              <Link href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Groups
-              </a>
-              <a href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
+              </Link>
+              <Link href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
                 My Profile
-              </a>
+              </Link>
               <div className="flex flex-col space-y-2 pt-4">
                 {user ? (
                   <div className="space-y-2">
