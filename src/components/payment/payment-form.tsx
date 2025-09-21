@@ -25,7 +25,7 @@ interface PaymentFormProps {
   onCancel?: () => void
 }
 
-export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
+export function PaymentForm({ game, onCancel }: PaymentFormProps) {
   const { user, player } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
@@ -256,8 +256,8 @@ export function PaymentForm({ game, onSuccess, onCancel }: PaymentFormProps) {
         {!user && (
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Don't have an account?</strong> No problem! You can purchase this game as a guest. 
-              After payment, you'll have the option to create an account to track your game history.
+              <strong>Don&apos;t have an account?</strong> No problem! You can purchase this game as a guest. 
+              After payment, you&apos;ll have the option to create an account to track your game history.
             </p>
           </div>
         )}

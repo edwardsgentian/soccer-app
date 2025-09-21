@@ -22,7 +22,7 @@ export default function SuccessPage() {
         date: '2024-01-25',
         time: '18:00',
         location: 'Central Park, NYC',
-        group: 'NYC Women\'s Soccer'
+        group: 'NYC Women&apos;s Soccer'
       })
       setLoading(false)
     }, 1000)
@@ -54,7 +54,7 @@ export default function SuccessPage() {
               Payment Successful!
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Congratulations! You're now registered for the game.
+              Congratulations! You&apos;re now registered for the game.
             </p>
 
             {gameDetails && (

@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, DollarSign, ArrowLeft } from 'lucide-react'
+import { Calendar, Clock, MapPin, DollarSign, ArrowLeft } from 'lucide-react'
 
 interface Game {
   id: string
@@ -47,9 +47,9 @@ export default function GameDetailPage() {
     if (gameId) {
       fetchGameDetails()
     }
-  }, [gameId])
+  }, [gameId, fetchGameDetails])
 
-  const fetchGameDetails = async () => {
+  const fetchGameDetails = useCallback(async () => {
     if (!supabase) {
       setLoading(false)
       return
@@ -101,7 +101,7 @@ export default function GameDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [gameId])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -146,7 +146,7 @@ export default function GameDetailPage() {
               Game Not Found
             </h3>
             <p className="text-gray-600 mb-6">
-              The game you're looking for doesn't exist or has been removed.
+              The game you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
             <Button
               onClick={() => window.location.href = '/games'}

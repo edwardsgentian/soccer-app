@@ -69,22 +69,22 @@ export default function GamesPage() {
     fetchGames() // Refresh the games list
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      weekday: 'short', 
-      month: 'short', 
-      day: 'numeric' 
-    })
-  }
+  // const formatDate = (dateString: string) => {
+  //   const date = new Date(dateString)
+  //   return date.toLocaleDateString('en-US', { 
+  //     weekday: 'short', 
+  //     month: 'short', 
+  //     day: 'numeric' 
+  //   })
+  // }
 
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
+  // const formatTime = (timeString: string) => {
+  //   const [hours, minutes] = timeString.split(':')
+  //   const hour = parseInt(hours)
+  //   const ampm = hour >= 12 ? 'PM' : 'AM'
+  //   const displayHour = hour % 12 || 12
+  //   return `${displayHour}:${minutes} ${ampm}`
+  // }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">

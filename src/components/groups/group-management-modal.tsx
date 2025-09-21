@@ -60,7 +60,7 @@ export function GroupManagementModal({
                   </h3>
                   <p className="text-green-700 text-sm">
                     Start a new soccer group to organize games and connect with players.
-                    You'll set up an admin password to manage the group.
+                    You&apos;ll set up an admin password to manage the group.
                   </p>
                 </div>
 

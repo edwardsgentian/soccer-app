@@ -18,7 +18,7 @@ export function SupabaseTest() {
       try {
         // Simple test - just check if we can access the auth service
         // This doesn't require any database access or special permissions
-        const { data, error } = await supabase.auth.getSession()
+            const { error } = await supabase.auth.getSession()
         
         if (error) {
           // Even if there's an error, if we got a response, the connection works

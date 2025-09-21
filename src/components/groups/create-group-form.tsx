@@ -11,7 +11,7 @@ interface CreateGroupFormProps {
 }
 
 export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
-  const { user } = useAuth()
+  // const { user } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -100,7 +100,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               onChange={(e) => handleInputChange('name', e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="e.g., NYC Women's Soccer"
+              placeholder="e.g., NYC Women&apos;s Soccer"
             />
           </div>
 
@@ -200,7 +200,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               placeholder="Create a password for group management"
             />
             <p className="text-sm text-gray-500 mt-1">
-              You'll need this password to add games and manage the group
+              You&apos;ll need this password to add games and manage the group
             </p>
           </div>
 

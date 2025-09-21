@@ -63,7 +63,7 @@ export function GameManagementModal({
                   </h3>
                   <p className="text-green-700 text-sm">
                     Set up a new soccer game with date, time, location, price, and ticket capacity.
-                    You'll need the group admin password to create games.
+                    You&apos;ll need the group admin password to create games.
                   </p>
                 </div>
 

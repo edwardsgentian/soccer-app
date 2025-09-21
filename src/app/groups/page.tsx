@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Users, MapPin, Instagram, Globe } from 'lucide-react'
+import { Calendar, Instagram, Globe } from 'lucide-react'
 
 interface Group {
   id: string

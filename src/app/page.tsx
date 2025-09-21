@@ -13,7 +13,7 @@ export default function Home() {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-            ⚽ Women's Soccer Meetups
+            ⚽ Women&apos;s Soccer Meetups
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
             Join pickup soccer games in New York. Connect with fellow players, 
@@ -62,7 +62,7 @@ export default function Home() {
               location="Central Park, NYC"
               attendees={8}
               maxAttendees={12}
-              groupName="NYC Women's Soccer"
+              groupName="NYC Women&apos;s Soccer"
             />
             <GameCard 
               gameName="Brooklyn Bridge Park"
@@ -100,7 +100,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold mb-2">Find Games</h3>
               <p className="text-gray-600">
                 Browse upcoming soccer games in your area. See details like 
-                location, time, price, and who's attending.
+                location, time, price, and who&apos;s attending.
               </p>
             </div>
             <div className="text-center">

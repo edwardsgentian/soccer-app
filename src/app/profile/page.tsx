@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, MapPin, Globe, MessageCircle, Edit, Trophy, Users } from 'lucide-react'
+import { Calendar, MapPin, Globe, Edit, Trophy, Users } from 'lucide-react'
 
 interface GameHistory {
   id: string
@@ -34,9 +34,9 @@ export default function ProfilePage() {
     } else if (!authLoading) {
       setLoading(false)
     }
-  }, [user, player, authLoading])
+  }, [user, player, authLoading, fetchGameHistory])
 
-  const fetchGameHistory = async () => {
+  const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
       setLoading(false)
       return
@@ -72,7 +72,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

@@ -24,7 +24,7 @@ export default function CancelPage() {
             </p>
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-8">
-              <h2 className="text-lg font-semibold text-yellow-800 mb-2">What's Next?</h2>
+              <h2 className="text-lg font-semibold text-yellow-800 mb-2">What&apos;s Next?</h2>
               <p className="text-yellow-700 text-sm">
                 You can try again anytime. The game spot is still available for you to book.
               </p>
