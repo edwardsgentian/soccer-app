@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 import { supabase } from '@/lib/supabase'
@@ -211,12 +212,15 @@ function GameCard({ game }: { game: Game }) {
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
+            asChild
             variant="outline" 
             className="flex-1"
             size="sm"
           >
-            <Eye className="w-4 h-4 mr-1" />
-            View Details
+            <Link href={`/games/${game.id}`}>
+              <Eye className="w-4 h-4 mr-1" />
+              View Details
+            </Link>
           </Button>
           <Button 
             className={`flex-1 ${

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { supabase } from '@/lib/supabase'
@@ -192,8 +193,15 @@ function GroupCard({ group }: { group: Group }) {
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" size="sm">
-            View Games
+          <Button 
+            asChild
+            variant="outline" 
+            className="flex-1" 
+            size="sm"
+          >
+            <Link href={`/groups/${group.id}`}>
+              View Games
+            </Link>
           </Button>
           {group.whatsapp_group && (
             <Button

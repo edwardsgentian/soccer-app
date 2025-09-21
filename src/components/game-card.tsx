@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { PaymentModal } from "@/components/payment/payment-modal"
 import { Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react"
@@ -109,11 +110,14 @@ export function GameCard({
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
+            asChild
             variant="outline" 
             className="flex-1"
             size="sm"
           >
-            View Details
+            <Link href={`/games/${gameId}`}>
+              View Details
+            </Link>
           </Button>
           <Button 
             className={`flex-1 ${
