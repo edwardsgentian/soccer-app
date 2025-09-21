@@ -1,9 +1,9 @@
-'use client'
+&apos;use client&apos;
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/auth-context'
+import { useState } from &apos;react&apos;
+import { Button } from &apos;@/components/ui/button&apos;
+import { supabase } from &apos;@/lib/supabase&apos;
+import { useAuth } from &apos;@/contexts/auth-context&apos;
 
 interface CreateGroupFormProps {
   onSuccess?: () => void
@@ -13,14 +13,14 @@ interface CreateGroupFormProps {
 export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
   // const { user } = useAuth()
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    tags: '',
-    instagram: '',
-    website: '',
-    whatsapp_group: '',
-    admin_password: '',
-    confirm_password: '',
+    name: &apos;&apos;,
+    description: &apos;&apos;,
+    tags: &apos;&apos;,
+    instagram: &apos;&apos;,
+    website: &apos;&apos;,
+    whatsapp_group: &apos;&apos;,
+    admin_password: &apos;&apos;,
+    confirm_password: &apos;&apos;,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -32,15 +32,15 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
 
     try {
       if (formData.admin_password !== formData.confirm_password) {
-        throw new Error('Passwords do not match')
+        throw new Error(&apos;Passwords do not match&apos;)
       }
 
       if (formData.admin_password.length < 6) {
-        throw new Error('Password must be at least 6 characters')
+        throw new Error(&apos;Password must be at least 6 characters&apos;)
       }
 
       if (!supabase) {
-        throw new Error('Supabase client not initialized')
+        throw new Error(&apos;Supabase client not initialized&apos;)
       }
 
       // Hash the password (in production, use a proper hashing library)
@@ -48,12 +48,12 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
 
       // Parse tags from comma-separated string
       const tagsArray = formData.tags
-        .split(',')
+        .split(&apos;,&apos;)
         .map(tag => tag.trim())
         .filter(tag => tag.length > 0)
 
       const { error } = await supabase
-        .from('groups')
+        .from(&apos;groups&apos;)
         .insert({
           name: formData.name,
           description: formData.description,
@@ -70,7 +70,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
 
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      setError(err instanceof Error ? err.message : &apos;An error occurred&apos;)
     } finally {
       setLoading(false)
     }
@@ -97,7 +97,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="name"
               type="text"
               value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;name&apos;, e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="e.g., NYC Women&apos;s Soccer"
@@ -112,7 +112,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
             <textarea
               id="description"
               value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;description&apos;, e.target.value)}
               required
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -129,7 +129,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="tags"
               type="text"
               value={formData.tags}
-              onChange={(e) => handleInputChange('tags', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;tags&apos;, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="e.g., beginner-friendly, competitive, pickup, indoor"
             />
@@ -144,7 +144,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="instagram"
               type="text"
               value={formData.instagram}
-              onChange={(e) => handleInputChange('instagram', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;instagram&apos;, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="@yourgroup"
             />
@@ -159,7 +159,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="website"
               type="url"
               value={formData.website}
-              onChange={(e) => handleInputChange('website', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;website&apos;, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="https://yourgroup.com"
             />
@@ -174,7 +174,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="whatsapp_group"
               type="url"
               value={formData.whatsapp_group}
-              onChange={(e) => handleInputChange('whatsapp_group', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;whatsapp_group&apos;, e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="https://chat.whatsapp.com/..."
@@ -193,7 +193,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="admin_password"
               type="password"
               value={formData.admin_password}
-              onChange={(e) => handleInputChange('admin_password', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;admin_password&apos;, e.target.value)}
               required
               minLength={6}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
@@ -213,7 +213,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               id="confirm_password"
               type="password"
               value={formData.confirm_password}
-              onChange={(e) => handleInputChange('confirm_password', e.target.value)}
+              onChange={(e) => handleInputChange(&apos;confirm_password&apos;, e.target.value)}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Confirm your admin password"
@@ -240,7 +240,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               disabled={loading}
               className="flex-1 bg-green-600 hover:bg-green-700"
             >
-              {loading ? 'Creating Group...' : 'Create Group'}
+              {loading ? &apos;Creating Group...&apos; : &apos;Create Group&apos;}
             </Button>
           </div>
         </form>
