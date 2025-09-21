@@ -29,7 +29,7 @@ export function Header() {
             <a href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
               Groups
             </a>
-            <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <a href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
               My Profile
             </a>
           </nav>
@@ -102,7 +102,7 @@ export function Header() {
               <a href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
                 Groups
               </a>
-              <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors">
+              <a href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
                 My Profile
               </a>
               <div className="flex flex-col space-y-2 pt-4">
