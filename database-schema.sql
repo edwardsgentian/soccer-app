@@ -1,7 +1,6 @@
 -- Soccer Meetup App Database Schema
 
--- Enable Row Level Security
-ALTER DATABASE postgres SET "app.jwt_secret" TO 'your-jwt-secret';
+-- Enable Row Level Security (RLS is enabled by default in Supabase)
 
 -- Groups table
 CREATE TABLE groups (
