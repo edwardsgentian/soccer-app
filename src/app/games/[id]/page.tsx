@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, DollarSign, ArrowLeft } from 'lucide-react'
+import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Ticket } from 'lucide-react'
 
 interface Game {
   id: string
@@ -184,8 +184,8 @@ export default function GameDetailPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               {/* Game Image */}
-              <div className="h-64 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                <span className="text-8xl text-white opacity-80">⚽</span>
+              <div className="h-64 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                <Ticket className="w-20 h-20 text-white opacity-80" />
               </div>
 
               <div className="p-6">

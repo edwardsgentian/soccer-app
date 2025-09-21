@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, DollarSign, Eye } from 'lucide-react'
+import { Calendar, Clock, MapPin, Users, DollarSign, Eye, Ticket } from 'lucide-react'
 
 interface Game {
   id: string
@@ -158,8 +158,8 @@ function GameCard({ game }: { game: Game }) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
-      <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-        <span className="text-6xl text-white opacity-80">⚽</span>
+      <div className="h-48 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+        <Ticket className="w-16 h-16 text-white opacity-80" />
       </div>
 
       <div className="p-6">
@@ -190,7 +190,7 @@ function GameCard({ game }: { game: Game }) {
             <Users className="w-4 h-4 mr-2" />
             <span>{attendees}/{game.total_tickets} players</span>
             {!isFullyBooked && (
-              <span className="ml-2 text-sm text-green-600">
+              <span className="ml-2 text-sm text-blue-600">
                 ({spotsLeft} spots left)
               </span>
             )}

@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle } from 'lucide-react'
+import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket } from 'lucide-react'
 
 interface Group {
   id: string
@@ -274,6 +274,10 @@ export default function GroupDetailPage() {
 
                   return (
                     <div key={game.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
+                      {/* Game Header */}
+                      <div className="h-24 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+                        <Ticket className="w-8 h-8 text-white opacity-80" />
+                      </div>
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div>
@@ -283,7 +287,7 @@ export default function GroupDetailPage() {
                             )}
                           </div>
                           <div className="text-right">
-                            <div className="text-2xl font-bold text-green-600">${game.price}</div>
+                            <div className="text-2xl font-bold text-blue-600">${game.price}</div>
                             <div className="text-sm text-gray-500">per player</div>
                           </div>
                         </div>
@@ -309,7 +313,7 @@ export default function GroupDetailPage() {
                             <Users className="w-4 h-4 mr-2" />
                             <span>{attendees}/{game.total_tickets} players</span>
                             {!isFullyBooked && (
-                              <span className="ml-2 text-sm text-green-600">
+                              <span className="ml-2 text-sm text-blue-600">
                                 ({spotsLeft} spots left)
                               </span>
                             )}

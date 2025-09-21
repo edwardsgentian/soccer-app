@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { PaymentModal } from "@/components/payment/payment-modal"
-import { Calendar, Clock, MapPin, Users, DollarSign } from "lucide-react"
+import { Calendar, Clock, MapPin, Users, DollarSign, Ticket } from "lucide-react"
 
 interface GameCardProps {
   gameName: string
@@ -63,8 +63,8 @@ export function GameCard({
     <>
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
-      <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-        <span className="text-6xl text-white opacity-80">⚽</span>
+      <div className="h-48 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
+        <Ticket className="w-16 h-16 text-white opacity-80" />
       </div>
 
       <div className="p-6">
@@ -95,7 +95,7 @@ export function GameCard({
             <Users className="w-4 h-4 mr-2" />
             <span>{attendees}/{maxAttendees} players</span>
             {!isFullyBooked && (
-              <span className="ml-2 text-sm text-green-600">
+              <span className="ml-2 text-sm text-blue-600">
                 ({spotsLeft} spots left)
               </span>
             )}
