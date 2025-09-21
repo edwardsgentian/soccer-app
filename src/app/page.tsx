@@ -1,10 +1,68 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/game-card";
 import { Header } from "@/components/header";
+import { supabase } from '@/lib/supabase'
+
+interface Game {
+  id: string
+  name: string
+  description?: string
+  game_date: string
+  game_time: string
+  location: string
+  price: number
+  total_tickets: number
+  available_tickets: number
+  created_at: string
+  groups: {
+    name: string
+    whatsapp_group?: string
+  }
+}
 
 export default function Home() {
+  const [games, setGames] = useState<Game[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetchUpcomingGames()
+  }, [])
+
+  const fetchUpcomingGames = async () => {
+    if (!supabase) {
+      setLoading(false)
+      return
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('games')
+        .select(`
+          *,
+          groups (
+            name,
+            whatsapp_group
+          )
+        `)
+        .gte('game_date', new Date().toISOString().split('T')[0])
+        .order('game_date', { ascending: true })
+        .limit(6) // Show only the first 6 upcoming games on homepage
+
+      if (error) {
+        console.error('Error fetching games:', error)
+        return
+      }
+
+      setGames(data || [])
+    } catch (err) {
+      console.error('Error fetching games:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Header />
@@ -52,39 +110,48 @@ export default function Home() {
           </div>
           
           {/* Game Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Sample game cards - will be replaced with real data */}
-            <GameCard 
-              gameName="Central Park Pickup"
-              date="2024-01-25"
-              time="18:00"
-              price={15}
-              location="Central Park, NYC"
-              attendees={8}
-              maxAttendees={12}
-              groupName="NYC Women&apos;s Soccer"
-            />
-            <GameCard 
-              gameName="Brooklyn Bridge Park"
-              date="2024-01-26"
-              time="19:00"
-              price={12}
-              location="Brooklyn Bridge Park"
-              attendees={5}
-              maxAttendees={10}
-              groupName="Brooklyn Ballers"
-            />
-            <GameCard 
-              gameName="Riverside Park Evening"
-              date="2024-01-27"
-              time="17:30"
-              price={18}
-              location="Riverside Park"
-              attendees={10}
-              maxAttendees={14}
-              groupName="Manhattan United"
-            />
-          </div>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+              <p className="text-gray-600 mt-4">Loading upcoming games...</p>
+            </div>
+          ) : games.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">⚽</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No upcoming games yet
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Be the first to create a game in your area!
+              </p>
+              <Button
+                onClick={() => window.location.href = '/groups'}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Create a Group
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {games.map((game) => {
+                const attendees = game.total_tickets - game.available_tickets
+                return (
+                  <GameCard 
+                    key={game.id}
+                    gameName={game.name}
+                    date={game.game_date}
+                    time={game.game_time}
+                    price={game.price}
+                    location={game.location}
+                    attendees={attendees}
+                    maxAttendees={game.total_tickets}
+                    groupName={game.groups.name}
+                    gameId={game.id}
+                  />
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* How It Works Section */}
