@@ -2,9 +2,14 @@
 
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
+import { AuthModal } from "@/components/auth/auth-modal"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const { user, player, signOut } = useAuth()
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -31,12 +36,39 @@ export function Header() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              Sign In
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              Create Account
-            </Button>
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">
+                  Hi, {player?.name || user.email}
+                </span>
+                <Button variant="outline" size="sm" onClick={signOut}>
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setAuthMode('signin')
+                    setAuthModalOpen(true)
+                  }}
+                >
+                  Sign In
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="bg-green-600 hover:bg-green-700"
+                  onClick={() => {
+                    setAuthMode('signup')
+                    setAuthModalOpen(true)
+                  }}
+                >
+                  Create Account
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -74,17 +106,52 @@ export function Header() {
                 My Profile
               </a>
               <div className="flex flex-col space-y-2 pt-4">
-                <Button variant="outline" size="sm">
-                  Sign In
-                </Button>
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                  Create Account
-                </Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-600 text-center">
+                      Hi, {player?.name || user.email}
+                    </div>
+                    <Button variant="outline" size="sm" onClick={signOut}>
+                      Sign Out
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => {
+                        setAuthMode('signin')
+                        setAuthModalOpen(true)
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      Sign In
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={() => {
+                        setAuthMode('signup')
+                        setAuthModalOpen(true)
+                        setIsMenuOpen(false)
+                      }}
+                    >
+                      Create Account
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
         )}
       </div>
+
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        initialMode={authMode}
+      />
     </header>
   )
 }
