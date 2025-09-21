@@ -18,7 +18,11 @@ export default function Home() {
             improve your skills, and have fun on the field.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-green-600 hover:bg-green-700">
+            <Button 
+              size="lg" 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => window.location.href = '/games'}
+            >
               Find Games Near You
             </Button>
             <Button 
@@ -37,7 +41,10 @@ export default function Home() {
             <h2 className="text-3xl font-bold text-gray-900">
               Upcoming Games
             </h2>
-            <Button variant="outline">
+            <Button 
+              variant="outline"
+              onClick={() => window.location.href = '/games'}
+            >
               View All Games
             </Button>
           </div>
