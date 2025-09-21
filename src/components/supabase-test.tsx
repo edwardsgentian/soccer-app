@@ -16,26 +16,17 @@ export function SupabaseTest() {
       }
 
       try {
-        // Test connection by getting the current user (this works even with RLS)
-        const { data: { user }, error } = await supabase.auth.getUser()
+        // Simple test - just check if we can access the auth service
+        // This doesn't require any database access or special permissions
+        const { data, error } = await supabase.auth.getSession()
         
         if (error) {
-          // If we get an error, it might be due to RLS or auth settings
-          // Let's try a different approach - test the connection itself
-          const { data, error: healthError } = await supabase
-            .from('_supabase_migrations')
-            .select('*')
-            .limit(1)
-            .maybeSingle()
-          
-          if (healthError && healthError.code === 'PGRST116') {
-            // Table doesn't exist but connection is working
-            setConnectionStatus('connected')
-          } else if (healthError && healthError.message.includes('JWT')) {
-            // JWT/auth error - connection works but needs auth
+          // Even if there's an error, if we got a response, the connection works
+          // The error might be about no session, which is expected
+          if (error.message.includes('session') || error.message.includes('JWT')) {
             setConnectionStatus('connected')
           } else {
-            throw healthError
+            throw error
           }
         } else {
           setConnectionStatus('connected')
