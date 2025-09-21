@@ -1,3 +1,5 @@
+'use client'
+
 import { Button } from "@/components/ui/button";
 import { GameCard } from "@/components/game-card";
 import { Header } from "@/components/header";
