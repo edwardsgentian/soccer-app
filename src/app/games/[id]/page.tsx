@@ -29,7 +29,6 @@ interface Game {
     description?: string
   }
 }
-
 interface Attendee {
   id: string
   created_at: string
