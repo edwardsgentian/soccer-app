@@ -45,11 +45,6 @@ export default function Home() {
           groups (
             name,
             whatsapp_group
-          ),
-          organizer:players!created_by (
-            id,
-            name,
-            photo_url
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -70,15 +65,17 @@ export default function Home() {
   }
   return (
     <div className="min-h-screen bg-white">
-      <Header />
+      <div className="h-24" style={{background: 'linear-gradient(to bottom, #e2e8f0 0%, #ffffff 100%)'}}>
+        <Header />
+      </div>
       
-      <div className="container mx-auto px-4 pt-[50px] py-16">
+      <div className="container mx-auto px-4 pt-8 py-16">
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
             Community<br />
             soccer games<br />
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
               start here.
             </span>
           </h1>
@@ -117,19 +114,18 @@ export default function Home() {
                 {games.map((game) => {
                   const attendees = game.total_tickets - game.available_tickets
                   return (
-              <GameCard
-                key={game.id}
-                gameName={game.name}
-                date={game.game_date}
-                time={game.game_time}
-                price={game.price}
-                location={game.location}
-                attendees={attendees}
-                maxAttendees={game.total_tickets}
-                groupName={game.groups.name}
-                gameId={game.id}
-                organizer={game.organizer}
-              />
+            <GameCard
+              key={game.id}
+              gameName={game.name}
+              date={game.game_date}
+              time={game.game_time}
+              price={game.price}
+              location={game.location}
+              attendees={attendees}
+              maxAttendees={game.total_tickets}
+              groupName={game.groups.name}
+              gameId={game.id}
+            />
                   )
                 })}
               </div>

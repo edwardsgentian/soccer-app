@@ -35,7 +35,7 @@ function CancelPageContent() {
               {gameId && (
                 <Button
                   onClick={() => window.location.href = `/games/${gameId}`}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full"
                   size="lg"
                 >
                   Try Again

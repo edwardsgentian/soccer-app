@@ -155,7 +155,6 @@ export default function GameDetailPage() {
             </p>
             <Button
               onClick={() => window.location.href = '/games'}
-              className="bg-green-600 hover:bg-green-700"
             >
               Back to Games
             </Button>
@@ -199,6 +198,26 @@ export default function GameDetailPage() {
                 
                 {/* Game Name */}
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">{game.name}</h1>
+
+                {/* Organizer */}
+                {game.organizer && (
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                      {game.organizer.photo_url ? (
+                        <img
+                          src={game.organizer.photo_url}
+                          alt={game.organizer.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-blue-600 font-semibold text-xs">
+                          {game.organizer.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm">Organized by {game.organizer.name}</span>
+                  </div>
+                )}
 
                 {/* Game Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -289,7 +308,7 @@ export default function GameDetailPage() {
                 className={`w-full ${
                   isFullyBooked 
                     ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-green-600 hover:bg-green-700'
+                    : ''
                 }`}
                 disabled={isFullyBooked}
                 size="lg"

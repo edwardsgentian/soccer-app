@@ -218,7 +218,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full"
           >
             {loading ? 'Creating Account...' : 'Create Account'}
           </Button>

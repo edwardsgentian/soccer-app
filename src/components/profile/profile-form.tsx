@@ -440,7 +440,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <div className="flex items-center">

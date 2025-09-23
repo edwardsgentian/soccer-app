@@ -81,7 +81,6 @@ export function GameManagementModal({
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-green-600 hover:bg-green-700"
                 >
                   Create New Game
                 </Button>

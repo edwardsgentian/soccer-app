@@ -39,6 +39,7 @@ interface CreatedGroup {
   name: string
   description: string
   created_at: string
+  created_by?: string
 }
 
 export default function ProfilePage() {
@@ -46,8 +47,11 @@ export default function ProfilePage() {
   const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
   const [createdGames, setCreatedGames] = useState<CreatedGame[]>([])
   const [createdGroups, setCreatedGroups] = useState<CreatedGroup[]>([])
+  const [memberGroups, setMemberGroups] = useState<CreatedGroup[]>([])
+  const [upcomingGames, setUpcomingGames] = useState<GameHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
+  const [activeTab, setActiveTab] = useState<'attended' | 'groups' | 'upcoming'>('upcoming')
 
   const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
@@ -142,21 +146,107 @@ export default function ProfilePage() {
     }
   }, [user])
 
+  const fetchMemberGroups = useCallback(async () => {
+    if (!supabase || !user) return
+
+    try {
+      // Get groups where the user has attended games
+      const { data, error } = await supabase
+        .from('game_attendees')
+        .select(`
+          games!inner (
+            group_id,
+            groups!inner (
+              id,
+              name,
+              description,
+              created_at,
+              created_by
+            )
+          )
+        `)
+        .eq('player_id', user.id)
+        .eq('payment_status', 'completed')
+
+      if (error) {
+        console.error('Error fetching member groups:', error)
+      } else {
+        // Extract unique groups from the data
+        const groupsMap = new Map()
+        data?.forEach((item: any) => {
+          const group = item.games.groups
+          if (!groupsMap.has(group.id)) {
+            groupsMap.set(group.id, group)
+          }
+        })
+        setMemberGroups(Array.from(groupsMap.values()))
+      }
+    } catch (err) {
+      console.error('Error fetching member groups:', err)
+    }
+  }, [user])
+
+  const fetchUpcomingGames = useCallback(async () => {
+    if (!supabase || !user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('game_attendees')
+        .select(`
+          id,
+          created_at,
+          amount_paid,
+          games!inner (
+            name,
+            game_date,
+            game_time,
+            location,
+            duration_hours,
+            groups (
+              name
+            )
+          )
+        `)
+        .eq('player_id', user.id)
+        .eq('payment_status', 'completed')
+        .gte('games.game_date', new Date().toISOString().split('T')[0])
+        .order('games.game_date', { ascending: true })
+
+      if (error) {
+        console.error('Error fetching upcoming games:', error)
+      } else {
+        setUpcomingGames((data as unknown as GameHistory[]) || [])
+      }
+    } catch (err) {
+      console.error('Error fetching upcoming games:', err)
+    }
+  }, [user])
+
   useEffect(() => {
     if (user && player) {
       fetchGameHistory()
       fetchCreatedGames()
       fetchCreatedGroups()
+      fetchMemberGroups()
+      fetchUpcomingGames()
     } else if (!authLoading) {
       setLoading(false)
     }
-  }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups])
+  }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
+    })
+  }
+
+  const formatTime = (timeString: string) => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
     })
   }
 
@@ -195,7 +285,6 @@ export default function ProfilePage() {
             </p>
             <Button
               onClick={() => window.location.href = '/'}
-              className="bg-green-600 hover:bg-green-700"
             >
               Go to Home
             </Button>
@@ -245,269 +334,194 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16">
-        {/* Profile Header */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            {/* Profile Photo */}
-            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center">
-              {player.photo_url ? (
-                <img
-                  src={player.photo_url}
-                  alt={player.name}
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-3xl text-gray-600 font-bold">
-                  {player.name.charAt(0).toUpperCase()}
-                </span>
-              )}
+      <div className="container mx-auto px-4 py-16 max-w-4xl">
+        {/* Profile Header - Luma Style */}
+        <div className="text-center mb-12">
+          {/* Profile Photo */}
+          <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            {player.photo_url ? (
+              <img
+                src={player.photo_url}
+                alt={player.name}
+                className="w-32 h-32 rounded-full object-cover"
+              />
+            ) : (
+              <span className="text-4xl text-gray-600 font-bold">
+                {player.name.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+
+          {/* Name */}
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{player.name}</h1>
+          
+          {/* Joined Date */}
+          <p className="text-gray-600 mb-8">Joined {formatDate(player.member_since)}</p>
+
+          {/* Simple Stats - Luma Style */}
+          <div className="flex justify-center gap-8 mb-8">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{createdGroups.length + createdGames.length}</div>
+              <div className="text-sm text-gray-600">Hosted</div>
             </div>
-
-            {/* Profile Info */}
-            <div className="flex-1">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{player.name}</h1>
-                  <p className="text-gray-600">{player.email}</p>
-                </div>
-                <Button
-                  onClick={() => setShowEditForm(true)}
-                  className="mt-4 md:mt-0 bg-green-600 hover:bg-green-700"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </div>
-
-              {/* Member Since */}
-              <div className="flex items-center text-gray-600 mb-2">
-                <Calendar className="w-4 h-4 mr-2" />
-                <span>Member since {formatDate(player.member_since)}</span>
-              </div>
-
-              {/* Location */}
-              {player.home_location && (
-                <div className="flex items-center text-gray-600 mb-2">
-                  <MapPin className="w-4 h-4 mr-2" />
-                  <span>{player.home_location}</span>
-                </div>
-              )}
-
-              {/* Instagram */}
-              {player.instagram && (
-                <div className="flex items-center text-gray-600">
-                  <Globe className="w-4 h-4 mr-2" />
-                  <a
-                    href={`https://instagram.com/${player.instagram.replace('@', '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-pink-600 transition-colors"
-                  >
-                    {player.instagram}
-                  </a>
-                </div>
-              )}
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{gameHistory.length}</div>
+              <div className="text-sm text-gray-600">Attended</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900">{calculateTotalHoursPlayed().toFixed(1)}</div>
+              <div className="text-sm text-gray-600">Hours Played</div>
             </div>
           </div>
+
+          {/* Edit Profile Button */}
+          <Button
+            onClick={() => setShowEditForm(true)}
+            variant="outline"
+            className="mb-8"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Game History */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Games</h2>
-              
-              {gameHistory.length === 0 ? (
-                <div className="text-center py-8">
-                  <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No games attended yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {gameHistory.map((game) => (
-                    <div key={game.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
-                        <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600 text-sm mb-2">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span>{game.games.location}</span>
-                      </div>
-                      <div className="flex items-center text-gray-600 text-sm">
-                        <Users className="w-4 h-4 mr-1" />
-                        <span>{game.games.groups.name}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* Tabbed Content Panel */}
+        <div>
+          {/* Tab Headers - Luma Style with Sliding Animation */}
+          <div className="px-6 pt-6 flex justify-center">
+            <div className="flex bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setActiveTab('upcoming')}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                  activeTab === 'upcoming'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Upcoming
+              </button>
+              <button
+                onClick={() => setActiveTab('attended')}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                  activeTab === 'attended'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Past
+              </button>
+              <button
+                onClick={() => setActiveTab('groups')}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                  activeTab === 'groups'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Groups
+              </button>
             </div>
           </div>
 
-          {/* Leadership Section */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Leadership</h3>
-              
-              {/* Created Groups */}
-              <div className="mb-6">
-                <h4 className="font-medium text-gray-900 mb-3">Groups Created</h4>
-                {createdGroups.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No groups created yet.</p>
-                ) : (
-                  <div className="space-y-2">
-                    {createdGroups.slice(0, 3).map((group) => (
-                      <div key={group.id} className="border border-gray-200 rounded-lg p-3">
-                        <h5 className="font-medium text-gray-900 text-sm">{group.name}</h5>
-                        <p className="text-gray-500 text-xs mt-1 line-clamp-2">{group.description}</p>
-                        <p className="text-gray-400 text-xs mt-2">{formatDate(group.created_at)}</p>
-                      </div>
-                    ))}
-                    {createdGroups.length > 3 && (
-                      <p className="text-gray-500 text-xs">+{createdGroups.length - 3} more groups</p>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Created Games */}
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'attended' && (
+              /* Attended Content */
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">Games Created</h4>
-                {createdGames.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No games created yet.</p>
+                {gameHistory.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No games attended yet.</p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
-                    {createdGames.slice(0, 3).map((game) => (
-                      <div key={game.id} className="border border-gray-200 rounded-lg p-3">
-                        <h5 className="font-medium text-gray-900 text-sm">{game.name}</h5>
-                        <p className="text-gray-500 text-xs mt-1">{game.groups.name}</p>
-                        <p className="text-gray-400 text-xs mt-2">{formatDate(game.game_date)}</p>
+                  <div className="space-y-4">
+                    {gameHistory.map((game) => (
+                      <div key={game.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
+                          <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm mb-2">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          <span>{game.games.location}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Users className="w-4 h-4 mr-1" />
+                          <span>{game.games.groups.name}</span>
+                        </div>
                       </div>
                     ))}
-                    {createdGames.length > 3 && (
-                      <p className="text-gray-500 text-xs">+{createdGames.length - 3} more games</p>
-                    )}
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Soccer Information */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Soccer Information</h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {player.playing_experience && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Playing Experience</h3>
-                    <p className="text-gray-600">{player.playing_experience}</p>
+
+            {activeTab === 'groups' && (
+              /* Groups Content */
+              <div>
+                {memberGroups.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No groups joined yet.</p>
                   </div>
-                )}
-
-                {player.skill_level && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Skill Level</h3>
-                    <p className="text-gray-600">{player.skill_level}</p>
-                  </div>
-                )}
-
-                {player.favorite_team && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Favorite Team</h3>
-                    <p className="text-gray-600">{player.favorite_team}</p>
-                  </div>
-                )}
-
-                {player.favorite_player && (
-                  <div>
-                    <h3 className="font-semibold text-gray-900 mb-1">Favorite Player</h3>
-                    <p className="text-gray-600">{player.favorite_player}</p>
-                  </div>
-                )}
-
-                {player.other_sports && (
-                  <div className="md:col-span-2">
-                    <h3 className="font-semibold text-gray-900 mb-1">Other Sports</h3>
-                    <p className="text-gray-600">{player.other_sports}</p>
+                ) : (
+                  <div className="space-y-4">
+                    {memberGroups.map((group) => (
+                      <div key={group.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900">{group.name}</h3>
+                          <span className="text-sm text-gray-500">
+                            {group.created_by === user?.id ? 'Organizer' : 'Member'}
+                          </span>
+                        </div>
+                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{group.description}</p>
+                        <p className="text-gray-400 text-xs">{formatDate(group.created_at)}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            )}
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            {/* Personal Information */}
-            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-              
-              <div className="space-y-3">
-                {player.languages && player.languages.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Languages</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {player.languages.map((lang, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-green-100 text-green-800 text-sm rounded-full"
-                        >
-                          {lang}
-                        </span>
-                      ))}
-                    </div>
+            {activeTab === 'upcoming' && (
+              /* Upcoming Games Content */
+              <div>
+                {upcomingGames.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">No upcoming games registered.</p>
                   </div>
-                )}
-
-                {player.time_in_nyc && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Time in NYC</h4>
-                    <p className="text-gray-600">{player.time_in_nyc}</p>
-                  </div>
-                )}
-
-                {player.phone && (
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-1">Phone</h4>
-                    <p className="text-gray-600">{player.phone}</p>
+                ) : (
+                  <div className="space-y-4">
+                    {upcomingGames.map((game) => (
+                      <div key={game.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
+                          <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm mb-2">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          <span>{formatTime(game.games.game_time)}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm mb-2">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          <span>{game.games.location}</span>
+                        </div>
+                        <div className="flex items-center text-gray-600 text-sm">
+                          <Users className="w-4 h-4 mr-1" />
+                          <span>{game.games.groups.name}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Stats */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Stats</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Games Attended</span>
-                  <span className="font-semibold text-green-600">{gameHistory.length}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Hours Played</span>
-                  <span className="font-semibold text-blue-600">{calculateTotalHoursPlayed().toFixed(1)}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Hosted</span>
-                  <span className="font-semibold text-purple-600">{createdGroups.length + createdGames.length}</span>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Total Spent</span>
-                  <span className="font-semibold text-green-600">
-                    ${gameHistory.reduce((sum, game) => sum + game.amount_paid, 0).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
+
+
       </div>
     </div>
   )

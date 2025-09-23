@@ -3,22 +3,18 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
-
-interface Group {
-  id: string
-  name: string
-}
+import { useAuth } from '@/contexts/auth-context'
 
 interface CreateGameFormProps {
-  groupId?: string
+  groupId: string
   onSuccess?: () => void
   onCancel?: () => void
 }
 
 export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormProps) {
-  const [groups, setGroups] = useState<Group[]>([])
+  const { player } = useAuth()
   const [formData, setFormData] = useState({
-    group_id: groupId || '',
+    group_id: groupId,
     name: '',
     description: '',
     game_date: '',
@@ -26,36 +22,14 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
     location: '',
     price: '',
     total_tickets: '',
+    duration_hours: '2.0',
     admin_password: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!groupId) {
-      fetchGroups()
-    }
-  }, [groupId])
+  // Group is always provided from group page context
 
-  const fetchGroups = async () => {
-    if (!supabase) return
-
-    try {
-      const { data, error } = await supabase
-        .from('groups')
-        .select('id, name')
-        .order('name')
-
-      if (error) {
-        console.error('Error fetching groups:', error)
-        return
-      }
-
-      setGroups(data || [])
-    } catch (err) {
-      console.error('Error fetching groups:', err)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,6 +71,8 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
           price: parseFloat(formData.price),
           total_tickets: parseInt(formData.total_tickets),
           available_tickets: parseInt(formData.total_tickets),
+          duration_hours: parseFloat(formData.duration_hours),
+          created_by: player?.id || null,
         })
 
       if (error) {
@@ -117,39 +93,17 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-          Create New Game
+      <div className="bg-white p-8">
+        <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          Create Game
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Group Selection */}
-          {!groupId && (
-            <div>
-              <label htmlFor="group_id" className="block text-sm font-medium text-gray-700 mb-1">
-                Select Group *
-              </label>
-              <select
-                id="group_id"
-                value={formData.group_id}
-                onChange={(e) => handleInputChange('group_id', e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              >
-                <option value="">Choose a group...</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-8">
 
           {/* Game Name */}
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-              Game Name *
+            <label htmlFor="name" className="block text-lg font-medium text-gray-900 mb-3">
+              Game Name
             </label>
             <input
               id="name"
@@ -157,31 +111,31 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
               placeholder="e.g., Central Park Pickup Game"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="description" className="block text-lg font-medium text-gray-900 mb-3">
               Description
             </label>
             <textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
               placeholder="Describe the game, skill level, format, etc."
             />
           </div>
 
           {/* Date and Time */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <label htmlFor="game_date" className="block text-sm font-medium text-gray-700 mb-1">
-                Game Date *
+              <label htmlFor="game_date" className="block text-lg font-medium text-gray-900 mb-3">
+                Start
               </label>
               <input
                 id="game_date"
@@ -190,13 +144,13 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
                 onChange={(e) => handleInputChange('game_date', e.target.value)}
                 required
                 min={new Date().toISOString().split('T')[0]}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
               />
             </div>
 
             <div>
-              <label htmlFor="game_time" className="block text-sm font-medium text-gray-700 mb-1">
-                Game Time *
+              <label htmlFor="game_time" className="block text-lg font-medium text-gray-900 mb-3">
+                Time
               </label>
               <input
                 id="game_time"
@@ -204,15 +158,15 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
                 value={formData.game_time}
                 onChange={(e) => handleInputChange('game_time', e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
               />
             </div>
           </div>
 
           {/* Location */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
-              Location *
+            <label htmlFor="location" className="block text-lg font-medium text-gray-900 mb-3">
+              Add Event Location
             </label>
             <input
               id="location"
@@ -220,8 +174,8 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
               value={formData.location}
               onChange={(e) => handleInputChange('location', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-              placeholder="e.g., Central Park, Great Lawn"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
+              placeholder="Offline location or virtual link"
             />
           </div>
 
@@ -262,10 +216,29 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
             </div>
           </div>
 
+          {/* Duration */}
+          <div>
+            <label htmlFor="duration_hours" className="block text-sm font-medium text-gray-700 mb-1">
+              Duration (hours) *
+            </label>
+            <input
+              id="duration_hours"
+              type="number"
+              value={formData.duration_hours}
+              onChange={(e) => handleInputChange('duration_hours', e.target.value)}
+              required
+              min="0.5"
+              max="8"
+              step="0.5"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              placeholder="2.0"
+            />
+          </div>
+
           {/* Admin Password */}
           <div>
-            <label htmlFor="admin_password" className="block text-sm font-medium text-gray-700 mb-1">
-              Group Admin Password *
+            <label htmlFor="admin_password" className="block text-lg font-medium text-gray-900 mb-3">
+              Group Admin Password
             </label>
             <input
               id="admin_password"
@@ -273,12 +246,9 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
               value={formData.admin_password}
               onChange={(e) => handleInputChange('admin_password', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent text-lg"
               placeholder="Enter group admin password"
             />
-            <p className="text-sm text-gray-500 mt-1">
-              Enter the admin password for the selected group
-            </p>
           </div>
 
           {error && (
@@ -287,21 +257,13 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
             </div>
           )}
 
-          <div className="flex gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              className="flex-1"
-            >
-              Cancel
-            </Button>
+          <div className="flex justify-center pt-4">
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="bg-black hover:bg-gray-800 text-white px-8 py-4 text-lg font-medium rounded-lg transition-all duration-200"
             >
-              {loading ? 'Creating Game...' : 'Create Game'}
+              {loading ? 'Creating...' : 'Create Game'}
             </Button>
           </div>
         </form>

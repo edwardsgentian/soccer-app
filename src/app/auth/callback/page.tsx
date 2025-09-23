@@ -117,7 +117,7 @@ function AuthCallbackContent() {
             <div className="space-y-4">
               <button
                 onClick={() => router.push('/')}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium mr-4"
+                className="text-white px-6 py-3 rounded-lg font-medium mr-4"
               >
                 Return to Home
               </button>

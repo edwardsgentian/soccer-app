@@ -59,3 +59,26 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Ensure gradient text works properly */
+.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+/* Force primary buttons to match Luma styling - black background, white text */
+button[class*="bg-primary"], 
+.bg-primary,
+[data-variant="default"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+button[class*="bg-primary"]:hover, 
+.bg-primary:hover,
+[data-variant="default"]:hover {
+  background-color: #333333 !important;
+  color: #ffffff !important;
+}
+

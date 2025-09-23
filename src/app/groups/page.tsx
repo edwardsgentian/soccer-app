@@ -17,6 +17,10 @@ interface Group {
   website?: string
   whatsapp_group?: string
   created_at: string
+  games?: Array<{
+    id: string
+    game_date: string
+  }>
 }
 
 export default function GroupsPage() {
@@ -43,8 +47,13 @@ export default function GroupsPage() {
             id,
             name,
             photo_url
+          ),
+          games!inner (
+            id,
+            game_date
           )
         `)
+        .gte('games.game_date', new Date().toISOString().split('T')[0])
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -145,10 +154,6 @@ function GroupCard({ group }: { group: Group }) {
         {/* Group Name */}
         <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
         
-        {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-          {group.description}
-        </p>
 
         {/* Tags */}
         {group.tags && group.tags.length > 0 && (
@@ -163,6 +168,12 @@ function GroupCard({ group }: { group: Group }) {
             ))}
           </div>
         )}
+
+        {/* Upcoming Games Count */}
+        <div className="flex items-center text-gray-600 text-sm mb-4">
+          <Calendar className="w-4 h-4 mr-2" />
+          <span>{group.games?.length || 0} upcoming games</span>
+        </div>
 
         {/* Social Links */}
         <div className="flex items-center gap-4 mb-4">
@@ -202,28 +213,13 @@ function GroupCard({ group }: { group: Group }) {
           <Button 
             asChild
             variant="outline" 
-            className="flex-1" 
+            className="w-full" 
             size="sm"
           >
             <Link href={`/groups/${group.id}`}>
-              View Games
+              View Group
             </Link>
           </Button>
-          {group.whatsapp_group && (
-            <Button
-              asChild
-              className="flex-1"
-              size="sm"
-            >
-              <a
-                href={group.whatsapp_group}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join WhatsApp
-              </a>
-            </Button>
-          )}
         </div>
       </div>
     </div>

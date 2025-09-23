@@ -248,7 +248,7 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1"
             >
               {loading ? 'Processing...' : `Pay $${game.price}`}
             </Button>

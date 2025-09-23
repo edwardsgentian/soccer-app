@@ -143,7 +143,6 @@ export default function GroupDetailPage() {
             </p>
             <Button
               onClick={() => window.location.href = '/groups'}
-              className="bg-green-600 hover:bg-green-700"
             >
               Back to Groups
             </Button>
@@ -180,6 +179,26 @@ export default function GroupDetailPage() {
               <div className="p-6">
                 {/* Group Name */}
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">{group.name}</h1>
+
+                {/* Organizer */}
+                {group.organizer && (
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                      {group.organizer.photo_url ? (
+                        <img
+                          src={group.organizer.photo_url}
+                          alt={group.organizer.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-blue-600 font-semibold text-xs">
+                          {group.organizer.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm">Organized by {group.organizer.name}</span>
+                  </div>
+                )}
                 
                 {/* Description */}
                 <p className="text-gray-600 mb-6">{group.description}</p>
@@ -249,13 +268,21 @@ export default function GroupDetailPage() {
 
           {/* Games List */}
           <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Upcoming Games
-              </h2>
-              <p className="text-gray-600">
-                Games organized by {group.name}
-              </p>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Upcoming Games
+                </h2>
+                <p className="text-gray-600">
+                  Games organized by {group.name}
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowCreateGameModal(true)}
+                size="sm"
+              >
+                Create Game
+              </Button>
             </div>
 
             {games.length === 0 ? (
@@ -268,10 +295,9 @@ export default function GroupDetailPage() {
                   This group hasn&apos;t scheduled any games yet.
                 </p>
                 <Button
-                  onClick={() => window.location.href = '/games'}
-                  variant="outline"
+                  onClick={() => setShowCreateGameModal(true)}
                 >
-                  Browse All Games
+                  Create First Game
                 </Button>
               </div>
             ) : (
@@ -344,7 +370,7 @@ export default function GroupDetailPage() {
                             className={`flex-1 ${
                               isFullyBooked 
                                 ? 'bg-gray-400 cursor-not-allowed' 
-                                : 'bg-green-600 hover:bg-green-700'
+                                : ''
                             }`}
                             disabled={isFullyBooked}
                           >
@@ -360,6 +386,16 @@ export default function GroupDetailPage() {
           </div>
         </div>
       </div>
+
+      <GameManagementModal
+        isOpen={showCreateGameModal}
+        onClose={() => setShowCreateGameModal(false)}
+        onGameCreated={() => {
+          setShowCreateGameModal(false)
+          fetchGroupDetails() // Refresh the group details
+        }}
+        groupId={groupId}
+      />
     </div>
   )
 }

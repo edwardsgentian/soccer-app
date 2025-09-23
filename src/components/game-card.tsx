@@ -130,7 +130,7 @@ export function GameCard({
             className={`flex-1 ${
               isFullyBooked 
                 ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-green-600 hover:bg-green-700'
+                : ''
             }`}
             size="sm"
             disabled={isFullyBooked}

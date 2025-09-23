@@ -16,7 +16,7 @@ export function GroupManagementModal({
   onClose, 
   onGroupCreated 
 }: GroupManagementModalProps) {
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(true)
 
   if (!isOpen) return null
 
@@ -78,7 +78,6 @@ export function GroupManagementModal({
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-green-600 hover:bg-green-700"
                 >
                   Create New Group
                 </Button>

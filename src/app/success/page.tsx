@@ -98,7 +98,7 @@ export default function SuccessPage() {
               <div className="space-y-4">
                 <Button
                   onClick={() => window.location.href = '/games'}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full"
                   size="lg"
                 >
                   View All Games
@@ -156,7 +156,7 @@ export default function SuccessPage() {
             <div className="space-y-4">
               <Button
                 onClick={() => window.location.href = '/games'}
-                className="w-full bg-green-600 hover:bg-green-700"
+                className="w-full"
                 size="lg"
               >
                 View All Games

@@ -184,12 +184,6 @@ function GameCard({ game }: { game: Game }) {
           </div>
         </div>
 
-        {/* Description */}
-        {game.description && (
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-            {game.description}
-          </p>
-        )}
 
         {/* Action Buttons */}
         <div className="flex gap-2">
@@ -217,25 +211,6 @@ function GameCard({ game }: { game: Game }) {
           </Button>
         </div>
 
-        {/* WhatsApp Link */}
-        {game.groups.whatsapp_group && (
-          <div className="mt-4 pt-4 border-t">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              <a
-                href={game.groups.whatsapp_group}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join WhatsApp Group
-              </a>
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )
