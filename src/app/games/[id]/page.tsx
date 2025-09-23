@@ -18,6 +18,11 @@ interface Game {
   total_tickets: number
   available_tickets: number
   created_at: string
+  organizer?: {
+    id: string
+    name: string
+    photo_url?: string
+  }
   groups: {
     name: string
     whatsapp_group?: string
