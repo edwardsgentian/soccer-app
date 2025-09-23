@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { supabase } from '@/lib/supabase'
-import { getStripe } from '@/lib/stripe'
+// Stripe integration temporarily removed
 
 interface Game {
   id: string
@@ -81,19 +81,9 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
 
       const { sessionId } = await response.json()
 
-      // Redirect to Stripe Checkout
-      const stripe = await getStripe()
-      if (!stripe) {
-        throw new Error('Stripe not initialized')
-      }
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId,
-      })
-
-      if (stripeError) {
-        throw stripeError
-      }
+      // Payment processing temporarily disabled
+      // TODO: Re-implement payment processing
+      alert('Payment processing is temporarily disabled. Please contact the organizer directly.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {

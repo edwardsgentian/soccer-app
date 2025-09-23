@@ -84,28 +84,8 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
           console.error('Error creating player profile:', profileError)
           // Don&apos;t throw here - user is created, profile can be updated later
         } else {
-          // Create Stripe customer for the new user
-          try {
-            const response = await fetch('/api/create-stripe-customer', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: formData.email,
-                name: formData.name,
-                phone: formData.phone,
-              }),
-            })
-
-            if (!response.ok) {
-              console.error('Failed to create Stripe customer')
-              // Don't fail the signup if Stripe customer creation fails
-            }
-          } catch (stripeError) {
-            console.error('Error creating Stripe customer:', stripeError)
-            // Don't fail the signup if Stripe customer creation fails
-          }
+          // Stripe customer creation temporarily disabled
+          // TODO: Re-implement Stripe customer creation
         }
       }
 
