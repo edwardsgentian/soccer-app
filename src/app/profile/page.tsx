@@ -16,15 +16,36 @@ interface GameHistory {
     name: string
     game_date: string
     location: string
+    duration_hours: number
     groups: {
       name: string
     }
   }
 }
 
+interface CreatedGame {
+  id: string
+  name: string
+  game_date: string
+  duration_hours: number
+  groups: {
+    name: string
+  }
+  created_at: string
+}
+
+interface CreatedGroup {
+  id: string
+  name: string
+  description: string
+  created_at: string
+}
+
 export default function ProfilePage() {
   const { user, player, loading: authLoading } = useAuth()
   const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
+  const [createdGames, setCreatedGames] = useState<CreatedGame[]>([])
+  const [createdGroups, setCreatedGroups] = useState<CreatedGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
 
@@ -45,6 +66,7 @@ export default function ProfilePage() {
             name,
             game_date,
             location,
+            duration_hours,
             groups (
               name
             )
@@ -66,13 +88,69 @@ export default function ProfilePage() {
     }
   }, [user])
 
+  const fetchCreatedGames = useCallback(async () => {
+    if (!supabase || !user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('games')
+        .select(`
+          id,
+          name,
+          game_date,
+          duration_hours,
+          created_at,
+          groups (
+            name
+          )
+        `)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching created games:', error)
+      } else {
+        setCreatedGames((data as unknown as CreatedGame[]) || [])
+      }
+    } catch (err) {
+      console.error('Error fetching created games:', err)
+    }
+  }, [user])
+
+  const fetchCreatedGroups = useCallback(async () => {
+    if (!supabase || !user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('groups')
+        .select(`
+          id,
+          name,
+          description,
+          created_at
+        `)
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) {
+        console.error('Error fetching created groups:', error)
+      } else {
+        setCreatedGroups((data as unknown as CreatedGroup[]) || [])
+      }
+    } catch (err) {
+      console.error('Error fetching created groups:', err)
+    }
+  }, [user])
+
   useEffect(() => {
     if (user && player) {
       fetchGameHistory()
+      fetchCreatedGames()
+      fetchCreatedGroups()
     } else if (!authLoading) {
       setLoading(false)
     }
-  }, [user, player, authLoading, fetchGameHistory])
+  }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -82,11 +160,17 @@ export default function ProfilePage() {
     })
   }
 
+  const calculateTotalHoursPlayed = () => {
+    return gameHistory.reduce((total, history) => {
+      return total + (history.games.duration_hours || 0)
+    }, 0)
+  }
+
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading profile...</p>
@@ -98,9 +182,9 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
             <div className="text-6xl mb-4">👤</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -123,9 +207,9 @@ export default function ProfilePage() {
 
   if (showEditForm) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <ProfileForm
             isEditing={true}
             onSuccess={() => setShowEditForm(false)}
@@ -138,9 +222,9 @@ export default function ProfilePage() {
 
   if (!player) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Complete Your Profile
@@ -158,15 +242,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Profile Header */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             {/* Profile Photo */}
-            <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center">
               {player.photo_url ? (
                 <img
                   src={player.photo_url}
@@ -174,7 +258,7 @@ export default function ProfilePage() {
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
-                <span className="text-3xl text-white font-bold">
+                <span className="text-3xl text-gray-600 font-bold">
                   {player.name.charAt(0).toUpperCase()}
                 </span>
               )}
@@ -228,9 +312,91 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Soccer Information */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Game History */}
           <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-lg p-6">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">Upcoming Games</h2>
+              
+              {gameHistory.length === 0 ? (
+                <div className="text-center py-8">
+                  <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No games attended yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {gameHistory.map((game) => (
+                    <div key={game.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
+                        <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600 text-sm mb-2">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        <span>{game.games.location}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600 text-sm">
+                        <Users className="w-4 h-4 mr-1" />
+                        <span>{game.games.groups.name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Leadership Section */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Leadership</h3>
+              
+              {/* Created Groups */}
+              <div className="mb-6">
+                <h4 className="font-medium text-gray-900 mb-3">Groups Created</h4>
+                {createdGroups.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No groups created yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {createdGroups.slice(0, 3).map((group) => (
+                      <div key={group.id} className="border border-gray-200 rounded-lg p-3">
+                        <h5 className="font-medium text-gray-900 text-sm">{group.name}</h5>
+                        <p className="text-gray-500 text-xs mt-1 line-clamp-2">{group.description}</p>
+                        <p className="text-gray-400 text-xs mt-2">{formatDate(group.created_at)}</p>
+                      </div>
+                    ))}
+                    {createdGroups.length > 3 && (
+                      <p className="text-gray-500 text-xs">+{createdGroups.length - 3} more groups</p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Created Games */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Games Created</h4>
+                {createdGames.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No games created yet.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {createdGames.slice(0, 3).map((game) => (
+                      <div key={game.id} className="border border-gray-200 rounded-lg p-3">
+                        <h5 className="font-medium text-gray-900 text-sm">{game.name}</h5>
+                        <p className="text-gray-500 text-xs mt-1">{game.groups.name}</p>
+                        <p className="text-gray-400 text-xs mt-2">{formatDate(game.game_date)}</p>
+                      </div>
+                    ))}
+                    {createdGames.length > 3 && (
+                      <p className="text-gray-500 text-xs">+{createdGames.length - 3} more games</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Soccer Information */}
+          <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">Soccer Information</h2>
               
@@ -270,49 +436,6 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
-            </div>
-
-            {/* Game History */}
-            <div className="bg-white rounded-lg shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Game History</h2>
-              
-              {gameHistory.length === 0 ? (
-                <div className="text-center py-8">
-                  <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600">No games attended yet.</p>
-                  <Button
-                    onClick={() => window.location.href = '/games'}
-                    className="mt-4 bg-green-600 hover:bg-green-700"
-                  >
-                    Find Games
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {gameHistory.map((game) => (
-                    <div key={game.id} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
-                        <span className="text-green-600 font-semibold">${game.amount_paid}</span>
-                      </div>
-                      <div className="text-sm text-gray-600 space-y-1">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-2" />
-                          <span>{formatDate(game.games.game_date)}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-2" />
-                          <span>{game.games.location}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Users className="w-4 h-4 mr-2" />
-                          <span>{game.games.groups.name}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
 
@@ -366,6 +489,16 @@ export default function ProfilePage() {
                 </div>
                 
                 <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Hours Played</span>
+                  <span className="font-semibold text-blue-600">{calculateTotalHoursPlayed().toFixed(1)}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">Hosted</span>
+                  <span className="font-semibold text-purple-600">{createdGroups.length + createdGames.length}</span>
+                </div>
+                
+                <div className="flex items-center justify-between">
                   <span className="text-gray-600">Total Spent</span>
                   <span className="font-semibold text-green-600">
                     ${gameHistory.reduce((sum, game) => sum + game.amount_paid, 0).toFixed(2)}
@@ -379,3 +512,4 @@ export default function ProfilePage() {
     </div>
   )
 }
+

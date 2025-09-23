@@ -37,7 +37,14 @@ export default function GroupsPage() {
     try {
       const { data, error } = await supabase
         .from('groups')
-        .select('*')
+        .select(`
+          *,
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
+          )
+        `)
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -58,10 +65,10 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -74,7 +81,6 @@ export default function GroupsPage() {
           </div>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="bg-green-600 hover:bg-green-700"
           >
             Create Group
           </Button>
@@ -97,7 +103,6 @@ export default function GroupsPage() {
             </p>
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-green-600 hover:bg-green-700"
             >
               Create First Group
             </Button>
@@ -132,8 +137,8 @@ function GroupCard({ group }: { group: Group }) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Group Header */}
-      <div className="h-32 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-        <span className="text-4xl text-white opacity-80">⚽</span>
+      <div className="h-32 bg-gray-50 flex items-center justify-center">
+        <span className="text-2xl text-gray-400">⚽</span>
       </div>
 
       <div className="p-6">
@@ -151,7 +156,7 @@ function GroupCard({ group }: { group: Group }) {
             {group.tags.map((tag, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
               >
                 {tag}
               </span>
@@ -191,6 +196,7 @@ function GroupCard({ group }: { group: Group }) {
           <span>Created {formatDate(group.created_at)}</span>
         </div>
 
+
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
@@ -206,7 +212,7 @@ function GroupCard({ group }: { group: Group }) {
           {group.whatsapp_group && (
             <Button
               asChild
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1"
               size="sm"
             >
               <a

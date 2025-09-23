@@ -18,7 +18,7 @@ export function GameManagementModal({
   onGameCreated,
   groupId 
 }: GameManagementModalProps) {
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(true)
 
   if (!isOpen) return null
 

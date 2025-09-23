@@ -59,6 +59,11 @@ export default function GameDetailPage() {
             name,
             whatsapp_group,
             description
+          ),
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
           )
         `)
         .eq('id', gameId)
@@ -123,7 +128,7 @@ export default function GameDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
@@ -137,7 +142,7 @@ export default function GameDetailPage() {
 
   if (error || !game) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
@@ -184,8 +189,8 @@ export default function GameDetailPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               {/* Game Image */}
-              <div className="h-64 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                <Ticket className="w-20 h-20 text-white opacity-80" />
+              <div className="h-48 bg-gray-50 flex items-center justify-center">
+                <Ticket className="w-12 h-12 text-gray-400" />
               </div>
 
               <div className="p-6">

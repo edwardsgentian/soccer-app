@@ -16,6 +16,11 @@ interface GameCardProps {
   maxAttendees: number
   groupName: string
   gameId?: string
+  organizer?: {
+    id: string
+    name: string
+    photo_url?: string
+  }
 }
 
 export function GameCard({
@@ -27,7 +32,8 @@ export function GameCard({
   attendees,
   maxAttendees,
   groupName,
-  gameId = 'sample-game-id'
+  gameId = 'sample-game-id',
+  organizer
 }: GameCardProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const formatDate = (dateString: string) => {
@@ -63,8 +69,8 @@ export function GameCard({
     <>
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
-      <div className="h-48 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-        <Ticket className="w-16 h-16 text-white opacity-80" />
+      <div className="h-32 bg-gray-50 flex items-center justify-center">
+        <Ticket className="w-8 h-8 text-gray-400" />
       </div>
 
       <div className="p-6">
@@ -90,6 +96,7 @@ export function GameCard({
             <MapPin className="w-4 h-4 mr-2" />
             <span className="truncate">{location}</span>
           </div>
+          
           
           <div className="flex items-center text-gray-600">
             <Users className="w-4 h-4 mr-2" />

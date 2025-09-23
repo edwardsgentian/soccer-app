@@ -5,6 +5,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { AuthModal } from "@/components/auth/auth-modal"
+import { Citrus } from "lucide-react"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -13,17 +14,18 @@ export function Header() {
   const { user, player, signOut } = useAuth()
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-transparent">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-            <span className="text-2xl">⚽</span>
-            <span className="text-xl font-bold text-gray-900">SoccerMeetups</span>
-          </Link>
+          <div className="flex-1">
+            <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
+              <Citrus className="w-8 h-8 text-black" />
+            </Link>
+          </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-8">
+          {/* Desktop Navigation - Centered */}
+          <nav className="hidden md:flex items-center space-x-8 flex-1 justify-center">
             <Link href="/games" className="text-gray-600 hover:text-gray-900 transition-colors">
               Games
             </Link>
@@ -31,12 +33,12 @@ export function Header() {
               Groups
             </Link>
             <Link href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
-              My Profile
+              Profile
             </Link>
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center space-x-4 flex-1 justify-end">
             {user ? (
               <div className="flex items-center space-x-4">
                 <span className="text-sm text-gray-600">
@@ -60,7 +62,6 @@ export function Header() {
                 </Button>
                 <Button 
                   size="sm" 
-                  className="bg-green-600 hover:bg-green-700"
                   onClick={() => {
                     setAuthMode('signup')
                     setAuthModalOpen(true)
@@ -131,7 +132,6 @@ export function Header() {
                     </Button>
                     <Button 
                       size="sm" 
-                      className="bg-green-600 hover:bg-green-700"
                       onClick={() => {
                         setAuthMode('signup')
                         setAuthModalOpen(true)

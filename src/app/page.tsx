@@ -45,6 +45,11 @@ export default function Home() {
           groups (
             name,
             whatsapp_group
+          ),
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -64,50 +69,26 @@ export default function Home() {
     }
   }
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 pt-[50px] py-16">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
-            ⚽ Women&apos;s Soccer Meetups
+        <div className="text-center mb-20">
+          <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
+            Community<br />
+            soccer games<br />
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent">
+              start here.
+            </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Join pickup soccer games in New York. Connect with fellow players, 
-            improve your skills, and have fun on the field.
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
+            Create a game or find fun, soccer groups near you.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg" 
-              className="bg-green-600 hover:bg-green-700"
-              onClick={() => window.location.href = '/games'}
-            >
-              Find Games Near You
-            </Button>
-            <Button 
-              size="lg" 
-              variant="outline"
-              onClick={() => window.location.href = '/groups'}
-            >
-              Create a Group
-            </Button>
-          </div>
         </div>
 
         {/* Upcoming Games Section */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">
-              Upcoming Games
-            </h2>
-            <Button 
-              variant="outline"
-              onClick={() => window.location.href = '/games'}
-            >
-              View All Games
-            </Button>
-          </div>
           
           {/* Game Cards Grid */}
           {loading ? (
@@ -126,31 +107,43 @@ export default function Home() {
               </p>
               <Button
                 onClick={() => window.location.href = '/groups'}
-                className="bg-green-600 hover:bg-green-700"
               >
                 Create a Group
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {games.map((game) => {
-                const attendees = game.total_tickets - game.available_tickets
-                return (
-                  <GameCard 
-                    key={game.id}
-                    gameName={game.name}
-                    date={game.game_date}
-                    time={game.game_time}
-                    price={game.price}
-                    location={game.location}
-                    attendees={attendees}
-                    maxAttendees={game.total_tickets}
-                    groupName={game.groups.name}
-                    gameId={game.id}
-                  />
-                )
-              })}
-            </div>
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {games.map((game) => {
+                  const attendees = game.total_tickets - game.available_tickets
+                  return (
+              <GameCard
+                key={game.id}
+                gameName={game.name}
+                date={game.game_date}
+                time={game.game_time}
+                price={game.price}
+                location={game.location}
+                attendees={attendees}
+                maxAttendees={game.total_tickets}
+                groupName={game.groups.name}
+                gameId={game.id}
+                organizer={game.organizer}
+              />
+                  )
+                })}
+              </div>
+              
+              {/* View All Games Button - Centered below tiles */}
+              <div className="text-center mt-8">
+                <Button 
+                  variant="outline"
+                  onClick={() => window.location.href = '/games'}
+                >
+                  View All Games
+                </Button>
+              </div>
+            </>
           )}
         </div>
 

@@ -32,6 +32,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     if (isEditing && player) {
@@ -85,34 +86,71 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         time_in_nyc: formData.time_in_nyc || null,
       }
 
-      if (isEditing) {
-        // Update existing profile
-        const { error } = await supabase
-          .from('players')
-          .update(profileData)
-          .eq('id', user.id)
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out. Please check your internet connection and try again.')), 30000) // 30 second timeout
+      })
 
-        if (error) {
-          throw error
-        }
-      } else {
-        // Create new profile
-        const { error } = await supabase
-          .from('players')
-          .insert({
-            id: user.id,
-            ...profileData,
-          })
+      // Create the database operation promise
+      const dbOperation = async () => {
+        if (isEditing) {
+          // Update existing profile
+          const { error } = await supabase
+            .from('players')
+            .update(profileData)
+            .eq('id', user.id)
 
-        if (error) {
-          throw error
+          if (error) {
+            throw error
+          }
+        } else {
+          // Create new profile
+          const { error } = await supabase
+            .from('players')
+            .insert({
+              id: user.id,
+              ...profileData,
+            })
+
+          if (error) {
+            throw error
+          }
         }
       }
 
-      await refreshPlayer()
+      // Race between the database operation and timeout
+      await Promise.race([dbOperation(), timeoutPromise])
+
+      // If we get here, the database operation succeeded
+      try {
+        await refreshPlayer()
+      } catch (refreshError) {
+        console.warn('Profile saved but failed to refresh:', refreshError)
+        // Don't throw here - the profile was saved successfully
+      }
+      
+      // Reset retry count on success
+      setRetryCount(0)
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred')
+      console.error('Profile save error:', err)
+      
+      // Provide more specific error messages
+      if (err instanceof Error) {
+        if (err.message.includes('timeout')) {
+          setError('Request timed out. Please check your internet connection and try again.')
+        } else if (err.message.includes('network') || err.message.includes('fetch')) {
+          setError('Network error. Please check your internet connection and try again.')
+        } else if (err.message.includes('duplicate') || err.message.includes('unique')) {
+          setError('This email is already registered. Please use a different email address.')
+        } else if (err.message.includes('permission') || err.message.includes('unauthorized')) {
+          setError('Permission denied. Please sign out and sign back in.')
+        } else {
+          setError(`Error saving profile: ${err.message}`)
+        }
+      } else {
+        setError('An unexpected error occurred. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -120,6 +158,16 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1)
+    setError(null)
+    // Trigger form submission again
+    const form = document.querySelector('form')
+    if (form) {
+      form.requestSubmit()
+    }
   }
 
   return (
@@ -356,7 +404,25 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
 
           {error && (
             <div className="text-red-600 text-sm bg-red-50 p-3 rounded-md">
-              {error}
+              <div className="flex items-center justify-between">
+                <span>{error}</span>
+                {(error.includes('timeout') || error.includes('network') || error.includes('unexpected')) && retryCount < 3 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRetry}
+                    className="ml-2 text-red-600 border-red-300 hover:bg-red-100"
+                  >
+                    Retry
+                  </Button>
+                )}
+              </div>
+              {retryCount > 0 && (
+                <div className="text-xs text-red-500 mt-1">
+                  Retry attempt: {retryCount}/3
+                </div>
+              )}
             </div>
           )}
 
@@ -374,9 +440,16 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1 bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Saving...' : (isEditing ? 'Update Profile' : 'Save Profile')}
+              {loading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </div>
+              ) : (
+                isEditing ? 'Update Profile' : 'Save Profile'
+              )}
             </Button>
           </div>
         </form>

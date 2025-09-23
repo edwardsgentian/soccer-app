@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket } from 'lucide-react'
+import { GameManagementModal } from '@/components/games/game-management-modal'
 
 interface Group {
   id: string
@@ -40,6 +41,7 @@ export default function GroupDetailPage() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showCreateGameModal, setShowCreateGameModal] = useState(false)
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -51,7 +53,14 @@ export default function GroupDetailPage() {
       // Fetch group details
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .select('*')
+        .select(`
+          *,
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
+          )
+        `)
         .eq('id', groupId)
         .single()
 
@@ -107,9 +116,9 @@ export default function GroupDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading group details...</p>
@@ -121,9 +130,9 @@ export default function GroupDetailPage() {
 
   if (error || !group) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
             <div className="text-6xl mb-4">⚽</div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
@@ -145,10 +154,10 @@ export default function GroupDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Back Button */}
         <Button
           variant="outline"
@@ -164,8 +173,8 @@ export default function GroupDetailPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-8">
               {/* Group Header */}
-              <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                <span className="text-8xl text-white opacity-80">⚽</span>
+              <div className="h-32 bg-gray-50 flex items-center justify-center">
+                <span className="text-2xl text-gray-400">⚽</span>
               </div>
 
               <div className="p-6">
@@ -275,8 +284,8 @@ export default function GroupDetailPage() {
                   return (
                     <div key={game.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                       {/* Game Header */}
-                      <div className="h-24 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                        <Ticket className="w-8 h-8 text-white opacity-80" />
+                      <div className="h-24 bg-gray-50 flex items-center justify-center">
+                        <Ticket className="w-6 h-6 text-gray-400" />
                       </div>
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">

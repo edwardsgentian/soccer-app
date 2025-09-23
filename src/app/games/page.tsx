@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { GameManagementModal } from '@/components/games/game-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, Users, DollarSign, Eye, Ticket } from 'lucide-react'
@@ -28,7 +27,6 @@ interface Game {
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     fetchGames()
@@ -66,9 +64,6 @@ export default function GamesPage() {
     }
   }
 
-  const handleGameCreated = () => {
-    fetchGames() // Refresh the games list
-  }
 
   // const formatDate = (dateString: string) => {
   //   const date = new Date(dateString)
@@ -88,26 +83,18 @@ export default function GamesPage() {
   // }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Upcoming Games
-            </h1>
-            <p className="text-gray-600">
-              Find and join soccer games in your area
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Create Game
-          </Button>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Upcoming Games
+          </h1>
+          <p className="text-gray-600">
+            Find and join soccer games in your area
+          </p>
         </div>
 
         {/* Games Grid */}
@@ -123,13 +110,12 @@ export default function GamesPage() {
               No upcoming games
             </h3>
             <p className="text-gray-600 mb-6">
-              Be the first to create a game in your area!
+              Join a group to create and participate in games!
             </p>
             <Button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-green-600 hover:bg-green-700"
+              onClick={() => window.location.href = '/groups'}
             >
-              Create First Game
+              Browse Groups
             </Button>
           </div>
         ) : (
@@ -141,11 +127,6 @@ export default function GamesPage() {
         )}
       </div>
 
-      <GameManagementModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onGameCreated={handleGameCreated}
-      />
     </div>
   )
 }
@@ -158,8 +139,8 @@ function GameCard({ game }: { game: Game }) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
-      <div className="h-48 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-        <Ticket className="w-16 h-16 text-white opacity-80" />
+      <div className="h-32 bg-gray-50 flex items-center justify-center">
+        <Ticket className="w-8 h-8 text-gray-400" />
       </div>
 
       <div className="p-6">
@@ -185,6 +166,7 @@ function GameCard({ game }: { game: Game }) {
             <MapPin className="w-4 h-4 mr-2" />
             <span className="truncate">{game.location}</span>
           </div>
+          
           
           <div className="flex items-center text-gray-600">
             <Users className="w-4 h-4 mr-2" />
@@ -226,7 +208,7 @@ function GameCard({ game }: { game: Game }) {
             className={`flex-1 ${
               isFullyBooked 
                 ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-green-600 hover:bg-green-700'
+                : ''
             }`}
             size="sm"
             disabled={isFullyBooked}

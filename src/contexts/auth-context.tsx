@@ -41,11 +41,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return
 
     try {
-      const { data, error } = await supabase
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out')), 30000) // 30 second timeout
+      })
+
+      // Create the database query promise
+      // First get the user's email from auth, then find the player record by email
+      const { data: authUser } = await supabase.auth.getUser()
+      if (!authUser.user?.email) {
+        console.error('No email found for user')
+        return
+      }
+      
+      const queryPromise = supabase
         .from('players')
         .select('*')
-        .eq('id', userId)
+        .eq('email', authUser.user.email)
         .single()
+
+      // Race between the query and timeout
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
 
       if (error) {
         console.error('Error fetching player:', error)
@@ -55,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setPlayer(data)
     } catch (err) {
       console.error('Error fetching player:', err)
+      // Don't throw here - just log the error and continue
     }
   }
 

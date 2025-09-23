@@ -74,7 +74,9 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Payment API error:', errorData)
+        throw new Error(`Failed to create checkout session: ${errorData.error || 'Unknown error'}`)
       }
 
       const { sessionId } = await response.json()
