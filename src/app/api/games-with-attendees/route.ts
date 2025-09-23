@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       // Count completed attendees
       if (item.game_attendees && Array.isArray(item.game_attendees)) {
         const completedAttendees = item.game_attendees.filter(
-          (attendee: any) => attendee.payment_status === 'completed'
+          (attendee: { payment_status: string }) => attendee.payment_status === 'completed'
         ).length
         
         const currentGame = gamesMap.get(item.id)

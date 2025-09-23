@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       // Race between the query and timeout
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as { data: any; error: any }
 
       if (error) {
         console.error('Error fetching player:', error)
