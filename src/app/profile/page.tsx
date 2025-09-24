@@ -175,10 +175,11 @@ export default function ProfilePage() {
       const groupsMap = new Map()
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 data?.forEach((item: any) => {
-  const group = item.games.groups
-          groupsMap.set(group.id, group)
-        }
-      })
+  const group = (item as any).games.groups
+  if (!groupsMap.has(group.id)) {
+    groupsMap.set(group.id, group)
+  }
+})
       setMemberGroups(Array.from(groupsMap.values()))
     }
   } catch (err) {
