@@ -147,46 +147,44 @@ export default function ProfilePage() {
   }, [user])
 
   const fetchMemberGroups = useCallback(async () => {
-    if (!supabase || !user) return
+  if (!supabase || !user) return
 
-    try {
-      // Get groups where the user has attended games
-      const { data, error } = await supabase
-        .from('game_attendees')
-        .select(`
-          games!inner (
-            group_id,
-            groups!inner (
-              id,
-              name,
-              description,
-              created_at,
-              created_by
-            )
+  try {
+    // Get groups where the user has attended games
+    const { data, error } = await supabase
+      .from('game_attendees')
+      .select(`
+        games!inner (
+          group_id,
+          groups!inner (
+            id,
+            name,
+            description,
+            created_at,
+            created_by
           )
-        `)
-        .eq('player_id', user.id)
-        .eq('payment_status', 'completed')
+        )
+      `)
+      .eq('player_id', user.id)
+      .eq('payment_status', 'completed')
 
-      if (error) {
-        console.error('Error fetching member groups:', error)
-      } else {
-        // Extract unique groups from the data
-        const groupsMap = new Map()
-data?.forEach((item: unknown) => {
- data?.forEach((item: unknown) => {
-  const group = (item as any).games.groups
-          if (!groupsMap.has(group.id)) {
-            groupsMap.set(group.id, group)
-          }
-        })
-        setMemberGroups(Array.from(groupsMap.values()))
-      }
-    } catch (err) {
-      console.error('Error fetching member groups:', err)
+    if (error) {
+      console.error('Error fetching member groups:', error)
+    } else {
+      // Extract unique groups from the data
+      const groupsMap = new Map()
+      data?.forEach((item: any) => {
+        const group = item.games.groups
+        if (!groupsMap.has(group.id)) {
+          groupsMap.set(group.id, group)
+        }
+      })
+      setMemberGroups(Array.from(groupsMap.values()))
     }
-  }, [user])
-
+  } catch (err) {
+    console.error('Error fetching member groups:', err)
+  }
+}, [user])
   const fetchUpcomingGames = useCallback(async () => {
     if (!supabase || !user) return
 
