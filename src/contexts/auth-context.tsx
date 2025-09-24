@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      setPlayer(data)
+      setPlayer(data as Player | null)
     } catch (err) {
       console.error('Error fetching player:', err)
       // Don't throw here - just log the error and continue
