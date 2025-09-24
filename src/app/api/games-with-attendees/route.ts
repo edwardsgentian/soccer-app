@@ -17,15 +17,9 @@ export async function GET() {
         available_tickets,
         duration_hours,
         created_at,
-        created_by,
         groups (
           name,
           whatsapp_group
-        ),
-        organizer:players!created_by (
-          id,
-          name,
-          photo_url
         ),
         game_attendees (
           id,
@@ -57,9 +51,7 @@ export async function GET() {
           available_tickets: item.available_tickets,
           duration_hours: item.duration_hours,
           created_at: item.created_at,
-          created_by: item.created_by,
           groups: item.groups,
-          organizer: item.organizer,
           actualAttendees: 0
         })
       }

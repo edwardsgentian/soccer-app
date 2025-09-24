@@ -24,12 +24,6 @@ export async function GET(request: NextRequest) {
         available_tickets,
         duration_hours,
         created_at,
-        created_by,
-        organizer:players!created_by (
-          id,
-          name,
-          photo_url
-        ),
         game_attendees (
           id,
           payment_status
@@ -61,8 +55,6 @@ export async function GET(request: NextRequest) {
           available_tickets: item.available_tickets,
           duration_hours: item.duration_hours,
           created_at: item.created_at,
-          created_by: item.created_by,
-          organizer: item.organizer,
           actualAttendees: 0
         })
       }
