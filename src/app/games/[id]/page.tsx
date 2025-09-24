@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Ticket } from 'lucide-react'
+import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Volleyball } from 'lucide-react'
 
 interface Game {
   id: string
@@ -193,7 +193,7 @@ export default function GameDetailPage() {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               {/* Game Image */}
               <div className="h-48 bg-gray-50 flex items-center justify-center">
-                <Ticket className="w-12 h-12 text-gray-400" />
+                <Volleyball className="w-12 h-12 text-gray-400" />
               </div>
 
               <div className="p-6">

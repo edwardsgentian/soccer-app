@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Header } from '@/components/header'
 import { useAuth } from '@/contexts/auth-context'
-import { Calendar, MapPin, Users } from 'lucide-react'
+import { Calendar, MapPin, Component } from 'lucide-react'
 
 function SuccessContent() {
   const searchParams = useSearchParams()
@@ -146,7 +146,7 @@ function SuccessContent() {
                     <span>{gameDetails.location}</span>
                   </div>
                   <div className="flex items-center text-gray-700">
-                    <Users className="w-5 h-5 mr-3 text-green-600" />
+                    <Component className="w-5 h-5 mr-3 text-green-600" />
                     <span>{gameDetails.group}</span>
                   </div>
                 </div>

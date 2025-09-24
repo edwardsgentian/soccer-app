@@ -1,6 +1,6 @@
 'use client'
 
-import { Users } from 'lucide-react'
+import { Component } from 'lucide-react'
 
 interface AttendeeCountProps {
   currentCount: number
@@ -20,7 +20,7 @@ export function AttendeeCount({
 
   return (
     <div className={`flex items-center text-gray-500 ${className}`}>
-      <Users className="w-4 h-4 mr-3" />
+      <Component className="w-4 h-4 mr-3" />
       <span className="font-medium">{currentCount}/{maxCount} players</span>
       {showSpotsLeft && !isFullyBooked && (
         <span className="ml-2 text-sm text-gray-400">

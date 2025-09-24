@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, DollarSign, Eye, Ticket } from 'lucide-react'
+import { Calendar, Clock, MapPin, Users, DollarSign, Eye, Volleyball } from 'lucide-react'
 
 interface Game {
   id: string

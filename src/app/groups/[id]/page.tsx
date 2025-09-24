@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket } from 'lucide-react'
+import { Calendar, Clock, MapPin, Component, ArrowLeft, Instagram, Globe, MessageCircle, Volleyball } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 
 interface Group {
@@ -316,7 +316,7 @@ export default function GroupDetailPage() {
                     <div key={game.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
                       {/* Game Header */}
                       <div className="h-24 bg-gray-50 flex items-center justify-center">
-                        <Ticket className="w-6 h-6 text-gray-400" />
+                        <Volleyball className="w-6 h-6 text-gray-400" />
                       </div>
                       <div className="p-6">
                         <div className="flex items-start justify-between mb-4">
@@ -350,7 +350,7 @@ export default function GroupDetailPage() {
                           </div>
                           
                           <div className="flex items-center text-gray-600">
-                            <Users className="w-4 h-4 mr-2" />
+                            <Component className="w-4 h-4 mr-2" />
                             <span>{attendees}/{game.total_tickets} players</span>
                             {!isFullyBooked && (
                               <span className="ml-2 text-sm text-blue-600">

@@ -6,7 +6,7 @@ import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, MapPin, Edit, Trophy, Users } from 'lucide-react'
+import { Calendar, MapPin, Edit, Trophy, Component, Contact, Volleyball } from 'lucide-react'
 
 interface GameHistory {
   id: string
@@ -431,7 +431,7 @@ export default function ProfilePage() {
               <div>
                 {gameHistory.length === 0 ? (
                   <div className="text-center py-12">
-                    <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <Volleyball className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No games attended yet.</p>
                   </div>
                 ) : (
@@ -447,7 +447,7 @@ export default function ProfilePage() {
                           <span>{game.games.location}</span>
                         </div>
                         <div className="flex items-center text-gray-600 text-sm">
-                          <Users className="w-4 h-4 mr-1" />
+                          <Component className="w-4 h-4 mr-1" />
                           <span>{game.games.groups.name}</span>
                         </div>
                       </div>
@@ -463,7 +463,7 @@ export default function ProfilePage() {
               <div>
                 {memberGroups.length === 0 ? (
                   <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <Contact className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No groups joined yet.</p>
                   </div>
                 ) : (
@@ -490,7 +490,7 @@ export default function ProfilePage() {
               <div>
                 {upcomingGames.length === 0 ? (
                   <div className="text-center py-12">
-                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <Volleyball className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <p className="text-gray-600">No upcoming games registered.</p>
                   </div>
                 ) : (
@@ -509,7 +509,7 @@ export default function ProfilePage() {
                           <span>{game.games.location}</span>
                         </div>
                         <div className="flex items-center text-gray-600 text-sm">
-                          <Users className="w-4 h-4 mr-1" />
+                          <Component className="w-4 h-4 mr-1" />
                           <span>{game.games.groups.name}</span>
                         </div>
                       </div>
