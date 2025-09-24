@@ -73,7 +73,7 @@ function SuccessContent() {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
             <p className="text-gray-600 mt-4">Processing your payment...</p>
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function SuccessPage() {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading...</p>
           </div>
         </div>
