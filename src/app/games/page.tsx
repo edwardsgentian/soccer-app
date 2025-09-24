@@ -140,7 +140,7 @@ function GameCard({ game }: { game: Game }) {
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
       <div className="h-32 bg-gray-50 flex items-center justify-center">
-        <Ticket className="w-8 h-8 text-gray-400" />
+        <Volleyball className="w-8 h-8 text-gray-400" />
       </div>
 
       <div className="p-6">
