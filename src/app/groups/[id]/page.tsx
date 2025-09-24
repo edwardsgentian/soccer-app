@@ -18,6 +18,11 @@ interface Group {
   website?: string
   whatsapp_group?: string
   created_at: string
+  organizer?: {
+    id: string
+    name: string
+    photo_url?: string
+  }
 }
 
 interface Game {
