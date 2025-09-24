@@ -46,7 +46,7 @@ export function GameManagementModal({
         <div className="p-6">
           {showCreateForm ? (
             <CreateGameForm
-              groupId={groupId}
+              groupId={groupId || ''}
               onSuccess={handleGameCreated}
               onCancel={handleCancel}
             />
