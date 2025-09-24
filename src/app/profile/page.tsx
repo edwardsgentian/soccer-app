@@ -503,8 +503,7 @@ const group = (item as any).games.groups
                         </div>
                         <div className="flex items-center text-gray-600 text-sm mb-2">
                           <Calendar className="w-4 h-4 mr-1" />
-                          <span>{formatTime(game.games.game_time)}</span>
-                        </div>
+                          <span>{new Date(game.games.game_date).toLocaleTimeString()}</span>                        </div>
                         <div className="flex items-center text-gray-600 text-sm mb-2">
                           <MapPin className="w-4 h-4 mr-1" />
                           <span>{game.games.location}</span>
