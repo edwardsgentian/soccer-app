@@ -173,7 +173,7 @@ export default function ProfilePage() {
       } else {
         // Extract unique groups from the data
         const groupsMap = new Map()
-        data?.forEach((item: { games: { groups: { id: string; name: string; description: string; tags: string[] } } }) => {
+        data?.forEach((item: any) => {
           const group = item.games.groups
           if (!groupsMap.has(group.id)) {
             groupsMap.set(group.id, group)
