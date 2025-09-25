@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
-import { PaymentModal } from "@/components/payment/payment-modal"
 import { Calendar, Clock, MapPin, Users, DollarSign, Ticket } from "lucide-react"
 
 interface GameCardProps {
@@ -34,7 +33,6 @@ export function GameCard({
   groupName,
   gameId = 'sample-game-id'
 }: GameCardProps) {
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
@@ -59,13 +57,7 @@ export function GameCard({
     }
   }
 
-  const handlePaymentSuccess = () => {
-    // Refresh the page or update the attendees count
-    window.location.reload()
-  }
-
   return (
-    <>
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Game Image Placeholder */}
       <div className="h-32 bg-gray-50 flex items-center justify-center">
@@ -133,20 +125,12 @@ export function GameCard({
             }`}
             size="sm"
             disabled={isFullyBooked}
-            onClick={() => setShowPaymentModal(true)}
           >
-            {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
+            {isFullyBooked ? 'Fully Booked' : 'Join Game'}
           </Button>
         </div>
       </div>
     </div>
 
-    <PaymentModal
-      isOpen={showPaymentModal}
-      onClose={() => setShowPaymentModal(false)}
-      game={game}
-      onSuccess={handlePaymentSuccess}
-    />
-    </>
   )
 }
