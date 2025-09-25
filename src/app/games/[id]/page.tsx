@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Ticket } from 'lucide-react'
+import { PaymentModal } from '@/components/payment/payment-modal'
 
 interface Game {
   id: string
@@ -42,6 +43,7 @@ export default function GameDetailPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
 
   const fetchGameDetails = useCallback(async () => {
     if (!supabase) {
@@ -293,6 +295,7 @@ export default function GameDetailPage() {
                 }`}
                 disabled={isFullyBooked}
                 size="lg"
+                onClick={() => !isFullyBooked && setShowPaymentModal(true)}
               >
                 {isFullyBooked ? 'Fully Booked' : 'Buy Game - $' + game.price}
               </Button>
@@ -318,6 +321,17 @@ export default function GameDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        game={game}
+        onSuccess={() => {
+          // Refresh game details after successful payment
+          fetchGameDetails()
+        }}
+      />
     </div>
   )
 }
