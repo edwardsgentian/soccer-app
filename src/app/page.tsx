@@ -289,7 +289,6 @@ export default function Home() {
                   ))
                 })()}
                 </div>
-              </div>
               )}
 
               {/* View All Games Button - Centered below tiles */}
