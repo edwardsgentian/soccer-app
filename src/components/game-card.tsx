@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+// import { useState } from 'react' // Removed unused import
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Users, DollarSign, Ticket } from "lucide-react"
@@ -45,17 +45,17 @@ export function GameCard({
   const isFullyBooked = attendees >= maxAttendees
   const spotsLeft = maxAttendees - attendees
 
-  const game = {
-    id: gameId,
-    name: gameName,
-    price,
-    location,
-    game_date: date,
-    game_time: time,
-    groups: {
-      name: groupName
-    }
-  }
+  // const game = { // Removed unused variable
+  //   id: gameId,
+  //   name: gameName,
+  //   price,
+  //   location,
+  //   game_date: date,
+  //   game_time: time,
+  //   groups: {
+  //     name: groupName
+  //   }
+  // }
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">

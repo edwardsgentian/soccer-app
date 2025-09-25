@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
-import { Calendar, Clock, MapPin, Users, DollarSign, Plus, Trash2, Eye } from 'lucide-react'
+import { Plus, Trash2, Eye } from 'lucide-react'
 
 interface CreateGameOrSeasonFormProps {
   groupId: string
@@ -72,19 +72,19 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleOneOffChange = (field: string, value: any) => {
+  const handleOneOffChange = (field: string, value: string | number) => {
     setOneOffData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSeasonChange = (field: string, value: any) => {
+  const handleSeasonChange = (field: string, value: string | number | boolean) => {
     setSeasonData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleDiscountChange = (field: string, value: any) => {
+  const handleDiscountChange = (field: string, value: string | boolean) => {
     setDiscountData(prev => ({ ...prev, [field]: value }))
   }
 
@@ -303,7 +303,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
     console.log('Season creation completed successfully')
   }
 
-  const createDiscountCode = async (seasonId: string | null, type: 'season' | 'game') => {
+  const createDiscountCode = async (seasonId: string | null, _type: 'season' | 'game') => {
     const { error } = await supabase
       .from('discount_codes')
       .insert({
@@ -607,7 +607,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
                       className="text-blue-600"
                     />
                     <label htmlFor="custom" className="text-sm text-gray-700">
-                      No, I'll add each game individually
+                      No, I&apos;ll add each game individually
                     </label>
                   </div>
                 </div>
@@ -669,7 +669,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
                     className="text-blue-600"
                   />
                   <label htmlFor="allow_individual_sales" className="text-sm text-gray-700">
-                    Allow individual games to be sold if games aren't full
+                    Allow individual games to be sold if games aren&apos;t full
                   </label>
                 </div>
                 <div className="flex items-center space-x-3">

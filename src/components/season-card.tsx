@@ -86,19 +86,15 @@ const generateAvatarStack = (attendees: number, maxAvatars: number) => {
 export function SeasonCard({
   seasonId,
   seasonName,
-  description,
   seasonPrice,
-  individualGamePrice,
   totalGames,
   seasonSpots,
-  gameSpots,
   firstGameDate,
   firstGameTime,
   repeatType,
   groupName,
   location,
   seasonSpotsAvailable,
-  gameSpotsAvailable,
 }: SeasonCardProps) {
   const formatTime = (timeString: string) => {
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
