@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
             currency: currency,
             product_data: {
               name: gameName || 'Soccer Game',
-              description: gameId ? `Soccer game ticket - Game ID: ${gameId}` : 'Soccer game ticket',
+              description: 'Join this exciting soccer game and connect with fellow players in your community',
             },
             unit_amount: priceInCents,
           },
