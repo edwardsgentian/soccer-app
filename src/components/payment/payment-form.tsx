@@ -79,7 +79,7 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
         throw new Error(`Failed to create checkout session: ${errorData.error || 'Unknown error'}`)
       }
 
-      const { sessionId } = await response.json()
+      await response.json()
 
       // Payment processing temporarily disabled
       // TODO: Re-implement payment processing

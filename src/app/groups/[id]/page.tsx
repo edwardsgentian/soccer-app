@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
@@ -112,13 +111,6 @@ export default function GroupDetailPage() {
     })
   }
 
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
 
   if (loading) {
     return (
@@ -321,7 +313,6 @@ export default function GroupDetailPage() {
                     <HomepageGameCard
                       key={game.id}
                       gameName={game.name}
-                      date={game.game_date}
                       time={game.game_time}
                       price={game.price}
                       location={game.location}
