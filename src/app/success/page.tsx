@@ -44,32 +44,32 @@ export default function SuccessPage() {
             </div>
 
             <div className="space-y-4">
-              <a
+              <Link
                 href="/games"
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-block"
               >
                 View All Games
-              </a>
+              </Link>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-semibold text-blue-800 mb-2">Create an Account</h3>
                 <p className="text-blue-700 text-sm mb-4">
                   Track your game history and get faster checkout for future games.
                 </p>
-                <a
+                <Link
                   href="/profile"
                   className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-block"
                 >
                   Create Account
-                </a>
+                </Link>
               </div>
               
-              <a
+              <Link
                 href="/"
                 className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-block"
               >
                 Return to Home
-              </a>
+              </Link>
             </div>
           </div>
         </div>
