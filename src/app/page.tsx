@@ -106,10 +106,10 @@ export default function Home() {
                 Payment Successful!
               </h2>
               <p className="text-green-700 mb-4">
-                Congratulations! You're now registered for the game.
+                Congratulations! You&apos;re now registered for the game.
               </p>
               <div className="bg-green-100 border border-green-300 rounded-lg p-4 text-left">
-                <h3 className="font-semibold text-green-800 mb-2">What's Next?</h3>
+                <h3 className="font-semibold text-green-800 mb-2">What&apos;s Next?</h3>
                 <div className="space-y-2 text-green-700">
                   <div className="flex items-center">
                     <span className="mr-2">📅</span>
@@ -121,7 +121,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center">
                     <span className="mr-2">👥</span>
-                    <span>You're now part of the team!</span>
+                    <span>You&apos;re now part of the team!</span>
                   </div>
                 </div>
               </div>
