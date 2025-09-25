@@ -150,7 +150,7 @@ export default function Home() {
                               maxAttendees={game.total_tickets}
                               groupName={game.groups.name}
                               gameId={game.id}
-                              tags={game.groups.tags || []}
+                              tags={[]}
                             />
                           )
                         })}
