@@ -45,10 +45,7 @@ export function GameManagementModal({
 
         <div className="p-6">
           {showCreateForm ? (
-            <CreateGameForm
-              groupId={groupId || ''}
-              onSuccess={handleGameCreated}
-            />
+
           ) : (
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
