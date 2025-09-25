@@ -248,6 +248,9 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
 
     if (seasonError) {
       console.error('Season creation error:', seasonError)
+      if (seasonError.message.includes('row-level security policy')) {
+        throw new Error('Permission denied: Please run the RLS policy fix in Supabase first. See fix-rls-policy.sql file.')
+      }
       throw new Error(`Failed to create season: ${seasonError.message}`)
     }
 
