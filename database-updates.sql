@@ -81,7 +81,7 @@ CREATE POLICY "Group members can create seasons" ON seasons FOR INSERT
     EXISTS (
       SELECT 1 FROM group_members 
       WHERE group_id = seasons.group_id 
-      AND player_id = auth.uid()::text
+      AND player_id = auth.uid()::uuid
     )
   );
 
@@ -92,4 +92,4 @@ CREATE POLICY "Anyone can view active discount codes" ON discount_codes FOR SELE
 -- Season attendees policies
 CREATE POLICY "Anyone can view season attendees" ON season_attendees FOR SELECT USING (true);
 CREATE POLICY "Players can join seasons" ON season_attendees FOR INSERT 
-  WITH CHECK (player_id = auth.uid()::text);
+  WITH CHECK (player_id = auth.uid()::uuid);
