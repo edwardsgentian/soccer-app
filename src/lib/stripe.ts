@@ -8,12 +8,12 @@ const fallbackKey = 'sk_test_51S9nduBI4qRcQSVOYBhuFPjf8jbfoLObzlsLw1nX065W2aO5SZ
 
 export const stripe = stripeSecretKey 
   ? new Stripe(stripeSecretKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2025-08-27.basil',
       typescript: true,
     })
   : fallbackKey
   ? new Stripe(fallbackKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2025-08-27.basil',
       typescript: true,
     })
   : null
