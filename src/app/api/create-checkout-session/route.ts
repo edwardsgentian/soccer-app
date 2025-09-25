@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
           currency: string
           product_data: {
             name: string
+            description?: string
           }
           unit_amount: number
         }
