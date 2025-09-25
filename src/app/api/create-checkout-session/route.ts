@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
       cancel_url: string
       customer?: string
       customer_email?: string
+      metadata?: Record<string, string>
     } = {
       payment_method_types: ['card'],
       line_items: [
