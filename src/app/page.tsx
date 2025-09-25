@@ -145,7 +145,6 @@ export default function Home() {
         return
       }
 
-      console.log('Fetched seasons data:', data)
       setSeasons(data || [])
     } catch (err) {
       console.error('Error fetching seasons:', err)

@@ -126,9 +126,6 @@ export function SeasonCard({
 
   const seasonAttendees = seasonSpots - seasonSpotsAvailable
 
-  // Debug: Log the location value
-  console.log('SeasonCard location:', location)
-
   return (
     <Link href={`/seasons/${seasonId}`} className="block">
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-row max-w-lg mx-auto">
