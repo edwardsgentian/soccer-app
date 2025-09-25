@@ -174,6 +174,11 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
 
       console.log('Password verified, creating...')
 
+      // Check if user is authenticated
+      if (!player?.id) {
+        throw new Error('You must be signed in to create games or seasons. Please sign in first.')
+      }
+
       // Add timeout wrapper
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000)
