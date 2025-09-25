@@ -138,9 +138,9 @@ export default function GamesPage() {
                 <div key={date}>
                   {/* Date Label */}
                   <div className="text-center mb-4">
-                    <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                    <h3 className="text-sm text-gray-600">
                       {date}
-                    </span>
+                    </h3>
                   </div>
                   
                   {/* Games for this date */}
