@@ -15,6 +15,7 @@ interface GameHistory {
   games: {
     name: string
     game_date: string
+    game_time: string
     location: string
     duration_hours: number
     groups: {
