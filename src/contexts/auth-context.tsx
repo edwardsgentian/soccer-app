@@ -38,18 +38,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   const fetchPlayer = async (userId: string) => {
-    if (!supabase) return
+    if (!supabase || !user) return
 
     try {
       // Create a timeout promise
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out')), 30000) // 30 second timeout
+        setTimeout(() => reject(new Error('Request timed out')), 10000) // 10 second timeout
       })
 
-      // Create the database query promise
-      // First get the user's email from auth, then find the player record by email
-      const { data: authUser } = await supabase.auth.getUser()
-      if (!authUser.user?.email) {
+      // Use the user's email directly from the user object instead of making another API call
+      if (!user.email) {
         console.error('No email found for user')
         return
       }
@@ -57,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const queryPromise = supabase
         .from('players')
         .select('*')
-        .eq('email', authUser.user.email)
+        .eq('email', user.email)
         .single()
 
       // Race between the query and timeout
