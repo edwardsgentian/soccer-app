@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket } from 'lucide-react'
+import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket, Component } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
+import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface Group {
   id: string
@@ -134,7 +135,7 @@ export default function GroupDetailPage() {
         <Header />
         <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <Component className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Group Not Found
             </h3>
@@ -173,7 +174,7 @@ export default function GroupDetailPage() {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-8">
               {/* Group Header */}
               <div className="h-32 bg-gray-50 flex items-center justify-center">
-                <span className="text-2xl text-gray-400">⚽</span>
+                <Component className="w-8 h-8 text-gray-400" />
               </div>
 
               <div className="p-6">

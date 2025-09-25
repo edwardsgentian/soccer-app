@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button";
-import { GameCard } from "@/components/game-card";
+import { HomepageGameCard } from "@/components/homepage-game-card";
 import { Header } from "@/components/header";
 import { supabase } from '@/lib/supabase'
 
@@ -80,7 +80,7 @@ export default function Home() {
             </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
-            Create a game or find fun, soccer groups near you.
+            Create a game or find social, soccer groups near you.
           </p>
         </div>
 
@@ -110,24 +110,54 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {games.map((game) => {
-                  const attendees = game.total_tickets - game.available_tickets
-                  return (
-            <GameCard
-              key={game.id}
-              gameName={game.name}
-              date={game.game_date}
-              time={game.game_time}
-              price={game.price}
-              location={game.location}
-              attendees={attendees}
-              maxAttendees={game.total_tickets}
-              groupName={game.groups.name}
-              gameId={game.id}
-            />
-                  )
-                })}
+              <div className="max-w-lg mx-auto space-y-6">
+                {(() => {
+                  // Group games by date
+                  const gamesByDate = games.reduce((acc, game) => {
+                    const date = new Date(game.game_date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                    if (!acc[date]) {
+                      acc[date] = []
+                    }
+                    acc[date].push(game)
+                    return acc
+                  }, {} as Record<string, typeof games>)
+
+                  return Object.entries(gamesByDate).map(([date, dateGames]) => (
+                    <div key={date}>
+                      {/* Date Label */}
+                      <div className="text-center mb-4">
+                        <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                          {date}
+                        </span>
+                      </div>
+                      
+                      {/* Games for this date */}
+                      <div className="space-y-4">
+                        {dateGames.map((game) => {
+                          const attendees = game.total_tickets - game.available_tickets
+                          return (
+                            <HomepageGameCard
+                              key={game.id}
+                              gameName={game.name}
+                              time={game.game_time}
+                              price={game.price}
+                              location={game.location}
+                              attendees={attendees}
+                              maxAttendees={game.total_tickets}
+                              groupName={game.groups.name}
+                              gameId={game.id}
+                              tags={game.groups.tags || []}
+                            />
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ))
+                })()}
               </div>
               
               {/* View All Games Button - Centered below tiles */}
