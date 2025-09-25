@@ -1,28 +1,6 @@
-'use client'
-
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Calendar, MapPin, Users } from 'lucide-react'
 
 export default function SuccessPage() {
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       {/* Simple header without complex components */}
@@ -51,50 +29,47 @@ export default function SuccessPage() {
               <h2 className="text-lg font-semibold text-green-800 mb-4">Game Details</h2>
               <div className="space-y-3">
                 <div className="flex items-center text-gray-700">
-                  <Calendar className="w-5 h-5 mr-3 text-green-600" />
+                  <div className="w-5 h-5 mr-3 text-green-600">📅</div>
                   <span>Game registration confirmed</span>
                 </div>
                 <div className="flex items-center text-gray-700">
-                  <MapPin className="w-5 h-5 mr-3 text-green-600" />
+                  <div className="w-5 h-5 mr-3 text-green-600">📍</div>
                   <span>Check your email for location details</span>
                 </div>
                 <div className="flex items-center text-gray-700">
-                  <Users className="w-5 h-5 mr-3 text-green-600" />
+                  <div className="w-5 h-5 mr-3 text-green-600">👥</div>
                   <span>You&apos;re now part of the team!</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <Button
-                onClick={() => window.location.href = '/games'}
-                className="w-full"
-                size="lg"
+              <a
+                href="/games"
+                className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-block"
               >
                 View All Games
-              </Button>
+              </a>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-semibold text-blue-800 mb-2">Create an Account</h3>
                 <p className="text-blue-700 text-sm mb-4">
                   Track your game history and get faster checkout for future games.
                 </p>
-                <Button
-                  onClick={() => window.location.href = '/profile'}
-                  variant="outline"
-                  className="w-full"
+                <a
+                  href="/profile"
+                  className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-block"
                 >
                   Create Account
-                </Button>
+                </a>
               </div>
               
-              <Button
-                onClick={() => window.location.href = '/'}
-                variant="outline"
-                className="w-full"
+              <a
+                href="/"
+                className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-block"
               >
                 Return to Home
-              </Button>
+              </a>
             </div>
           </div>
         </div>
