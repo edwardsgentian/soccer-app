@@ -48,7 +48,6 @@ export function GameManagementModal({
            <CreateGameForm
   groupId={groupId || ''}
   onSuccess={handleGameCreated}
-  onCancel={handleCancel}
 />
           ) : (
             <div className="text-center">
