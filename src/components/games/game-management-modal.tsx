@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CreateGameForm } from './create-game-form'
+import { CreateGameOrSeasonForm } from './create-game-or-season-form'
 import { X } from 'lucide-react'
 
 interface GameManagementModalProps {
@@ -19,6 +20,7 @@ export function GameManagementModal({
   groupId 
 }: GameManagementModalProps) {
   const [showCreateForm, setShowCreateForm] = useState(true)
+  const [useNewForm, setUseNewForm] = useState(true)
 
   if (!isOpen) return null
 
@@ -41,10 +43,51 @@ export function GameManagementModal({
 
         <div className="p-6">
           {showCreateForm ? (
-           <CreateGameForm
-  groupId={groupId || ''}
-  onSuccess={handleGameCreated}
-/>
+            <div>
+              {/* Form Selection */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Create Game or Season
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-600">Form:</span>
+                    <button
+                      onClick={() => setUseNewForm(true)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        useNewForm 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      New (Season/Game)
+                    </button>
+                    <button
+                      onClick={() => setUseNewForm(false)}
+                      className={`px-3 py-1 text-sm rounded ${
+                        !useNewForm 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Legacy (Game Only)
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {useNewForm ? (
+                <CreateGameOrSeasonForm
+                  groupId={groupId || ''}
+                  onSuccess={handleGameCreated}
+                />
+              ) : (
+                <CreateGameForm
+                  groupId={groupId || ''}
+                  onSuccess={handleGameCreated}
+                />
+              )}
+            </div>
           ) : (
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
