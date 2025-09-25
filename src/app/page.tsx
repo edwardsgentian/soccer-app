@@ -30,18 +30,9 @@ interface Game {
 export default function Home() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   useEffect(() => {
     fetchUpcomingGames()
-    
-    // Check if we have a payment success parameter
-    const urlParams = new URLSearchParams(window.location.search)
-    if (urlParams.get('payment') === 'success') {
-      setShowSuccessMessage(true)
-      // Remove the parameter from URL
-      window.history.replaceState({}, document.title, window.location.pathname)
-    }
   }, [])
 
   const fetchUpcomingGames = async () => {
@@ -98,35 +89,6 @@ export default function Home() {
 
         {/* Upcoming Games Section */}
         <div className="mb-12">
-          {/* Success Message */}
-          {showSuccessMessage && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-8 text-center">
-              <div className="text-4xl mb-3">🎉</div>
-              <h2 className="text-2xl font-bold text-green-800 mb-2">
-                Payment Successful!
-              </h2>
-              <p className="text-green-700 mb-4">
-                Congratulations! You&apos;re now registered for the game.
-              </p>
-              <div className="bg-green-100 border border-green-300 rounded-lg p-4 text-left">
-                <h3 className="font-semibold text-green-800 mb-2">What&apos;s Next?</h3>
-                <div className="space-y-2 text-green-700">
-                  <div className="flex items-center">
-                    <span className="mr-2">📅</span>
-                    <span>Game registration confirmed</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2">📍</span>
-                    <span>Check your email for location details</span>
-                  </div>
-                  <div className="flex items-center">
-                    <span className="mr-2">👥</span>
-                    <span>You&apos;re now part of the team!</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
           
           {/* Game Cards Grid */}
           {loading ? (
