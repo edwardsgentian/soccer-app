@@ -86,40 +86,30 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         time_in_nyc: formData.time_in_nyc || null,
       }
 
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out. Please check your internet connection and try again.')), 30000) // 30 second timeout
-      })
+      // Perform the database operation directly
+      if (isEditing) {
+        // Update existing profile
+        const { error } = await supabase
+          .from('players')
+          .update(profileData)
+          .eq('id', user.id)
 
-      // Create the database operation promise
-      const dbOperation = async () => {
-        if (isEditing) {
-          // Update existing profile
-          const { error } = await supabase
-            .from('players')
-            .update(profileData)
-            .eq('id', user.id)
+        if (error) {
+          throw error
+        }
+      } else {
+        // Create new profile
+        const { error } = await supabase
+          .from('players')
+          .insert({
+            id: user.id,
+            ...profileData,
+          })
 
-          if (error) {
-            throw error
-          }
-        } else {
-          // Create new profile
-          const { error } = await supabase
-            .from('players')
-            .insert({
-              id: user.id,
-              ...profileData,
-            })
-
-          if (error) {
-            throw error
-          }
+        if (error) {
+          throw error
         }
       }
-
-      // Race between the database operation and timeout
-      await Promise.race([dbOperation(), timeoutPromise])
 
       // If we get here, the database operation succeeded
       try {
