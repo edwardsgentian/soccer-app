@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
         }
         quantity: number
       }>
-      mode: string
+      mode: 'payment'
       success_url: string
       cancel_url: string
       customer?: string
