@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button";
 import { HomepageGameCard } from "@/components/homepage-game-card";
+import { SeasonCard } from "@/components/season-card";
 import { Header } from "@/components/header";
 import { supabase } from '@/lib/supabase'
 
@@ -27,12 +28,37 @@ interface Game {
   }[]
 }
 
+interface Season {
+  id: string
+  name: string
+  description?: string
+  season_price: number
+  individual_game_price: number
+  total_games: number
+  season_spots: number
+  game_spots: number
+  first_game_date: string
+  first_game_time: string
+  repeat_type: string
+  location: string
+  groups: {
+    name: string
+    whatsapp_group?: string
+  }
+  season_attendees?: {
+    id: string
+    payment_status: string
+  }[]
+}
+
 export default function Home() {
   const [games, setGames] = useState<Game[]>([])
+  const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     fetchUpcomingGames()
+    fetchUpcomingSeasons()
   }, [])
 
   const fetchUpcomingGames = async () => {
@@ -42,7 +68,8 @@ export default function Home() {
     }
 
     try {
-      const { data, error } = await supabase
+      // First, get all upcoming games
+      const { data: allGames, error: gamesError } = await supabase
         .from('games')
         .select(`
           *,
@@ -53,18 +80,74 @@ export default function Home() {
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
         .order('game_date', { ascending: true })
-        .limit(6) // Show only the first 6 upcoming games on homepage
 
-      if (error) {
-        console.error('Error fetching games:', error)
+      if (gamesError) {
+        console.error('Error fetching games:', gamesError)
         return
       }
 
-      setGames(data || [])
+      // Get active seasons to check their signup deadlines
+      const { data: activeSeasons, error: seasonsError } = await supabase
+        .from('seasons')
+        .select('id, season_signup_deadline, allow_individual_sales')
+        .gte('first_game_date', new Date().toISOString().split('T')[0])
+
+      if (seasonsError) {
+        console.error('Error fetching seasons for filtering:', seasonsError)
+        return
+      }
+
+      // Filter out individual games from seasons that haven't reached their signup deadline
+      const today = new Date().toISOString().split('T')[0]
+      const filteredGames = (allGames || []).filter(game => {
+        // If it's not part of a season, show it
+        if (!game.season_id) return true
+
+        // If it's part of a season, check if individual sales are allowed and deadline has passed
+        const season = activeSeasons?.find(s => s.id === game.season_id)
+        if (!season) return true // Show if season not found (fallback)
+
+        // Only show individual games if:
+        // 1. Season allows individual sales AND
+        // 2. Season signup deadline has passed
+        return season.allow_individual_sales && 
+               season.season_signup_deadline && 
+               season.season_signup_deadline <= today
+      })
+
+      setGames(filteredGames.slice(0, 6)) // Show only the first 6 filtered games
     } catch (err) {
       console.error('Error fetching games:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchUpcomingSeasons = async () => {
+    if (!supabase) return
+
+    try {
+      const { data, error } = await supabase
+        .from('seasons')
+        .select(`
+          *,
+          groups (
+            name,
+            whatsapp_group
+          )
+        `)
+        .gte('first_game_date', new Date().toISOString().split('T')[0])
+        .order('first_game_date', { ascending: true })
+        .limit(3) // Show only the first 3 upcoming seasons on homepage
+
+      if (error) {
+        console.error('Error fetching seasons:', error)
+        return
+      }
+
+      setSeasons(data || [])
+    } catch (err) {
+      console.error('Error fetching seasons:', err)
     }
   }
   return (
@@ -96,14 +179,14 @@ export default function Home() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
               <p className="text-gray-600 mt-4">Loading upcoming games...</p>
             </div>
-          ) : games.length === 0 ? (
+          ) : games.length === 0 && seasons.length === 0 ? (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">⚽</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                No upcoming games yet
+                No upcoming games or seasons yet
               </h3>
               <p className="text-gray-600 mb-6">
-                Be the first to create a game in your area!
+                Be the first to create a game or season in your area!
               </p>
               <Button
                 onClick={() => window.location.href = '/groups'}
@@ -113,7 +196,51 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className="max-w-lg mx-auto space-y-6">
+              {/* Seasons Section */}
+              {seasons.length > 0 && (
+                <div className="max-w-lg mx-auto mb-8">
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                      Available Seasons
+                    </h2>
+                    <p className="text-gray-600">
+                      Join a full season and save on individual games
+                    </p>
+                  </div>
+                  <div className="space-y-4">
+                    {seasons.map((season) => {
+                      const seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
+                      const seasonSpotsAvailable = season.season_spots - seasonAttendees
+                      const gameSpotsAvailable = season.game_spots // Individual game spots (not affected by season signups)
+                      
+                      return (
+                        <SeasonCard
+                          key={season.id}
+                          seasonId={season.id}
+                          seasonName={season.name}
+                          description={season.description}
+                          seasonPrice={season.season_price}
+                          individualGamePrice={season.individual_game_price}
+                          totalGames={season.total_games}
+                          seasonSpots={season.season_spots}
+                          gameSpots={season.game_spots}
+                          firstGameDate={season.first_game_date}
+                          firstGameTime={season.first_game_time}
+                          repeatType={season.repeat_type}
+                          groupName={season.groups.name}
+                          location={season.location}
+                          seasonSpotsAvailable={seasonSpotsAvailable}
+                          gameSpotsAvailable={gameSpotsAvailable}
+                        />
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Games Section */}
+              {games.length > 0 && (
+                <div className="max-w-lg mx-auto space-y-6">
                 {(() => {
                   // Group games by date
                   const gamesByDate = games.reduce((acc, game) => {
@@ -161,8 +288,10 @@ export default function Home() {
                     </div>
                   ))
                 })()}
+                </div>
               </div>
-              
+              )}
+
               {/* View All Games Button - Centered below tiles */}
               <div className="text-center mt-8">
                 <Button 
