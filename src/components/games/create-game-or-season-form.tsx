@@ -246,6 +246,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
         allow_individual_sales: seasonData.allow_individual_sales,
         season_signup_deadline: seasonData.season_signup_deadline,
         include_organizer_in_count: seasonData.include_organizer_in_count,
+        location: formData.location,
         created_by: player?.id
       })
       .select()
