@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket, Component } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
+import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface Group {
   id: string
@@ -282,86 +283,54 @@ export default function GroupDetailPage() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-6">
-                {games.map((game) => {
-                  const attendees = game.total_tickets - game.available_tickets
-                  const isFullyBooked = game.available_tickets <= 0
-                  const spotsLeft = game.available_tickets
+              <div className="max-w-lg mx-auto space-y-6">
+                {(() => {
+                  // Group games by date
+                  const gamesByDate = games.reduce((acc, game) => {
+                    const date = new Date(game.game_date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+                    if (!acc[date]) {
+                      acc[date] = []
+                    }
+                    acc[date].push(game)
+                    return acc
+                  }, {} as Record<string, typeof games>)
 
-                  return (
-                    <div key={game.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      {/* Game Header */}
-                      <div className="h-24 bg-gray-50 flex items-center justify-center">
-                        <Ticket className="w-6 h-6 text-gray-400" />
+                  return Object.entries(gamesByDate).map(([date, dateGames]) => (
+                    <div key={date}>
+                      {/* Date Label */}
+                      <div className="text-center mb-4">
+                        <h3 className="text-sm text-gray-600">
+                          {date}
+                        </h3>
                       </div>
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{game.name}</h3>
-                            {game.description && (
-                              <p className="text-gray-600 text-sm mb-3">{game.description}</p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-600">${game.price}</div>
-                            <div className="text-sm text-gray-500">per player</div>
-                          </div>
-                        </div>
-
-                        {/* Game Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>{formatDate(game.game_date)}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="w-4 h-4 mr-2" />
-                            <span>{formatTime(game.game_time)}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            <span>{game.location}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Users className="w-4 h-4 mr-2" />
-                            <span>{attendees}/{game.total_tickets} players</span>
-                            {!isFullyBooked && (
-                              <span className="ml-2 text-sm text-blue-600">
-                                ({spotsLeft} spots left)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3">
-                          <Button 
-                            asChild
-                            variant="outline" 
-                            className="flex-1"
-                          >
-                            <Link href={`/games/${game.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                          <Button 
-                            className={`flex-1 ${
-                              isFullyBooked 
-                                ? 'bg-gray-400 cursor-not-allowed' 
-                                : ''
-                            }`}
-                            disabled={isFullyBooked}
-                          >
-                            {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
-                          </Button>
-                        </div>
+                      
+                      {/* Games for this date */}
+                      <div className="space-y-4">
+                        {dateGames.map((game) => {
+                          const attendees = game.total_tickets - game.available_tickets
+                          return (
+                            <HomepageGameCard
+                              key={game.id}
+                              gameName={game.name}
+                              time={game.game_time}
+                              price={game.price}
+                              location={game.location}
+                              attendees={attendees}
+                              maxAttendees={game.total_tickets}
+                              groupName={group.name}
+                              gameId={game.id}
+                              tags={group.tags || []}
+                            />
+                          )
+                        })}
                       </div>
                     </div>
-                  )
-                })}
+                  ))
+                })()}
               </div>
             )}
           </div>
