@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchPlayer = async () => {
+  const fetchPlayer = async (userId: string) => {
     if (!supabase) return
 
     try {
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshPlayer = async () => {
     if (user) {
-      await fetchPlayer()
+      await fetchPlayer(user.id)
     }
   }
 
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       
       if (session?.user) {
-        await fetchPlayer()
+        await fetchPlayer(session.user.id)
       }
       
       setLoading(false)
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          await fetchPlayer()
+          await fetchPlayer(session.user.id)
         } else {
           setPlayer(null)
         }
