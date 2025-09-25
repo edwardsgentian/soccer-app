@@ -215,7 +215,6 @@ function SuccessPageContent() {
     </div>
   )
 }
-
 export default function SuccessPage() {
   return (
     <Suspense fallback={
@@ -233,3 +232,4 @@ export default function SuccessPage() {
     </Suspense>
   )
 }
+
