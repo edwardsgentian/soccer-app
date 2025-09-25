@@ -90,7 +90,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
 
   const addCustomGameDate = () => {
     const newDate: GameDate = {
-      id: Date.now().toString(),
+      id: `custom-${customGameDates.length + 1}`,
       date: '',
       time: ''
     }
