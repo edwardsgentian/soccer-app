@@ -163,7 +163,9 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
         throw new Error('Group not found')
       }
 
-      if (groupData.admin_password !== formData.admin_password) {
+      // Simple password verification (in production, use proper hashing)
+      const hashedPassword = btoa(formData.admin_password)
+      if (groupData.admin_password !== hashedPassword) {
         throw new Error('Invalid admin password')
       }
 
