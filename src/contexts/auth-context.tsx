@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchPlayer = async (userId: string) => {
+  const fetchPlayer = async () => {
     if (!supabase) return
 
     try {
@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single()
 
       // Race between the query and timeout
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as { data: Player | null; error: Error | null }
 
       if (error) {
         console.error('Error fetching player:', error)
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshPlayer = async () => {
     if (user) {
-      await fetchPlayer(user.id)
+      await fetchPlayer()
     }
   }
 
@@ -93,7 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null)
       
       if (session?.user) {
-        await fetchPlayer(session.user.id)
+        await fetchPlayer()
       }
       
       setLoading(false)
@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(session?.user ?? null)
         
         if (session?.user) {
-          await fetchPlayer(session.user.id)
+          await fetchPlayer()
         } else {
           setPlayer(null)
         }

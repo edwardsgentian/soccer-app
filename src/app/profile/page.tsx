@@ -6,7 +6,7 @@ import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, MapPin, Globe, Edit, Trophy, Users } from 'lucide-react'
+import { Calendar, MapPin, Edit, Trophy, Users } from 'lucide-react'
 
 interface GameHistory {
   id: string
@@ -173,7 +173,7 @@ export default function ProfilePage() {
       } else {
         // Extract unique groups from the data
         const groupsMap = new Map()
-        data?.forEach((item: any) => {
+        data?.forEach((item: { games: { groups: { id: string; name: string; description: string; tags: string[] } } }) => {
           const group = item.games.groups
           if (!groupsMap.has(group.id)) {
             groupsMap.set(group.id, group)

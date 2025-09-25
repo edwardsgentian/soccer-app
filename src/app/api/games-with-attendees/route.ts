@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const { data, error } = await supabase
       .from('games')
@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
       // Count completed attendees
       if (item.game_attendees && Array.isArray(item.game_attendees)) {
         const completedAttendees = item.game_attendees.filter(
-          (attendee: any) => attendee.payment_status === 'completed'
+          (attendee: { payment_status: string }) => attendee.payment_status === 'completed'
         ).length
         
         const currentGame = gamesMap.get(item.id)

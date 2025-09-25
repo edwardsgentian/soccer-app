@@ -44,7 +44,7 @@ export default function SuccessPage() {
           throw new Error(errorData.error || 'Failed to confirm payment')
         }
 
-        const result = await response.json()
+        await response.json()
         
         // For now, set some default game details
         // In a real app, you'd fetch the actual game details using result.gameId

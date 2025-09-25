@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
@@ -8,10 +8,9 @@ import { useAuth } from '@/contexts/auth-context'
 interface CreateGameFormProps {
   groupId: string
   onSuccess?: () => void
-  onCancel?: () => void
 }
 
-export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormProps) {
+export function CreateGameForm({ groupId, onSuccess }: CreateGameFormProps) {
   const { player } = useAuth()
   const [formData, setFormData] = useState({
     group_id: groupId,

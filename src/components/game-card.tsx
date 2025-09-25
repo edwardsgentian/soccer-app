@@ -32,8 +32,7 @@ export function GameCard({
   attendees,
   maxAttendees,
   groupName,
-  gameId = 'sample-game-id',
-  organizer
+  gameId = 'sample-game-id'
 }: GameCardProps) {
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const formatDate = (dateString: string) => {

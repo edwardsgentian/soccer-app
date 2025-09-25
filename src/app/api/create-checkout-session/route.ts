@@ -58,12 +58,29 @@ export async function POST(request: NextRequest) {
         .single()
 
       customerId = player?.stripe_customer_id
-    } catch (error) {
+    } catch {
       console.log('No existing customer found, will create new one')
     }
 
     // Create a Checkout Session
-    const sessionConfig: any = {
+    const sessionConfig: {
+      payment_method_types: string[]
+      line_items: Array<{
+        price_data: {
+          currency: string
+          product_data: {
+            name: string
+          }
+          unit_amount: number
+        }
+        quantity: number
+      }>
+      mode: string
+      success_url: string
+      cancel_url: string
+      customer?: string
+      customer_email?: string
+    } = {
       payment_method_types: ['card'],
       line_items: [
         {
