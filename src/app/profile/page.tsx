@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
 import { Calendar, MapPin, Edit, Trophy, Users } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface GameHistory {
   id: string
@@ -392,70 +394,114 @@ export default function ProfilePage() {
           {/* Tab Headers - Luma Style with Sliding Animation */}
           <div className="px-6 pt-6 flex justify-center">
             <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button
+              <motion.button
                 onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'upcoming'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 Upcoming
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setActiveTab('attended')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'attended'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 Past
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setActiveTab('groups')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'groups'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 Groups
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'attended' && (
-              /* Attended Content */
-              <div>
-                {gameHistory.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No games attended yet.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {gameHistory.map((game) => (
-                      <div key={game.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
-                          <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          <span>{game.games.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Users className="w-4 h-4 mr-1" />
-                          <span>{game.games.groups.name}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key="attended"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {gameHistory.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No games attended yet.</p>
+                    </div>
+                  ) : (
+                    <div className="max-w-lg mx-auto space-y-6">
+                      {(() => {
+                        // Group games by date
+                        const gamesByDate = gameHistory.reduce((acc, game) => {
+                          const date = new Date(game.games.game_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric'
+                          })
+                          if (!acc[date]) {
+                            acc[date] = []
+                          }
+                          acc[date].push(game)
+                          return acc
+                        }, {} as Record<string, typeof gameHistory>)
+
+                        return Object.entries(gamesByDate).map(([date, dateGames]) => (
+                          <div key={date}>
+                            {/* Date Label */}
+                            <div className="text-center mb-4">
+                              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                {date}
+                              </span>
+                            </div>
+                            
+                            {/* Games for this date */}
+                            <div className="space-y-4">
+                              {dateGames.map((game) => (
+                                <HomepageGameCard
+                                  key={game.id}
+                                  gameName={game.games.name}
+                                  time={game.games.game_time}
+                                  price={0} // Past games show as completed
+                                  location={game.games.location}
+                                  attendees={1} // They attended
+                                  maxAttendees={1}
+                                  groupName={game.games.groups.name}
+                                  gameId={game.id}
+                                  tags={[]}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             )}
 
 
@@ -487,38 +533,69 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'upcoming' && (
-              /* Upcoming Games Content */
-              <div>
-                {upcomingGames.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No upcoming games registered.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {upcomingGames.map((game) => (
-                      <div key={game.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
-                          <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          <span>{formatTime(game.games.game_time)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          <span>{game.games.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Users className="w-4 h-4 mr-1" />
-                          <span>{game.games.groups.name}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key="upcoming"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {upcomingGames.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No upcoming games registered.</p>
+                    </div>
+                  ) : (
+                    <div className="max-w-lg mx-auto space-y-6">
+                      {(() => {
+                        // Group games by date
+                        const gamesByDate = upcomingGames.reduce((acc, game) => {
+                          const date = new Date(game.games.game_date).toLocaleDateString('en-US', {
+                            weekday: 'long',
+                            month: 'long',
+                            day: 'numeric'
+                          })
+                          if (!acc[date]) {
+                            acc[date] = []
+                          }
+                          acc[date].push(game)
+                          return acc
+                        }, {} as Record<string, typeof upcomingGames>)
+
+                        return Object.entries(gamesByDate).map(([date, dateGames]) => (
+                          <div key={date}>
+                            {/* Date Label */}
+                            <div className="text-center mb-4">
+                              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                {date}
+                              </span>
+                            </div>
+                            
+                            {/* Games for this date */}
+                            <div className="space-y-4">
+                              {dateGames.map((game) => (
+                                <HomepageGameCard
+                                  key={game.id}
+                                  gameName={game.games.name}
+                                  time={game.games.game_time}
+                                  price={game.amount_paid}
+                                  location={game.games.location}
+                                  attendees={1} // They're registered
+                                  maxAttendees={1}
+                                  groupName={game.games.groups.name}
+                                  gameId={game.id}
+                                  tags={[]}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      })()}
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
             )}
           </div>
         </div>
