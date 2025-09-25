@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Create a Checkout Session
     const sessionConfig: {
-      payment_method_types: string[]
+      payment_method_types: ['card']
       line_items: Array<{
         price_data: {
           currency: string
