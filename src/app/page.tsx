@@ -149,7 +149,6 @@ export default function Home() {
                               <HomepageGameCard
                                 key={game.id}
                                 gameName={game.name}
-                                date={game.game_date}
                                 time={game.game_time}
                                 price={game.price}
                                 location={game.location}

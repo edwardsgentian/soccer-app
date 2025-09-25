@@ -7,7 +7,7 @@ import { HomepageGameCard } from '@/components/homepage-game-card'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Edit, Trophy, Contact, Volleyball } from 'lucide-react'
+import { Edit, Contact, Volleyball } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface GameHistory {
@@ -498,7 +498,7 @@ export default function ProfilePage() {
                     bounce: 0.4
                   }}
                 >
-              /* Attended Content */
+              {/* Attended Content */}
               <div>
                 {gameHistory.length === 0 ? (
                   <div className="text-center py-12">
@@ -541,7 +541,6 @@ export default function ProfilePage() {
                                 <HomepageGameCard
                                   key={game.id}
                                   gameName={game.games.name}
-                                  date={game.games.game_date}
                                   time={formatTime(game.games.game_time)}
                                   price={0} // Hide price for past games
                                   location={game.games.location}
@@ -576,7 +575,7 @@ export default function ProfilePage() {
                     bounce: 0.4
                   }}
                 >
-              /* Groups Content */
+              {/* Groups Content */}
               <div>
                 {memberGroups.length === 0 ? (
                   <div className="text-center py-12">
@@ -616,7 +615,7 @@ export default function ProfilePage() {
                     bounce: 0.4
                   }}
                 >
-              /* Upcoming Games Content */
+              {/* Upcoming Games Content */}
               <div>
                 {upcomingGames.length === 0 ? (
                   <div className="text-center py-12">
@@ -659,7 +658,6 @@ export default function ProfilePage() {
                                 <HomepageGameCard
                                   key={game.id}
                                   gameName={game.games.name}
-                                  date={game.games.game_date}
                                   time="7:00 PM"
                                   price={game.amount_paid}
                                   location={game.games.location}

@@ -6,7 +6,6 @@ import { motion } from 'framer-motion'
 
 interface HomepageGameCardProps {
   gameName: string
-  date: string
   time: string
   price: number
   location: string
@@ -19,7 +18,6 @@ interface HomepageGameCardProps {
 
 export function HomepageGameCard({
   gameName,
-  date,
   time,
   price,
   location,

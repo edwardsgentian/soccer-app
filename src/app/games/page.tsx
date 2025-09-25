@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
@@ -158,7 +157,6 @@ export default function GamesPage() {
                           <HomepageGameCard
                             key={game.id}
                             gameName={game.name}
-                            date={game.game_date}
                             time={game.game_time}
                             price={game.price}
                             location={game.location}
