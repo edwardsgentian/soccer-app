@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Header } from '@/components/header'
 import { Calendar, MapPin, Users } from 'lucide-react'
 
 export default function SuccessPage() {
@@ -25,7 +24,16 @@ export default function SuccessPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
-      <Header />
+      {/* Simple header without complex components */}
+      <nav className="bg-white shadow-sm">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <a href="/" className="text-2xl font-bold text-gray-900">
+              Soccer App
+            </a>
+          </div>
+        </div>
+      </nav>
       
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
