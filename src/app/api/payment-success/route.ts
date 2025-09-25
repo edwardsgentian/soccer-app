@@ -7,6 +7,9 @@ export async function GET(request: NextRequest) {
   // Here you could verify the payment with Stripe if needed
   // For now, just redirect to home with success parameter
   
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  // Use the request URL to determine the correct domain
+  const url = new URL(request.url)
+  const baseUrl = `${url.protocol}//${url.host}`
+  
   return NextResponse.redirect(`${baseUrl}/?payment=success&session_id=${sessionId}`)
 }
