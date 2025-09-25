@@ -1,12 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { GameManagementModal } from '@/components/games/game-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, DollarSign, Eye, Ticket } from 'lucide-react'
+import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface Game {
   id: string
@@ -28,7 +26,6 @@ interface Game {
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
-  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     fetchGames()
@@ -66,9 +63,6 @@ export default function GamesPage() {
     }
   }
 
-  const handleGameCreated = () => {
-    fetchGames() // Refresh the games list
-  }
 
   // const formatDate = (dateString: string) => {
   //   const date = new Date(dateString)
@@ -88,26 +82,18 @@ export default function GamesPage() {
   // }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Upcoming Games
-            </h1>
-            <p className="text-gray-600">
-              Find and join soccer games in your area
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Create Game
-          </Button>
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Upcoming Games
+          </h1>
+          <p className="text-gray-600">
+            Find and join soccer games in your area
+          </p>
         </div>
 
         {/* Games Grid */}
@@ -123,138 +109,75 @@ export default function GamesPage() {
               No upcoming games
             </h3>
             <p className="text-gray-600 mb-6">
-              Be the first to create a game in your area!
+              Join a group to create and participate in games!
             </p>
             <Button
-              onClick={() => setShowCreateModal(true)}
-              className="bg-green-600 hover:bg-green-700"
+              onClick={() => window.location.href = '/groups'}
             >
-              Create First Game
+              Browse Groups
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {games.map((game) => (
-              <GameCard key={game.id} game={game} />
-            ))}
+          <div className="max-w-lg mx-auto">
+            {(() => {
+              // Group games by date
+              const gamesByDate = games.reduce((acc, game) => {
+                const date = game.game_date
+                if (!acc[date]) {
+                  acc[date] = []
+                }
+                acc[date].push(game)
+                return acc
+              }, {} as Record<string, typeof games>)
+              
+              const sortedDates = Object.keys(gamesByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()) // Sort ascending for upcoming games
+              
+              return sortedDates.map((date) => {
+                const dateGames = gamesByDate[date]
+                const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })
+                
+                return (
+                  <div key={date} className="mb-8">
+                    {/* Date Label */}
+                    <div className="mb-4 text-center">
+                      <h3 className="text-sm text-gray-600">{formattedDate}</h3>
+                    </div>
+                    
+                    {/* Games for this date */}
+                    <div className="space-y-4">
+                      {dateGames.map((game, index) => {
+                        const attendees = game.total_tickets - game.available_tickets
+                        // Add some test attendees for demonstration
+                        const testAttendees = Math.min(attendees + (index % 4) + 1, game.total_tickets)
+                        return (
+                          <HomepageGameCard
+                            key={game.id}
+                            gameName={game.name}
+                            time={game.game_time}
+                            price={game.price}
+                            location={game.location}
+                            attendees={testAttendees}
+                            maxAttendees={game.total_tickets}
+                            groupName={game.groups.name}
+                            gameId={game.id}
+                            tags={['Intermediate', 'Outdoors']}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })
+            })()}
           </div>
         )}
       </div>
 
-      <GameManagementModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onGameCreated={handleGameCreated}
-      />
     </div>
   )
 }
 
-function GameCard({ game }: { game: Game }) {
-  const isFullyBooked = game.available_tickets <= 0
-  const spotsLeft = game.available_tickets
-  const attendees = game.total_tickets - game.available_tickets
-
-  return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-      {/* Game Image Placeholder */}
-      <div className="h-48 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-        <Ticket className="w-16 h-16 text-white opacity-80" />
-      </div>
-
-      <div className="p-6">
-        {/* Group Name */}
-        <div className="text-sm text-gray-500 mb-2">{game.groups.name}</div>
-        
-        {/* Game Name */}
-        <h3 className="text-xl font-bold text-gray-900 mb-3">{game.name}</h3>
-
-        {/* Game Details */}
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center text-gray-600">
-            <Calendar className="w-4 h-4 mr-2" />
-            <span>{game.game_date}</span>
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <Clock className="w-4 h-4 mr-2" />
-            <span>{game.game_time}</span>
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <MapPin className="w-4 h-4 mr-2" />
-            <span className="truncate">{game.location}</span>
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <Users className="w-4 h-4 mr-2" />
-            <span>{attendees}/{game.total_tickets} players</span>
-            {!isFullyBooked && (
-              <span className="ml-2 text-sm text-blue-600">
-                ({spotsLeft} spots left)
-              </span>
-            )}
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <DollarSign className="w-4 h-4 mr-2" />
-            <span className="font-semibold">${game.price}</span>
-          </div>
-        </div>
-
-        {/* Description */}
-        {game.description && (
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-            {game.description}
-          </p>
-        )}
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button 
-            asChild
-            variant="outline" 
-            className="flex-1"
-            size="sm"
-          >
-            <Link href={`/games/${game.id}`}>
-              <Eye className="w-4 h-4 mr-1" />
-              View Details
-            </Link>
-          </Button>
-          <Button 
-            className={`flex-1 ${
-              isFullyBooked 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : 'bg-green-600 hover:bg-green-700'
-            }`}
-            size="sm"
-            disabled={isFullyBooked}
-          >
-            {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
-          </Button>
-        </div>
-
-        {/* WhatsApp Link */}
-        {game.groups.whatsapp_group && (
-          <div className="mt-4 pt-4 border-t">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              <a
-                href={game.groups.whatsapp_group}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join WhatsApp Group
-              </a>
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}

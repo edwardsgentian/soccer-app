@@ -82,7 +82,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           Create New Group
         </h2>
@@ -238,7 +238,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1"
             >
               {loading ? 'Creating Group...' : 'Create Group'}
             </Button>

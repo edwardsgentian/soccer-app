@@ -3,11 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Debug logging
-if (typeof window !== 'undefined') {
-  console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Not set')
-  console.log('Supabase Anon Key:', supabaseAnonKey ? 'Set' : 'Not set')
-}
+// Debug logging removed to prevent hydration issues
 
 // Fallback values if environment variables aren't loaded
 const fallbackUrl = 'https://xrhjexjgjhdgxzumngpj.supabase.co'

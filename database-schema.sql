@@ -136,10 +136,19 @@ CREATE POLICY "Group members are insertable by system" ON group_members
 -- Indexes for performance
 CREATE INDEX idx_games_date ON games(game_date);
 CREATE INDEX idx_games_group ON games(group_id);
+CREATE INDEX idx_games_group_date ON games(group_id, game_date);
+CREATE INDEX idx_games_date_upcoming ON games(game_date) WHERE game_date >= CURRENT_DATE;
+
 CREATE INDEX idx_game_attendees_game ON game_attendees(game_id);
 CREATE INDEX idx_game_attendees_player ON game_attendees(player_id);
+CREATE INDEX idx_game_attendees_game_payment ON game_attendees(game_id, payment_status);
+CREATE INDEX idx_game_attendees_payment_status ON game_attendees(payment_status);
+
 CREATE INDEX idx_group_members_group ON group_members(group_id);
 CREATE INDEX idx_group_members_player ON group_members(player_id);
+
+-- Index for players by email (used in auth context)
+CREATE INDEX idx_players_email ON players(email);
 
 -- Functions for updating timestamps
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -159,3 +168,14 @@ CREATE TRIGGER update_players_updated_at BEFORE UPDATE ON players
 
 CREATE TRIGGER update_games_updated_at BEFORE UPDATE ON games
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Function to decrement available tickets
+CREATE OR REPLACE FUNCTION decrement_available_tickets(game_id UUID)
+RETURNS VOID AS $$
+BEGIN
+    UPDATE games 
+    SET available_tickets = available_tickets - 1,
+        updated_at = NOW()
+    WHERE id = game_id AND available_tickets > 0;
+END;
+$$ LANGUAGE plpgsql;

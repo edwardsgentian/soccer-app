@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useAuth } from '@/contexts/auth-context'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { supabase } from '@/lib/supabase'
-import { getStripe } from '@/lib/stripe'
+// Stripe integration temporarily removed
 
 interface Game {
   id: string
@@ -74,24 +74,16 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('Payment API error:', errorData)
+        throw new Error(`Failed to create checkout session: ${errorData.error || 'Unknown error'}`)
       }
 
-      const { sessionId } = await response.json()
+      await response.json()
 
-      // Redirect to Stripe Checkout
-      const stripe = await getStripe()
-      if (!stripe) {
-        throw new Error('Stripe not initialized')
-      }
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId,
-      })
-
-      if (stripeError) {
-        throw stripeError
-      }
+      // Payment processing temporarily disabled
+      // TODO: Re-implement payment processing
+      alert('Payment processing is temporarily disabled. Please contact the organizer directly.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
@@ -105,7 +97,7 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           Purchase Game Ticket
         </h2>
@@ -246,7 +238,7 @@ export function PaymentForm({ game, onCancel }: PaymentFormProps) {
             <Button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1"
             >
               {loading ? 'Processing...' : `Pay $${game.price}`}
             </Button>

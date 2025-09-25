@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Ticket } from 'lucide-react'
+import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Volleyball } from 'lucide-react'
 
 interface Game {
   id: string
@@ -18,13 +18,17 @@ interface Game {
   total_tickets: number
   available_tickets: number
   created_at: string
+  organizer?: {
+    id: string
+    name: string
+    photo_url?: string
+  }
   groups: {
     name: string
     whatsapp_group?: string
     description?: string
   }
 }
-
 interface Attendee {
   id: string
   created_at: string
@@ -59,6 +63,11 @@ export default function GameDetailPage() {
             name,
             whatsapp_group,
             description
+          ),
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
           )
         `)
         .eq('id', gameId)
@@ -123,7 +132,7 @@ export default function GameDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
@@ -137,7 +146,7 @@ export default function GameDetailPage() {
 
   if (error || !game) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
@@ -150,7 +159,6 @@ export default function GameDetailPage() {
             </p>
             <Button
               onClick={() => window.location.href = '/games'}
-              className="bg-green-600 hover:bg-green-700"
             >
               Back to Games
             </Button>
@@ -184,8 +192,8 @@ export default function GameDetailPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden">
               {/* Game Image */}
-              <div className="h-64 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                <Ticket className="w-20 h-20 text-white opacity-80" />
+              <div className="h-48 bg-gray-50 flex items-center justify-center">
+                <Volleyball className="w-12 h-12 text-gray-400" />
               </div>
 
               <div className="p-6">
@@ -194,6 +202,26 @@ export default function GameDetailPage() {
                 
                 {/* Game Name */}
                 <h1 className="text-3xl font-bold text-gray-900 mb-4">{game.name}</h1>
+
+                {/* Organizer */}
+                {game.organizer && (
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                      {game.organizer.photo_url ? (
+                        <img
+                          src={game.organizer.photo_url}
+                          alt={game.organizer.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-blue-600 font-semibold text-xs">
+                          {game.organizer.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm">Organized by {game.organizer.name}</span>
+                  </div>
+                )}
 
                 {/* Game Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -284,7 +312,7 @@ export default function GameDetailPage() {
                 className={`w-full ${
                   isFullyBooked 
                     ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-green-600 hover:bg-green-700'
+                    : ''
                 }`}
                 disabled={isFullyBooked}
                 size="lg"

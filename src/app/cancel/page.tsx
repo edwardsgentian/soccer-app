@@ -10,7 +10,7 @@ function CancelPageContent() {
   const gameId = searchParams.get('game_id')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
@@ -35,7 +35,7 @@ function CancelPageContent() {
               {gameId && (
                 <Button
                   onClick={() => window.location.href = `/games/${gameId}`}
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full"
                   size="lg"
                 >
                   Try Again

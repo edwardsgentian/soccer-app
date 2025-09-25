@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Instagram, Globe } from 'lucide-react'
+import { Calendar, Instagram, Globe, Component } from 'lucide-react'
 
 interface Group {
   id: string
@@ -17,6 +17,10 @@ interface Group {
   website?: string
   whatsapp_group?: string
   created_at: string
+  games?: Array<{
+    id: string
+    game_date: string
+  }>
 }
 
 export default function GroupsPage() {
@@ -37,7 +41,19 @@ export default function GroupsPage() {
     try {
       const { data, error } = await supabase
         .from('groups')
-        .select('*')
+        .select(`
+          *,
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
+          ),
+          games!inner (
+            id,
+            game_date
+          )
+        `)
+        .gte('games.game_date', new Date().toISOString().split('T')[0])
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -58,13 +74,13 @@ export default function GroupsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Soccer Groups
             </h1>
@@ -72,12 +88,13 @@ export default function GroupsPage() {
               Find and join soccer groups in your area
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Create Group
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setShowCreateModal(true)}
+            >
+              Create Group
+            </Button>
+          </div>
         </div>
 
         {/* Groups Grid */}
@@ -88,7 +105,9 @@ export default function GroupsPage() {
           </div>
         ) : groups.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <div className="flex justify-center mb-4">
+              <Component className="w-16 h-16 text-gray-400" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No groups yet
             </h3>
@@ -97,7 +116,6 @@ export default function GroupsPage() {
             </p>
             <Button
               onClick={() => setShowCreateModal(true)}
-              className="bg-green-600 hover:bg-green-700"
             >
               Create First Group
             </Button>
@@ -132,18 +150,14 @@ function GroupCard({ group }: { group: Group }) {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Group Header */}
-      <div className="h-32 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-        <span className="text-4xl text-white opacity-80">⚽</span>
+      <div className="h-32 bg-gray-50 flex items-center justify-center">
+        <Component className="w-8 h-8 text-gray-400" />
       </div>
 
       <div className="p-6">
         {/* Group Name */}
         <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
         
-        {/* Description */}
-        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-          {group.description}
-        </p>
 
         {/* Tags */}
         {group.tags && group.tags.length > 0 && (
@@ -151,13 +165,19 @@ function GroupCard({ group }: { group: Group }) {
             {group.tags.map((tag, index) => (
               <span
                 key={index}
-                className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
               >
                 {tag}
               </span>
             ))}
           </div>
         )}
+
+        {/* Upcoming Games Count */}
+        <div className="flex items-center text-gray-600 text-sm mb-4">
+          <Calendar className="w-4 h-4 mr-2" />
+          <span>{group.games?.length || 0} upcoming games</span>
+        </div>
 
         {/* Social Links */}
         <div className="flex items-center gap-4 mb-4">
@@ -191,33 +211,19 @@ function GroupCard({ group }: { group: Group }) {
           <span>Created {formatDate(group.created_at)}</span>
         </div>
 
+
         {/* Action Buttons */}
         <div className="flex gap-2">
           <Button 
             asChild
             variant="outline" 
-            className="flex-1" 
+            className="w-full" 
             size="sm"
           >
             <Link href={`/groups/${group.id}`}>
-              View Games
+              View Group
             </Link>
           </Button>
-          {group.whatsapp_group && (
-            <Button
-              asChild
-              className="flex-1 bg-green-600 hover:bg-green-700"
-              size="sm"
-            >
-              <a
-                href={group.whatsapp_group}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Join WhatsApp
-              </a>
-            </Button>
-          )}
         </div>
       </div>
     </div>

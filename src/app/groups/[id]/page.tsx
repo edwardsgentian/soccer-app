@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket } from 'lucide-react'
+import { HomepageGameCard } from '@/components/homepage-game-card'
+import { Component, ArrowLeft, Instagram, Globe, MessageCircle, Calendar } from 'lucide-react'
+import { GameManagementModal } from '@/components/games/game-management-modal'
 
 interface Group {
   id: string
@@ -17,6 +18,11 @@ interface Group {
   website?: string
   whatsapp_group?: string
   created_at: string
+  organizer?: {
+    id: string
+    name: string
+    photo_url?: string
+  }
 }
 
 interface Game {
@@ -40,6 +46,7 @@ export default function GroupDetailPage() {
   const [games, setGames] = useState<Game[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showCreateGameModal, setShowCreateGameModal] = useState(false)
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -51,7 +58,14 @@ export default function GroupDetailPage() {
       // Fetch group details
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .select('*')
+        .select(`
+          *,
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
+          )
+        `)
         .eq('id', groupId)
         .single()
 
@@ -97,19 +111,12 @@ export default function GroupDetailPage() {
     })
   }
 
-  const formatTime = (timeString: string) => {
-    const [hours, minutes] = timeString.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading group details...</p>
@@ -121,11 +128,13 @@ export default function GroupDetailPage() {
 
   if (error || !group) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+      <div className="min-h-screen bg-white">
         <Header />
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <div className="flex justify-center mb-4">
+              <Component className="w-16 h-16 text-gray-400" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Group Not Found
             </h3>
@@ -134,7 +143,6 @@ export default function GroupDetailPage() {
             </p>
             <Button
               onClick={() => window.location.href = '/groups'}
-              className="bg-green-600 hover:bg-green-700"
             >
               Back to Groups
             </Button>
@@ -145,10 +153,10 @@ export default function GroupDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* Back Button */}
         <Button
           variant="outline"
@@ -164,13 +172,33 @@ export default function GroupDetailPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-8">
               {/* Group Header */}
-              <div className="h-48 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
-                <span className="text-8xl text-white opacity-80">⚽</span>
+              <div className="h-32 bg-gray-50 flex items-center justify-center">
+                <Component className="w-8 h-8 text-gray-400" />
               </div>
 
               <div className="p-6">
                 {/* Group Name */}
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">{group.name}</h1>
+
+                {/* Organizer */}
+                {group.organizer && (
+                  <div className="flex items-center text-gray-600 mb-4">
+                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
+                      {group.organizer.photo_url ? (
+                        <img
+                          src={group.organizer.photo_url}
+                          alt={group.organizer.name}
+                          className="w-6 h-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-blue-600 font-semibold text-xs">
+                          {group.organizer.name.charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-sm">Organized by {group.organizer.name}</span>
+                  </div>
+                )}
                 
                 {/* Description */}
                 <p className="text-gray-600 mb-6">{group.description}</p>
@@ -240,18 +268,28 @@ export default function GroupDetailPage() {
 
           {/* Games List */}
           <div className="lg:col-span-2">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Upcoming Games
-              </h2>
-              <p className="text-gray-600">
-                Games organized by {group.name}
-              </p>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                  Upcoming Games
+                </h2>
+                <p className="text-gray-600">
+                  Games organized by {group.name}
+                </p>
+              </div>
+              <Button
+                onClick={() => setShowCreateGameModal(true)}
+                size="sm"
+              >
+                Create Game
+              </Button>
             </div>
 
             {games.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">⚽</div>
+                <div className="flex justify-center mb-4">
+                  <Component className="w-16 h-16 text-gray-400" />
+                </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   No upcoming games
                 </h3>
@@ -259,91 +297,31 @@ export default function GroupDetailPage() {
                   This group hasn&apos;t scheduled any games yet.
                 </p>
                 <Button
-                  onClick={() => window.location.href = '/games'}
-                  variant="outline"
+                  onClick={() => setShowCreateGameModal(true)}
                 >
-                  Browse All Games
+                  Create First Game
                 </Button>
               </div>
             ) : (
-              <div className="space-y-6">
-                {games.map((game) => {
+              <div className="max-w-lg mx-auto space-y-4">
+                {games.map((game, index) => {
                   const attendees = game.total_tickets - game.available_tickets
-                  const isFullyBooked = game.available_tickets <= 0
-                  const spotsLeft = game.available_tickets
-
+                  // Add some test attendees for demonstration
+                  const testAttendees = Math.min(attendees + (index % 4) + 1, game.total_tickets)
+                  
                   return (
-                    <div key={game.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      {/* Game Header */}
-                      <div className="h-24 bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center">
-                        <Ticket className="w-8 h-8 text-white opacity-80" />
-                      </div>
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{game.name}</h3>
-                            {game.description && (
-                              <p className="text-gray-600 text-sm mb-3">{game.description}</p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-600">${game.price}</div>
-                            <div className="text-sm text-gray-500">per player</div>
-                          </div>
-                        </div>
-
-                        {/* Game Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>{formatDate(game.game_date)}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="w-4 h-4 mr-2" />
-                            <span>{formatTime(game.game_time)}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            <span>{game.location}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Users className="w-4 h-4 mr-2" />
-                            <span>{attendees}/{game.total_tickets} players</span>
-                            {!isFullyBooked && (
-                              <span className="ml-2 text-sm text-blue-600">
-                                ({spotsLeft} spots left)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3">
-                          <Button 
-                            asChild
-                            variant="outline" 
-                            className="flex-1"
-                          >
-                            <Link href={`/games/${game.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                          <Button 
-                            className={`flex-1 ${
-                              isFullyBooked 
-                                ? 'bg-gray-400 cursor-not-allowed' 
-                                : 'bg-green-600 hover:bg-green-700'
-                            }`}
-                            disabled={isFullyBooked}
-                          >
-                            {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <HomepageGameCard
+                      key={game.id}
+                      gameName={game.name}
+                      time={game.game_time}
+                      price={game.price}
+                      location={game.location}
+                      attendees={testAttendees}
+                      maxAttendees={game.total_tickets}
+                      groupName={group.name}
+                      gameId={game.id}
+                      tags={['Intermediate', 'Outdoors']}
+                    />
                   )
                 })}
               </div>
@@ -351,6 +329,16 @@ export default function GroupDetailPage() {
           </div>
         </div>
       </div>
+
+      <GameManagementModal
+        isOpen={showCreateGameModal}
+        onClose={() => setShowCreateGameModal(false)}
+        onGameCreated={() => {
+          setShowCreateGameModal(false)
+          fetchGroupDetails() // Refresh the group details
+        }}
+        groupId={groupId}
+      />
     </div>
   )
 }

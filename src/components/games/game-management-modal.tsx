@@ -18,7 +18,7 @@ export function GameManagementModal({
   onGameCreated,
   groupId 
 }: GameManagementModalProps) {
-  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(true)
 
   if (!isOpen) return null
 
@@ -45,11 +45,7 @@ export function GameManagementModal({
 
         <div className="p-6">
           {showCreateForm ? (
-           <CreateGameForm
-  groupId={groupId || ''}
-  onSuccess={handleGameCreated}
-  onCancel={handleCancel}
-/>
+
           ) : (
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -81,7 +77,6 @@ export function GameManagementModal({
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
                   onClick={() => setShowCreateForm(true)}
-                  className="bg-green-600 hover:bg-green-700"
                 >
                   Create New Game
                 </Button>

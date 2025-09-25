@@ -44,7 +44,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           Sign In
         </h2>
@@ -89,7 +89,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full"
           >
             {loading ? 'Signing In...' : 'Sign In'}
           </Button>

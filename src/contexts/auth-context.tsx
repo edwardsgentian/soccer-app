@@ -37,14 +37,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchPlayer = async (userId: string) => {
-    if (!supabase) return
+  const fetchPlayer = async (userEmail: string) => {
+    if (!supabase || !userEmail) return
 
     try {
       const { data, error } = await supabase
         .from('players')
         .select('*')
-        .eq('id', userId)
+        .eq('email', userEmail)
         .single()
 
       if (error) {
@@ -52,15 +52,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
 
-      setPlayer(data)
+      setPlayer(data as Player | null)
     } catch (err) {
       console.error('Error fetching player:', err)
+      // Don't throw here - just log the error and continue
     }
   }
 
   const refreshPlayer = async () => {
-    if (user) {
-      await fetchPlayer(user.id)
+    if (user && user.email) {
+      await fetchPlayer(user.email)
     }
   }
 
@@ -75,8 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       
-      if (session?.user) {
-        await fetchPlayer(session.user.id)
+      if (session?.user?.email) {
+        await fetchPlayer(session.user.email)
       }
       
       setLoading(false)
@@ -89,8 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         setUser(session?.user ?? null)
         
-        if (session?.user) {
-          await fetchPlayer(session.user.id)
+        if (session?.user?.email) {
+          await fetchPlayer(session.user.email)
         } else {
           setPlayer(null)
         }
