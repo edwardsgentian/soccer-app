@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, Users, ArrowLeft, Instagram, Globe, MessageCircle, Ticket, Component } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
-import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface Group {
   id: string

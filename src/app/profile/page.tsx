@@ -6,7 +6,7 @@ import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, MapPin, Edit, Trophy, Users } from 'lucide-react'
+import { Calendar, Edit, Trophy, Users } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 
@@ -246,13 +246,6 @@ export default function ProfilePage() {
     })
   }
 
-  const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-  }
 
   const calculateTotalHoursPlayed = () => {
     return gameHistory.reduce((total, history) => {

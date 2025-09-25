@@ -28,7 +28,6 @@ export function HomepageGameCard({
   gameId,
   tags
 }: HomepageGameCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
 
   // Generate random gradient based on gameId for consistency
   const getRandomGradient = () => {
@@ -83,8 +82,6 @@ export function HomepageGameCard({
     <Link href={`/games/${gameId}`} className="block">
       <motion.div
         className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -2 }}
