@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 export default function SuccessPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -7,9 +5,9 @@ export default function SuccessPage() {
       <nav className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <Link href="/" className="text-2xl font-bold text-gray-900">
+            <a href="/" className="text-2xl font-bold text-gray-900">
               Soccer App
-            </Link>
+            </a>
           </div>
         </div>
       </nav>
@@ -44,32 +42,32 @@ export default function SuccessPage() {
             </div>
 
             <div className="space-y-4">
-              <Link
+              <a
                 href="/games"
                 className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors inline-block"
               >
                 View All Games
-              </Link>
+              </a>
               
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-semibold text-blue-800 mb-2">Create an Account</h3>
                 <p className="text-blue-700 text-sm mb-4">
                   Track your game history and get faster checkout for future games.
                 </p>
-                <Link
+                <a
                   href="/profile"
                   className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-block"
                 >
                   Create Account
-                </Link>
+                </a>
               </div>
               
-              <Link
+              <a
                 href="/"
                 className="w-full border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-50 transition-colors inline-block"
               >
                 Return to Home
-              </Link>
+              </a>
             </div>
           </div>
         </div>
