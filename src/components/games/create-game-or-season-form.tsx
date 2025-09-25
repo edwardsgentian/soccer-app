@@ -152,6 +152,8 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
         throw new Error('Supabase client not initialized')
       }
 
+      console.log('Starting form submission...')
+
       // Verify admin password
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
@@ -160,6 +162,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
         .single()
 
       if (groupError) {
+        console.error('Group lookup error:', groupError)
         throw new Error('Group not found')
       }
 
@@ -169,14 +172,21 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
         throw new Error('Invalid admin password')
       }
 
-      if (gameType === 'one-off') {
-        await createOneOffGame()
-      } else {
-        await createSeason()
-      }
+      console.log('Password verified, creating...')
 
+      // Add timeout wrapper
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000)
+      })
+
+      const createPromise = gameType === 'one-off' ? createOneOffGame() : createSeason()
+      
+      await Promise.race([createPromise, timeoutPromise])
+
+      console.log('Creation successful!')
       onSuccess?.()
     } catch (err) {
+      console.error('Form submission error:', err)
       setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
@@ -210,6 +220,8 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
   }
 
   const createSeason = async () => {
+    console.log('Creating season...')
+    
     // Create season
     const { data: season, error: seasonError } = await supabase
       .from('seasons')
@@ -234,10 +246,17 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
       .select()
       .single()
 
-    if (seasonError) throw seasonError
+    if (seasonError) {
+      console.error('Season creation error:', seasonError)
+      throw new Error(`Failed to create season: ${seasonError.message}`)
+    }
+
+    console.log('Season created successfully:', season.id)
 
     // Create individual games
     const gameDates = generateGameDates()
+    console.log(`Creating ${gameDates.length} games...`)
+    
     const gamesToInsert = gameDates.map((gameDate, index) => ({
       group_id: groupId,
       season_id: season.id,
@@ -259,12 +278,20 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
       .from('games')
       .insert(gamesToInsert)
 
-    if (gamesError) throw gamesError
+    if (gamesError) {
+      console.error('Games creation error:', gamesError)
+      throw new Error(`Failed to create games: ${gamesError.message}`)
+    }
+
+    console.log('Games created successfully')
 
     // Create discount code if requested
     if (discountData.create_discount) {
+      console.log('Creating discount code...')
       await createDiscountCode(season.id, 'season')
     }
+    
+    console.log('Season creation completed successfully')
   }
 
   const createDiscountCode = async (seasonId: string | null, type: 'season' | 'game') => {
