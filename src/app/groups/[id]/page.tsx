@@ -180,25 +180,6 @@ export default function GroupDetailPage() {
                 {/* Group Name */}
                 <h1 className="text-2xl font-bold text-gray-900 mb-4">{group.name}</h1>
 
-                {/* Organizer */}
-                {group.organizer && (
-                  <div className="flex items-center text-gray-600 mb-4">
-                    <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center mr-2">
-                      {group.organizer.photo_url ? (
-                        <img
-                          src={group.organizer.photo_url}
-                          alt={group.organizer.name}
-                          className="w-6 h-6 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-blue-600 font-semibold text-xs">
-                          {group.organizer.name.charAt(0).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-sm">Organized by {group.organizer.name}</span>
-                  </div>
-                )}
                 
                 {/* Description */}
                 <p className="text-gray-600 mb-6">{group.description}</p>
