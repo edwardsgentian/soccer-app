@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-html-link-for-pages, react/no-unescaped-entities */
 export default function SuccessPage() {
   return (
     <html>
