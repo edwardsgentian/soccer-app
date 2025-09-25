@@ -21,6 +21,10 @@ interface Game {
     name: string
     whatsapp_group?: string
   }
+  game_attendees?: {
+    id: string
+    payment_status: string
+  }[]
 }
 
 export default function Home() {
