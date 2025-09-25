@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Clock, MapPin } from "lucide-react"
-import { motion } from 'framer-motion'
+// import { motion } from 'framer-motion'
 
 interface HomepageGameCardProps {
   gameName: string
@@ -102,12 +102,8 @@ export function HomepageGameCard({
 
   return (
     <Link href={`/games/${gameId}`} className="block">
-      <motion.div
+      <div
         className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-row max-w-lg mx-auto"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
         {/* Image Section - Left Side */}
         <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
@@ -177,7 +173,7 @@ export function HomepageGameCard({
             </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </Link>
   )
 }

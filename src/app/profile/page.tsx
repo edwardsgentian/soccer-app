@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
 import { Calendar, Edit, Trophy, Users } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+// import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface GameHistory {
@@ -387,59 +387,43 @@ export default function ProfilePage() {
           {/* Tab Headers - Luma Style with Sliding Animation */}
           <div className="px-6 pt-6 flex justify-center">
             <div className="flex bg-gray-100 p-1 rounded-lg">
-              <motion.button
+              <button
                 onClick={() => setActiveTab('upcoming')}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'upcoming'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 Upcoming
-              </motion.button>
-              <motion.button
+              </button>
+              <button
                 onClick={() => setActiveTab('attended')}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'attended'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 Past
-              </motion.button>
-              <motion.button
+              </button>
+              <button
                 onClick={() => setActiveTab('groups')}
                 className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'groups'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 17 }}
               >
                 Groups
-              </motion.button>
+              </button>
             </div>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
             {activeTab === 'attended' && (
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key="attended"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
+              <div>
                   {gameHistory.length === 0 ? (
                     <div className="text-center py-12">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -493,8 +477,7 @@ export default function ProfilePage() {
                       })()}
                     </div>
                   )}
-                </motion.div>
-              </AnimatePresence>
+              </div>
             )}
 
 
@@ -526,14 +509,7 @@ export default function ProfilePage() {
             )}
 
             {activeTab === 'upcoming' && (
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key="upcoming"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                >
+              <div>
                   {upcomingGames.length === 0 ? (
                     <div className="text-center py-12">
                       <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -587,8 +563,7 @@ export default function ProfilePage() {
                       })()}
                     </div>
                   )}
-                </motion.div>
-              </AnimatePresence>
+              </div>
             )}
           </div>
         </div>
