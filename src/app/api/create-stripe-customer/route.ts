@@ -14,6 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Stripe customer
+    if (!stripe) {
+      return NextResponse.json(
+        { error: 'Stripe not configured' },
+        { status: 500 }
+      )
+    }
+
     const customer = await stripe.customers.create({
       email,
       name,
