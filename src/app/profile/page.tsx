@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from '@/components/profile/profile-form'
+import { HomepageGameCard } from '@/components/homepage-game-card'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, MapPin, Edit, Trophy, Component, Contact, Volleyball } from 'lucide-react'
+import { Edit, Trophy, Contact, Volleyball } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface GameHistory {
   id: string
@@ -15,6 +17,7 @@ interface GameHistory {
   games: {
     name: string
     game_date: string
+    game_time: string
     location: string
     duration_hours: number
     groups: {
@@ -69,6 +72,7 @@ export default function ProfilePage() {
           games (
             name,
             game_date,
+            game_time,
             location,
             duration_hours,
             groups (
@@ -391,42 +395,109 @@ export default function ProfilePage() {
           {/* Tab Headers - Luma Style with Sliding Animation */}
           <div className="px-6 pt-6 flex justify-center">
             <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button
+              <motion.button
                 onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'upcoming'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10,
+                    bounce: 0.6
+                  }
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10,
+                    bounce: 0.3
+                  }
+                }}
               >
                 Upcoming
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setActiveTab('attended')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'attended'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10,
+                    bounce: 0.6
+                  }
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10,
+                    bounce: 0.3
+                  }
+                }}
               >
                 Past
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => setActiveTab('groups')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 text-center flex items-center justify-center ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
                   activeTab === 'groups'
                     ? 'bg-white text-black shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileTap={{ 
+                  scale: 0.95,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10,
+                    bounce: 0.6
+                  }
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  transition: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 10,
+                    bounce: 0.3
+                  }
+                }}
               >
                 Groups
-              </button>
+              </motion.button>
             </div>
           </div>
 
           {/* Tab Content */}
           <div className="p-6">
-            {activeTab === 'attended' && (
+            <AnimatePresence mode="wait">
+              {activeTab === 'attended' && (
+                <motion.div
+                  key="attended"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 20,
+                    bounce: 0.4
+                  }}
+                >
               /* Attended Content */
               <div>
                 {gameHistory.length === 0 ? (
@@ -435,30 +506,76 @@ export default function ProfilePage() {
                     <p className="text-gray-600">No games attended yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {gameHistory.map((game) => (
-                      <div key={game.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
-                          <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          <span>{game.games.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Component className="w-4 h-4 mr-1" />
-                          <span>{game.games.groups.name}</span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="max-w-lg mx-auto">
+                    {(() => {
+                      // Group games by date
+                      const gamesByDate = gameHistory.reduce((acc, game) => {
+                        const date = game.games.game_date
+                        if (!acc[date]) {
+                          acc[date] = []
+                        }
+                        acc[date].push(game)
+                        return acc
+                      }, {} as Record<string, typeof gameHistory>)
+                      
+                      const sortedDates = Object.keys(gamesByDate).sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort descending for past games
+                      
+                      return sortedDates.map((date) => {
+                        const dateGames = gamesByDate[date]
+                        const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })
+                        
+                        return (
+                          <div key={date} className="mb-8">
+                            {/* Date Label */}
+                            <div className="mb-4 text-center">
+                              <h3 className="text-sm text-gray-600">{formattedDate}</h3>
+                            </div>
+                            
+                            {/* Games for this date */}
+                            <div className="space-y-4">
+                              {dateGames.map((game, index) => (
+                                <HomepageGameCard
+                                  key={game.id}
+                                  gameName={game.games.name}
+                                  date={game.games.game_date}
+                                  time={formatTime(game.games.game_time)}
+                                  price={0} // Hide price for past games
+                                  location={game.games.location}
+                                  attendees={Math.min((index % 4) + 1, 8)} // Test attendees for demonstration
+                                  maxAttendees={8} // Default max attendees
+                                  groupName={game.games.groups.name}
+                                  gameId={game.id}
+                                  tags={[]}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })
+                    })()}
                   </div>
                 )}
               </div>
-            )}
+                </motion.div>
+              )}
 
-
-            {activeTab === 'groups' && (
+              {activeTab === 'groups' && (
+                <motion.div
+                  key="groups"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 20,
+                    bounce: 0.4
+                  }}
+                >
               /* Groups Content */
               <div>
                 {memberGroups.length === 0 ? (
@@ -483,9 +600,22 @@ export default function ProfilePage() {
                   </div>
                 )}
               </div>
-            )}
+                </motion.div>
+              )}
 
-            {activeTab === 'upcoming' && (
+              {activeTab === 'upcoming' && (
+                <motion.div
+                  key="upcoming"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                  transition={{ 
+                    type: "spring", 
+                    stiffness: 300, 
+                    damping: 20,
+                    bounce: 0.4
+                  }}
+                >
               /* Upcoming Games Content */
               <div>
                 {upcomingGames.length === 0 ? (
@@ -494,30 +624,63 @@ export default function ProfilePage() {
                     <p className="text-gray-600">No upcoming games registered.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {upcomingGames.map((game) => (
-                      <div key={game.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900">{game.games.name}</h3>
-                          <span className="text-sm text-gray-500">{formatDate(game.games.game_date)}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          <span>{new Date(game.games.game_date).toLocaleTimeString()}</span>                        </div>
-                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          <span>{game.games.location}</span>
-                        </div>
-                        <div className="flex items-center text-gray-600 text-sm">
-                          <Component className="w-4 h-4 mr-1" />
-                          <span>{game.games.groups.name}</span>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="max-w-lg mx-auto">
+                    {(() => {
+                      // Group games by date
+                      const gamesByDate = upcomingGames.reduce((acc, game) => {
+                        const date = game.games.game_date
+                        if (!acc[date]) {
+                          acc[date] = []
+                        }
+                        acc[date].push(game)
+                        return acc
+                      }, {} as Record<string, typeof upcomingGames>)
+                      
+                      const sortedDates = Object.keys(gamesByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()) // Sort ascending for upcoming games
+                      
+                      return sortedDates.map((date) => {
+                        const dateGames = gamesByDate[date]
+                        const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+                          weekday: 'long', 
+                          month: 'long', 
+                          day: 'numeric' 
+                        })
+                        
+                        return (
+                          <div key={date} className="mb-8">
+                            {/* Date Label */}
+                            <div className="mb-4 text-center">
+                              <h3 className="text-sm text-gray-600">{formattedDate}</h3>
+                            </div>
+                            
+                            {/* Games for this date */}
+                            <div className="space-y-4">
+                              {dateGames.map((game, index) => (
+                                <HomepageGameCard
+                                  key={game.id}
+                                  gameName={game.games.name}
+                                  date={game.games.game_date}
+                                  time="7:00 PM"
+                                  price={game.amount_paid}
+                                  location={game.games.location}
+                                  attendees={Math.min((index % 4) + 1, 8)} // Test attendees for demonstration
+                                  maxAttendees={8} // Default max attendees
+                                  groupName={game.games.groups.name}
+                                  gameId={game.id}
+                                  tags={['Registered']}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })
+                    })()}
                   </div>
                 )}
               </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

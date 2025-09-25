@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Instagram, Globe } from 'lucide-react'
+import { Calendar, Instagram, Globe, Component } from 'lucide-react'
 
 interface Group {
   id: string
@@ -79,8 +79,8 @@ export default function GroupsPage() {
       
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
+        <div className="mb-8">
+          <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Soccer Groups
             </h1>
@@ -88,11 +88,13 @@ export default function GroupsPage() {
               Find and join soccer groups in your area
             </p>
           </div>
-          <Button
-            onClick={() => setShowCreateModal(true)}
-          >
-            Create Group
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              onClick={() => setShowCreateModal(true)}
+            >
+              Create Group
+            </Button>
+          </div>
         </div>
 
         {/* Groups Grid */}
@@ -103,7 +105,9 @@ export default function GroupsPage() {
           </div>
         ) : groups.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <div className="flex justify-center mb-4">
+              <Component className="w-16 h-16 text-gray-400" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No groups yet
             </h3>
@@ -147,7 +151,7 @@ function GroupCard({ group }: { group: Group }) {
     <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
       {/* Group Header */}
       <div className="h-32 bg-gray-50 flex items-center justify-center">
-        <span className="text-2xl text-gray-400">⚽</span>
+        <Component className="w-8 h-8 text-gray-400" />
       </div>
 
       <div className="p-6">

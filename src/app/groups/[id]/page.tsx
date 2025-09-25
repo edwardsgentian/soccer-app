@@ -6,7 +6,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Component, ArrowLeft, Instagram, Globe, MessageCircle, Volleyball } from 'lucide-react'
+import { HomepageGameCard } from '@/components/homepage-game-card'
+import { Component, ArrowLeft, Instagram, Globe, MessageCircle, Calendar } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 
 interface Group {
@@ -139,7 +140,9 @@ export default function GroupDetailPage() {
         <Header />
         <div className="container mx-auto px-4 py-16">
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <div className="flex justify-center mb-4">
+              <Component className="w-16 h-16 text-gray-400" />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Group Not Found
             </h3>
@@ -178,7 +181,7 @@ export default function GroupDetailPage() {
             <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-8">
               {/* Group Header */}
               <div className="h-32 bg-gray-50 flex items-center justify-center">
-                <span className="text-2xl text-gray-400">⚽</span>
+                <Component className="w-8 h-8 text-gray-400" />
               </div>
 
               <div className="p-6">
@@ -292,7 +295,9 @@ export default function GroupDetailPage() {
 
             {games.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">⚽</div>
+                <div className="flex justify-center mb-4">
+                  <Component className="w-16 h-16 text-gray-400" />
+                </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   No upcoming games
                 </h3>
@@ -306,84 +311,26 @@ export default function GroupDetailPage() {
                 </Button>
               </div>
             ) : (
-              <div className="space-y-6">
-                {games.map((game) => {
+              <div className="max-w-lg mx-auto space-y-4">
+                {games.map((game, index) => {
                   const attendees = game.total_tickets - game.available_tickets
-                  const isFullyBooked = game.available_tickets <= 0
-                  const spotsLeft = game.available_tickets
-
+                  // Add some test attendees for demonstration
+                  const testAttendees = Math.min(attendees + (index % 4) + 1, game.total_tickets)
+                  
                   return (
-                    <div key={game.id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                      {/* Game Header */}
-                      <div className="h-24 bg-gray-50 flex items-center justify-center">
-                        <Volleyball className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <div className="p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">{game.name}</h3>
-                            {game.description && (
-                              <p className="text-gray-600 text-sm mb-3">{game.description}</p>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-blue-600">${game.price}</div>
-                            <div className="text-sm text-gray-500">per player</div>
-                          </div>
-                        </div>
-
-                        {/* Game Details */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center text-gray-600">
-                            <Calendar className="w-4 h-4 mr-2" />
-                            <span>{formatDate(game.game_date)}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Clock className="w-4 h-4 mr-2" />
-                            <span>{formatTime(game.game_time)}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            <span>{game.location}</span>
-                          </div>
-                          
-                          <div className="flex items-center text-gray-600">
-                            <Component className="w-4 h-4 mr-2" />
-                            <span>{attendees}/{game.total_tickets} players</span>
-                            {!isFullyBooked && (
-                              <span className="ml-2 text-sm text-blue-600">
-                                ({spotsLeft} spots left)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-3">
-                          <Button 
-                            asChild
-                            variant="outline" 
-                            className="flex-1"
-                          >
-                            <Link href={`/games/${game.id}`}>
-                              View Details
-                            </Link>
-                          </Button>
-                          <Button 
-                            className={`flex-1 ${
-                              isFullyBooked 
-                                ? 'bg-gray-400 cursor-not-allowed' 
-                                : ''
-                            }`}
-                            disabled={isFullyBooked}
-                          >
-                            {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
+                    <HomepageGameCard
+                      key={game.id}
+                      gameName={game.name}
+                      date={game.game_date}
+                      time={game.game_time}
+                      price={game.price}
+                      location={game.location}
+                      attendees={testAttendees}
+                      maxAttendees={game.total_tickets}
+                      groupName={group.name}
+                      gameId={game.id}
+                      tags={['Intermediate', 'Outdoors']}
+                    />
                   )
                 })}
               </div>

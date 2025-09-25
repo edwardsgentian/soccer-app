@@ -93,7 +93,7 @@ export function CreateGameForm({ groupId, onSuccess, onCancel }: CreateGameFormP
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div className="bg-white p-8">
+      <div className="p-8">
         <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
           Create Game
         </h2>

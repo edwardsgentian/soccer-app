@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button";
-import { GameCard } from "@/components/game-card";
+import { HomepageGameCard } from "@/components/homepage-game-card";
 import { Header } from "@/components/header";
 import { supabase } from '@/lib/supabase'
 
@@ -73,14 +73,13 @@ export default function Home() {
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
-            Community<br />
-            soccer games<br />
+            Community soccer<br />
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
-              start here.
+              games start here
             </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
-            Create a game or find fun, soccer groups near you.
+            Create a game or find social, soccer groups near you.
           </p>
         </div>
 
@@ -110,24 +109,63 @@ export default function Home() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {games.map((game) => {
-                  const attendees = game.total_tickets - game.available_tickets
-                  return (
-            <GameCard
-              key={game.id}
-              gameName={game.name}
-              date={game.game_date}
-              time={game.game_time}
-              price={game.price}
-              location={game.location}
-              attendees={attendees}
-              maxAttendees={game.total_tickets}
-              groupName={game.groups.name}
-              gameId={game.id}
-            />
-                  )
-                })}
+              <div className="max-w-lg mx-auto">
+                {(() => {
+                  // Group games by date
+                  const gamesByDate = games.reduce((acc, game) => {
+                    const date = game.game_date
+                    if (!acc[date]) {
+                      acc[date] = []
+                    }
+                    acc[date].push(game)
+                    return acc
+                  }, {} as Record<string, typeof games>)
+
+                  // Sort dates
+                  const sortedDates = Object.keys(gamesByDate).sort()
+
+                  return sortedDates.map((date) => {
+                    const dateGames = gamesByDate[date]
+                    const formattedDate = new Date(date).toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric'
+                    })
+
+                    return (
+                      <div key={date} className="mb-8">
+                        {/* Date Label */}
+                        <div className="mb-4 text-center">
+                          <h3 className="text-sm text-gray-600">{formattedDate}</h3>
+                        </div>
+                        
+                        {/* Games for this date */}
+                        <div className="space-y-4">
+                          {dateGames.map((game, index) => {
+                            const realAttendees = game.total_tickets - game.available_tickets
+                            // Add some test attendees for demonstration
+                            const testAttendees = Math.min(realAttendees + (index % 4) + 1, game.total_tickets)
+                            return (
+                              <HomepageGameCard
+                                key={game.id}
+                                gameName={game.name}
+                                date={game.game_date}
+                                time={game.game_time}
+                                price={game.price}
+                                location={game.location}
+                                attendees={testAttendees}
+                                maxAttendees={game.total_tickets}
+                                groupName={game.groups.name}
+                                gameId={game.id}
+                                tags={['Intermediate', 'Outdoors']} // You can make this dynamic based on game data
+                              />
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
               
               {/* View All Games Button - Centered below tiles */}
@@ -144,7 +182,7 @@ export default function Home() {
         </div>
 
         {/* How It Works Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
+        <div className="p-8 mb-12">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
             How It Works
           </h2>
@@ -173,10 +211,10 @@ export default function Home() {
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl">⚽</span>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Play & Connect</h3>
+              <h3 className="text-xl font-semibold mb-2">Confirm and Play</h3>
               <p className="text-gray-600">
-                Show up and play! Meet new people, improve your skills, 
-                and join the community WhatsApp group.
+                Confirm attendance, show up and play! Meet new people, improve your skills, 
+                and join a new community.
               </p>
             </div>
           </div>

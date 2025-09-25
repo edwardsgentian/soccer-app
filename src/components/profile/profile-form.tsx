@@ -172,7 +172,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           {isEditing ? 'Edit Profile' : 'Complete Your Profile'}
         </h2>

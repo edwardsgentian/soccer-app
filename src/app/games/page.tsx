@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Clock, MapPin, Users, DollarSign, Eye, Volleyball } from 'lucide-react'
+import { HomepageGameCard } from '@/components/homepage-game-card'
 
 interface Game {
   id: string
@@ -88,7 +88,7 @@ export default function GamesPage() {
       
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Upcoming Games
           </h1>
@@ -119,10 +119,62 @@ export default function GamesPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {games.map((game) => (
-              <GameCard key={game.id} game={game} />
-            ))}
+          <div className="max-w-lg mx-auto">
+            {(() => {
+              // Group games by date
+              const gamesByDate = games.reduce((acc, game) => {
+                const date = game.game_date
+                if (!acc[date]) {
+                  acc[date] = []
+                }
+                acc[date].push(game)
+                return acc
+              }, {} as Record<string, typeof games>)
+              
+              const sortedDates = Object.keys(gamesByDate).sort((a, b) => new Date(a).getTime() - new Date(b).getTime()) // Sort ascending for upcoming games
+              
+              return sortedDates.map((date) => {
+                const dateGames = gamesByDate[date]
+                const formattedDate = new Date(date).toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })
+                
+                return (
+                  <div key={date} className="mb-8">
+                    {/* Date Label */}
+                    <div className="mb-4 text-center">
+                      <h3 className="text-sm text-gray-600">{formattedDate}</h3>
+                    </div>
+                    
+                    {/* Games for this date */}
+                    <div className="space-y-4">
+                      {dateGames.map((game, index) => {
+                        const attendees = game.total_tickets - game.available_tickets
+                        // Add some test attendees for demonstration
+                        const testAttendees = Math.min(attendees + (index % 4) + 1, game.total_tickets)
+                        return (
+                          <HomepageGameCard
+                            key={game.id}
+                            gameName={game.name}
+                            date={game.game_date}
+                            time={game.game_time}
+                            price={game.price}
+                            location={game.location}
+                            attendees={testAttendees}
+                            maxAttendees={game.total_tickets}
+                            groupName={game.groups.name}
+                            gameId={game.id}
+                            tags={['Intermediate', 'Outdoors']}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })
+            })()}
           </div>
         )}
       </div>
@@ -131,87 +183,3 @@ export default function GamesPage() {
   )
 }
 
-function GameCard({ game }: { game: Game }) {
-  const isFullyBooked = game.available_tickets <= 0
-  const spotsLeft = game.available_tickets
-  const attendees = game.total_tickets - game.available_tickets
-
-  return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-      {/* Game Image Placeholder */}
-      <div className="h-32 bg-gray-50 flex items-center justify-center">
-        <Volleyball className="w-8 h-8 text-gray-400" />
-      </div>
-
-      <div className="p-6">
-        {/* Group Name */}
-        <div className="text-sm text-gray-500 mb-2">{game.groups.name}</div>
-        
-        {/* Game Name */}
-        <h3 className="text-xl font-bold text-gray-900 mb-3">{game.name}</h3>
-
-        {/* Game Details */}
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center text-gray-600">
-            <Calendar className="w-4 h-4 mr-2" />
-            <span>{game.game_date}</span>
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <Clock className="w-4 h-4 mr-2" />
-            <span>{game.game_time}</span>
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <MapPin className="w-4 h-4 mr-2" />
-            <span className="truncate">{game.location}</span>
-          </div>
-          
-          
-          <div className="flex items-center text-gray-600">
-            <Users className="w-4 h-4 mr-2" />
-            <span>{attendees}/{game.total_tickets} players</span>
-            {!isFullyBooked && (
-              <span className="ml-2 text-sm text-blue-600">
-                ({spotsLeft} spots left)
-              </span>
-            )}
-          </div>
-          
-          <div className="flex items-center text-gray-600">
-            <DollarSign className="w-4 h-4 mr-2" />
-            <span className="font-semibold">${game.price}</span>
-          </div>
-        </div>
-
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button 
-            asChild
-            variant="outline" 
-            className="flex-1"
-            size="sm"
-          >
-            <Link href={`/games/${game.id}`}>
-              <Eye className="w-4 h-4 mr-1" />
-              View Details
-            </Link>
-          </Button>
-          <Button 
-            className={`flex-1 ${
-              isFullyBooked 
-                ? 'bg-gray-400 cursor-not-allowed' 
-                : ''
-            }`}
-            size="sm"
-            disabled={isFullyBooked}
-          >
-            {isFullyBooked ? 'Fully Booked' : 'Buy Game'}
-          </Button>
-        </div>
-
-      </div>
-    </div>
-  )
-}

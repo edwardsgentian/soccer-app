@@ -60,6 +60,15 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Instrument Serif font for h1 titles */
+h1 {
+  font-family: var(--font-instrument-serif), serif;
+  font-size: 5em;
+  line-height: 1.1;
+  font-weight: 500;
+}
+
+
 /* Ensure gradient text works properly */
 .bg-clip-text {
   -webkit-background-clip: text;

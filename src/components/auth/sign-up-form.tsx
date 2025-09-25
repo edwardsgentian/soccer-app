@@ -103,7 +103,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
           Create Account
         </h2>
