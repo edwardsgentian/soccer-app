@@ -13,6 +13,7 @@ function SuccessPageContent() {
   const { user } = useAuth()
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const [gameDetails, setGameDetails] = useState<{
     name: string
     date: string
@@ -21,7 +22,14 @@ function SuccessPageContent() {
     group: string
   } | null>(null)
 
+  // Prevent hydration mismatch
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     const processPayment = async () => {
       if (!sessionId) {
         setError('No session ID found')
@@ -65,7 +73,22 @@ function SuccessPageContent() {
     }
 
     processPayment()
-  }, [sessionId])
+  }, [sessionId, mounted])
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -162,7 +185,7 @@ function SuccessPageContent() {
                 View All Games
               </Button>
               
-              {!user && (
+              {mounted && !user && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <h3 className="font-semibold text-blue-800 mb-2">Create an Account</h3>
                   <p className="text-blue-700 text-sm mb-4">
