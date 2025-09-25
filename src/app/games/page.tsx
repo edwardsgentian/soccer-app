@@ -158,7 +158,7 @@ export default function GamesPage() {
                           maxAttendees={game.total_tickets}
                           groupName={game.groups.name}
                           gameId={game.id}
-                          tags={game.groups.tags || []}
+                          tags={[]}
                         />
                       )
                     })}
