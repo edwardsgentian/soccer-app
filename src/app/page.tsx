@@ -45,6 +45,10 @@ export default function Home() {
           groups (
             name,
             whatsapp_group
+          ),
+          game_attendees (
+            id,
+            payment_status
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -73,14 +77,13 @@ export default function Home() {
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
-            Community<br />
-            soccer games<br />
+            Community soccer<br />
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
-              start here.
+              games start here
             </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
-            Create a game or find social, soccer groups near you.
+            Create a game or find social, soccer groups near you
           </p>
         </div>
 
@@ -130,15 +133,15 @@ export default function Home() {
                     <div key={date}>
                       {/* Date Label */}
                       <div className="text-center mb-4">
-                        <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                        <h3 className="text-sm text-gray-600">
                           {date}
-                        </span>
+                        </h3>
                       </div>
                       
                       {/* Games for this date */}
                       <div className="space-y-4">
                         {dateGames.map((game) => {
-                          const attendees = game.total_tickets - game.available_tickets
+                          const attendees = game.game_attendees?.filter(att => att.payment_status === 'completed').length || 0
                           return (
                             <HomepageGameCard
                               key={game.id}
@@ -150,7 +153,7 @@ export default function Home() {
                               maxAttendees={game.total_tickets}
                               groupName={game.groups.name}
                               gameId={game.id}
-                              tags={[]}
+                              tags={['Intermediate', 'Outdoors']}
                             />
                           )
                         })}
@@ -174,7 +177,7 @@ export default function Home() {
         </div>
 
         {/* How It Works Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-12">
+        <div className="p-8 mb-12">
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
             How It Works
           </h2>
