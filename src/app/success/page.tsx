@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Calendar, MapPin, Users } from 'lucide-react'
 
@@ -28,9 +29,9 @@ export default function SuccessPage() {
       <nav className="bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <a href="/" className="text-2xl font-bold text-gray-900">
+            <Link href="/" className="text-2xl font-bold text-gray-900">
               Soccer App
-            </a>
+            </Link>
           </div>
         </div>
       </nav>
