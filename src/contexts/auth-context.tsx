@@ -37,29 +37,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchPlayer = async (userId: string) => {
-    if (!supabase || !user) return
+  const fetchPlayer = async (userEmail: string) => {
+    if (!supabase || !userEmail) return
 
     try {
-      // Create a timeout promise
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Request timed out')), 10000) // 10 second timeout
-      })
-
-      // Use the user's email directly from the user object instead of making another API call
-      if (!user.email) {
-        console.error('No email found for user')
-        return
-      }
-      
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from('players')
         .select('*')
-        .eq('email', user.email)
+        .eq('email', userEmail)
         .single()
-
-      // Race between the query and timeout
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as { data: unknown; error: unknown }
 
       if (error) {
         console.error('Error fetching player:', error)
@@ -74,8 +60,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshPlayer = async () => {
-    if (user) {
-      await fetchPlayer(user.id)
+    if (user && user.email) {
+      await fetchPlayer(user.email)
     }
   }
 
@@ -90,8 +76,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession()
       setUser(session?.user ?? null)
       
-      if (session?.user) {
-        await fetchPlayer(session.user.id)
+      if (session?.user?.email) {
+        await fetchPlayer(session.user.email)
       }
       
       setLoading(false)
@@ -104,8 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       async (event, session) => {
         setUser(session?.user ?? null)
         
-        if (session?.user) {
-          await fetchPlayer(session.user.id)
+        if (session?.user?.email) {
+          await fetchPlayer(session.user.email)
         } else {
           setPlayer(null)
         }
