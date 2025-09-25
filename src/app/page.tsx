@@ -49,10 +49,6 @@ export default function Home() {
           groups (
             name,
             whatsapp_group
-          ),
-          game_attendees (
-            id,
-            payment_status
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -145,7 +141,7 @@ export default function Home() {
                       {/* Games for this date */}
                       <div className="space-y-4">
                         {dateGames.map((game) => {
-                          const attendees = game.game_attendees?.filter(att => att.payment_status === 'completed').length || 0
+                          const attendees = game.total_tickets - game.available_tickets
                           return (
                             <HomepageGameCard
                               key={game.id}
