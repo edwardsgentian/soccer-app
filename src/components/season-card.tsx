@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Clock, MapPin, CalendarCheck, Calendar, SmilePlus, Check } from 'lucide-react'
+import { Clock, MapPin, CalendarCheck, Calendar, SmilePlus } from 'lucide-react'
 
 interface SeasonCardProps {
   seasonId: string
@@ -20,6 +20,7 @@ interface SeasonCardProps {
   seasonSpotsAvailable: number
   gameSpotsAvailable: number
   isUserAttending?: boolean
+  isPastSeason?: boolean
 }
 
 const gradients = [
@@ -106,6 +107,7 @@ export function SeasonCard({
   location,
   seasonSpotsAvailable,
   isUserAttending = false,
+  isPastSeason = false,
 }: SeasonCardProps) {
   const formatTime = (timeString: string) => {
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
@@ -150,9 +152,12 @@ export function SeasonCard({
             <h3 className="font-bold text-gray-900 text-lg">{seasonName}</h3>
             
             {/* Season Price or Attending status in top right */}
-            {isUserAttending ? (
-              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm font-medium flex items-center">
-                <Check className="w-3 h-3 mr-1" />
+            {isPastSeason ? (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                Completed
+              </span>
+            ) : isUserAttending ? (
+              <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
                 Attending
               </span>
             ) : (
