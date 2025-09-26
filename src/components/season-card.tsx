@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Clock, MapPin, Component, Wallet, Calendar } from 'lucide-react'
+import { Clock, MapPin, CalendarCheck, Calendar, SmilePlus, Check } from 'lucide-react'
 
 interface SeasonCardProps {
   seasonId: string
@@ -19,6 +19,7 @@ interface SeasonCardProps {
   location: string
   seasonSpotsAvailable: number
   gameSpotsAvailable: number
+  isUserAttending?: boolean
 }
 
 const gradients = [
@@ -47,6 +48,15 @@ const getRandomGradient = (seasonId: string) => {
 const generateAvatarStack = (attendees: number, maxAvatars: number) => {
   const avatars = []
   const avatarCount = Math.min(attendees, maxAvatars)
+  
+  // If no attendees, show empty state avatar
+  if (attendees === 0) {
+    return (
+      <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+        <SmilePlus className="w-3 h-3 text-gray-500" />
+      </div>
+    )
+  }
   
   const userInitials = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
   const avatarColors = [
@@ -95,6 +105,7 @@ export function SeasonCard({
   groupName,
   location,
   seasonSpotsAvailable,
+  isUserAttending = false,
 }: SeasonCardProps) {
   const formatTime = (timeString: string) => {
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
@@ -128,7 +139,7 @@ export function SeasonCard({
         {/* Image Section - Left Side */}
         <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient(seasonId)} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-            <Component className="w-6 h-6 text-gray-600" />
+            <CalendarCheck className="w-6 h-6 text-gray-600" />
           </div>
         </div>
 
@@ -138,10 +149,17 @@ export function SeasonCard({
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-bold text-gray-900 text-lg">{seasonName}</h3>
             
-            {/* Season Price in top right */}
-            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-medium">
-              ${seasonPrice}
-            </span>
+            {/* Season Price or Attending status in top right */}
+            {isUserAttending ? (
+              <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md text-sm font-medium flex items-center">
+                <Check className="w-3 h-3 mr-1" />
+                Attending
+              </span>
+            ) : (
+              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-medium">
+                ${seasonPrice}
+              </span>
+            )}
           </div>
 
           {/* Time and Location */}
@@ -157,8 +175,8 @@ export function SeasonCard({
               <span>{location}</span>
             </div>
             <div className="flex items-center text-gray-600 text-sm">
-              <Wallet className="w-4 h-4 mr-2 text-gray-500" />
-              <span>{totalGames} games{getRepeatDisplay(repeatType)}</span>
+              <Calendar className="w-4 h-4 mr-2 text-gray-500" />
+              <span>{totalGames} games {getRepeatDisplay(repeatType)}</span>
             </div>
           </div>
 

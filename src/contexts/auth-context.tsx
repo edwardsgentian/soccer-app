@@ -28,6 +28,9 @@ interface AuthContextType {
   loading: boolean
   signOut: () => Promise<void>
   refreshPlayer: () => Promise<void>
+  login: (email: string, password: string) => Promise<void>
+  signup: (name: string, email: string, phone: string, password: string) => Promise<void>
+  restoreAuth: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -41,10 +44,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!supabase) return
 
     try {
-      // First get the user's email from auth, then find the player record by email
+      // Check if user is logged in via localStorage (custom auth system)
+      const storedUser = localStorage.getItem('soccer_app_user')
+      const storedPlayer = localStorage.getItem('soccer_app_player')
+      
+      if (storedUser && storedPlayer) {
+        const user = JSON.parse(storedUser)
+        const player = JSON.parse(storedPlayer)
+        setUser(user)
+        setPlayer(player)
+        return
+      }
+
+      // Fallback: try Supabase auth (for compatibility)
       const { data: authUser } = await supabase.auth.getUser()
       if (!authUser.user?.email) {
-        console.error('No email found for user')
         return
       }
       
@@ -72,19 +86,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const restoreAuth = async () => {
+    console.log('Attempting to restore authentication from localStorage...')
+    try {
+      const storedUser = localStorage.getItem('soccer_app_user')
+      const storedPlayer = localStorage.getItem('soccer_app_player')
+      
+      if (storedUser && storedPlayer) {
+        const user = JSON.parse(storedUser)
+        const player = JSON.parse(storedPlayer)
+        setUser(user)
+        setPlayer(player)
+        console.log('Authentication restored successfully:', { user: !!user, player: !!player })
+        return true
+      } else {
+        console.log('No stored authentication data found')
+        return false
+      }
+    } catch (error) {
+      console.error('Error restoring authentication:', error)
+      return false
+    }
+  }
+
   useEffect(() => {
     if (!supabase) {
       setLoading(false)
       return
     }
 
-    // Get initial session
+    // Get initial session - try custom auth first, then Supabase fallback
     const getInitialSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user ?? null)
+      // First try to restore from localStorage (our custom auth system)
+      const restored = await restoreAuth()
       
-      if (session?.user) {
-        await fetchPlayer()
+      if (!restored) {
+        // Fallback to Supabase auth
+        const { data: { session } } = await supabase.auth.getSession()
+        setUser(session?.user ?? null)
+        
+        if (session?.user) {
+          await fetchPlayer()
+        }
       }
       
       setLoading(false)
@@ -92,15 +135,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getInitialSession()
 
-    // Listen for auth changes
+    // Listen for auth changes (but don't override custom auth)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setUser(session?.user ?? null)
+        // Only update if we don't have custom auth data
+        const hasCustomAuth = localStorage.getItem('soccer_app_user') && localStorage.getItem('soccer_app_player')
         
-        if (session?.user) {
-          await fetchPlayer()
-        } else {
-          setPlayer(null)
+        if (!hasCustomAuth) {
+          setUser(session?.user ?? null)
+          
+          if (session?.user) {
+            await fetchPlayer()
+          } else {
+            setPlayer(null)
+          }
         }
         
         setLoading(false)
@@ -113,9 +161,137 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     if (!supabase) return
 
+    // Clear localStorage
+    localStorage.removeItem('soccer_app_user')
+    localStorage.removeItem('soccer_app_player')
+    
+    // Clear state
+    setUser(null)
+    setPlayer(null)
+
+    // Try Supabase signOut for compatibility
     const { error } = await supabase.auth.signOut()
     if (error) {
       console.error('Error signing out:', error)
+    }
+  }
+
+  const login = async (email: string, password: string) => {
+    if (!supabase) throw new Error('Supabase not initialized')
+
+    try {
+      // First, find the player by email
+      const { data: playerData, error: playerError } = await supabase
+        .from('players')
+        .select('*')
+        .eq('email', email)
+        .single()
+
+      if (playerError) {
+        console.error('Login error:', playerError)
+        if (playerError.code === 'PGRST116') {
+          // Not found - invalid email
+          throw new Error('Invalid email or password')
+        } else {
+          throw new Error('Login failed. Please try again.')
+        }
+      }
+
+      if (!playerData) {
+        throw new Error('Invalid email or password')
+      }
+
+      // Check password (simple comparison for now)
+      const hashedPassword = btoa(password)
+      if (playerData.password_hash !== hashedPassword) {
+        throw new Error('Invalid email or password')
+      }
+
+      // Create a mock user object for the auth context
+      const mockUser = {
+        id: playerData.id,
+        email: playerData.email,
+        user_metadata: {
+          name: playerData.name
+        },
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: new Date().toISOString()
+      } as User
+
+      // Store in localStorage for persistence
+      localStorage.setItem('soccer_app_user', JSON.stringify(mockUser))
+      localStorage.setItem('soccer_app_player', JSON.stringify(playerData))
+
+        setUser(mockUser as unknown as User)
+      setPlayer(playerData)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const signup = async (name: string, email: string, phone: string, password: string) => {
+    if (!supabase) throw new Error('Supabase not initialized')
+
+    try {
+      // Check if email already exists
+      const { data: existingPlayer, error: checkError } = await supabase
+        .from('players')
+        .select('id')
+        .eq('email', email)
+        .single()
+      
+      if (checkError && checkError.code !== 'PGRST116') {
+        // PGRST116 is "not found" which is expected for new emails
+        console.error('Error checking existing email:', checkError)
+        throw new Error('Failed to check if email exists')
+      }
+
+      if (existingPlayer) {
+        throw new Error('An account with this email already exists')
+      }
+
+      // Hash password
+      const hashedPassword = btoa(password)
+
+      // Create new player
+      const { data: newPlayer, error: insertError } = await supabase
+        .from('players')
+        .insert({
+          name,
+          email,
+          phone,
+          password_hash: hashedPassword,
+          member_since: new Date().toISOString()
+        })
+        .select()
+        .single()
+
+      if (insertError) {
+        console.error('Signup error:', insertError)
+        throw new Error(`Failed to create account: ${insertError.message}`)
+      }
+
+      // Create a mock user object for the auth context
+      const mockUser = {
+        id: newPlayer.id,
+        email: newPlayer.email,
+        user_metadata: {
+          name: newPlayer.name
+        },
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: new Date().toISOString()
+      } as User
+
+      // Store in localStorage for persistence
+      localStorage.setItem('soccer_app_user', JSON.stringify(mockUser))
+      localStorage.setItem('soccer_app_player', JSON.stringify(newPlayer))
+
+        setUser(mockUser as unknown as User)
+      setPlayer(newPlayer)
+    } catch (error) {
+      throw error
     }
   }
 
@@ -125,6 +301,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signOut,
     refreshPlayer,
+    login,
+    signup,
+    restoreAuth,
   }
 
   return (

@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Clock, MapPin } from "lucide-react"
+import { Clock, MapPin, SmilePlus } from "lucide-react"
 // import { motion } from 'framer-motion'
 
 interface HomepageGameCardProps {
@@ -14,6 +14,14 @@ interface HomepageGameCardProps {
   groupName: string
   gameId: string
   tags: string[]
+  seasonId?: string
+  seasonSignupDeadline?: string
+  isUserAttending?: boolean
+  gameAttendees?: {
+    id: string
+    player_id: string
+    payment_status: string
+  }[]
 }
 
 export function HomepageGameCard({
@@ -25,7 +33,11 @@ export function HomepageGameCard({
   maxAttendees,
   groupName,
   gameId,
-  tags
+  tags,
+  seasonId,
+  seasonSignupDeadline,
+  isUserAttending,
+  gameAttendees
 }: HomepageGameCardProps) {
 
   // Generate random gradient based on gameId for consistency
@@ -57,7 +69,20 @@ export function HomepageGameCard({
   const generateAvatarStack = () => {
     const avatars = []
     const maxAvatars = 3
-    const avatarCount = Math.min(attendees, maxAvatars)
+    
+    // Use actual game attendees data if available, otherwise fall back to attendees count
+    const actualAttendees = gameAttendees?.filter(att => att.payment_status === 'completed') || []
+    const attendeeCount = actualAttendees.length
+    const avatarCount = Math.min(attendeeCount, maxAvatars)
+    
+    // If no attendees, show empty state avatar
+    if (attendeeCount === 0) {
+      return (
+        <div className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center">
+          <SmilePlus className="w-3 h-3 text-gray-500" />
+        </div>
+      )
+    }
     
     // Generate realistic user initials
     const userInitials = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
@@ -81,14 +106,14 @@ export function HomepageGameCard({
     }
     
     // Add "+X more" indicator if there are more attendees
-    if (attendees > maxAvatars) {
+    if (attendeeCount > maxAvatars) {
       avatars.push(
         <div
           key="more"
           className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600"
           style={{ marginLeft: '-8px', zIndex: 0 }}
         >
-          +{attendees - maxAvatars}
+          +{attendeeCount - maxAvatars}
         </div>
       )
     }
@@ -97,11 +122,20 @@ export function HomepageGameCard({
   }
 
   const isPastGame = price === 0
-  const availableSpots = maxAttendees - attendees
+  // Calculate actual attendee count from game_attendees data
+  const actualAttendees = gameAttendees?.filter(att => att.payment_status === 'completed') || []
+  const actualAttendeeCount = actualAttendees.length
+  const availableSpots = maxAttendees - actualAttendeeCount
+  
+  // Check if season signup period is still open
+  const isSeasonSignupOpen = seasonSignupDeadline && new Date(seasonSignupDeadline) > new Date()
+  
+  // If this is a season game and signup is still open, no one can join individual games
+  const requiresSeasonSignup = seasonId && isSeasonSignupOpen
   
 
   return (
-    <Link href={`/games/${gameId}`} className="block">
+    <Link href={requiresSeasonSignup ? `/seasons/${seasonId}` : `/games/${gameId}`} className="block">
       <div
         className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-row max-w-lg mx-auto"
       >
@@ -118,10 +152,18 @@ export function HomepageGameCard({
           <div className="flex items-start justify-between mb-2">
             <h3 className="font-bold text-gray-900 text-lg">{gameName}</h3>
             
-            {/* Price or Completed Badge in top right */}
-            {isPastGame ? (
+            {/* Price or Status Badge in top right */}
+            {isUserAttending ? (
+              <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
+                Attending
+              </span>
+            ) : isPastGame ? (
               <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
                 Completed
+              </span>
+            ) : requiresSeasonSignup ? (
+              <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">
+                Season Signup Open
               </span>
             ) : (
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-medium">
@@ -151,7 +193,7 @@ export function HomepageGameCard({
               {availableSpots <= 0
                 ? 'Fully Booked'
                 : isPastGame
-                  ? `${attendees} attended`
+                  ? `${actualAttendeeCount} attended`
                   : `${availableSpots} spots available`}
             </span>
           </div>

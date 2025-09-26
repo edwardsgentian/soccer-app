@@ -20,6 +20,12 @@ interface GameHistory {
     game_time: string
     location: string
     duration_hours: number
+    season_id?: string
+    season_signup_deadline?: string
+    seasons?: {
+      id: string
+      season_signup_deadline: string
+    }
     groups: {
       name: string
     }
@@ -74,6 +80,13 @@ export default function ProfilePage() {
             game_date,
             location,
             duration_hours,
+            season_id,
+            season_signup_deadline,
+            seasons (
+              id,
+              season_signup_deadline,
+              include_organizer_in_count
+            ),
             groups (
               name
             )
@@ -469,6 +482,10 @@ export default function ProfilePage() {
                                   groupName={game.games.groups.name}
                                   gameId={game.id}
                                   tags={[]}
+                                  seasonId={game.games.season_id || game.games.seasons?.id}
+                                  seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
+                                  isUserAttending={true}
+                                  gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
                                 />
                               ))}
                             </div>
@@ -555,6 +572,10 @@ export default function ProfilePage() {
                                   groupName={game.games.groups.name}
                                   gameId={game.id}
                                   tags={[]}
+                                  seasonId={game.games.season_id || game.games.seasons?.id}
+                                  seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
+                                  isUserAttending={true}
+                                  gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
                                 />
                               ))}
                             </div>

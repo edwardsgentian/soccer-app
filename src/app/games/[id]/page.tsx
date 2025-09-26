@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, DollarSign, ArrowLeft, Ticket } from 'lucide-react'
+import { JoinModal } from '@/components/join-flow/join-modal'
 
 interface Game {
   id: string
@@ -18,10 +19,17 @@ interface Game {
   total_tickets: number
   available_tickets: number
   created_at: string
+  season_id?: string
+  season_signup_deadline?: string
   groups: {
     name: string
     whatsapp_group?: string
     description?: string
+  }
+  seasons?: {
+    id: string
+    season_signup_deadline: string
+    include_organizer_in_count: boolean
   }
 }
 
@@ -42,6 +50,7 @@ export default function GameDetailPage() {
   const [attendees, setAttendees] = useState<Attendee[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showJoinModal, setShowJoinModal] = useState(false)
 
   const fetchGameDetails = useCallback(async () => {
     if (!supabase) {
@@ -64,6 +73,11 @@ export default function GameDetailPage() {
             id,
             name,
             photo_url
+          ),
+          seasons (
+            id,
+            season_signup_deadline,
+            include_organizer_in_count
           )
         `)
         .eq('id', gameId)
@@ -164,9 +178,10 @@ export default function GameDetailPage() {
     )
   }
 
-  const isFullyBooked = game.available_tickets <= 0
-  const spotsLeft = game.available_tickets
-  const totalAttendees = game.total_tickets - game.available_tickets
+  // Use actual attendee count from the fetched attendees data
+  const totalAttendees = attendees.length
+  const spotsLeft = game.total_tickets - totalAttendees
+  const isFullyBooked = spotsLeft <= 0
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
@@ -293,6 +308,7 @@ export default function GameDetailPage() {
                 }`}
                 disabled={isFullyBooked}
                 size="lg"
+                onClick={() => setShowJoinModal(true)}
               >
                 {isFullyBooked ? 'Fully Booked' : 'Join Game - $' + game.price}
               </Button>
@@ -319,6 +335,14 @@ export default function GameDetailPage() {
         </div>
       </div>
 
+      {/* Join Modal */}
+      <JoinModal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        gameId={gameId}
+        price={game?.price || 0}
+        gameName={game?.name}
+      />
     </div>
   )
 }

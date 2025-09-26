@@ -1,9 +1,10 @@
 'use client'
 
-// import { useState } from 'react' // Removed unused import
+import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from "@/components/ui/button"
 import { Calendar, Clock, MapPin, Users, DollarSign, Ticket } from "lucide-react"
+import { JoinModal } from '@/components/join-flow/join-modal'
 
 interface GameCardProps {
   gameName: string
@@ -33,6 +34,7 @@ export function GameCard({
   groupName,
   gameId = 'sample-game-id'
 }: GameCardProps) {
+  const [showJoinModal, setShowJoinModal] = useState(false)
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
@@ -125,12 +127,21 @@ export function GameCard({
             }`}
             size="sm"
             disabled={isFullyBooked}
+            onClick={() => setShowJoinModal(true)}
           >
             {isFullyBooked ? 'Fully Booked' : 'Join Game'}
           </Button>
         </div>
       </div>
-    </div>
 
+      {/* Join Modal */}
+      <JoinModal
+        isOpen={showJoinModal}
+        onClose={() => setShowJoinModal(false)}
+        gameId={gameId}
+        price={price}
+        gameName={gameName}
+      />
+    </div>
   )
 }

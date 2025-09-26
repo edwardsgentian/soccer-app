@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { HomepageGameCard } from "@/components/homepage-game-card";
 import { SeasonCard } from "@/components/season-card";
 import { Header } from "@/components/header";
+import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
 
 interface Game {
@@ -18,12 +19,20 @@ interface Game {
   total_tickets: number
   available_tickets: number
   created_at: string
+  season_id?: string
+  season_signup_deadline?: string
   groups: {
     name: string
     whatsapp_group?: string
   }
+  seasons?: {
+    id: string
+    season_signup_deadline: string
+    include_organizer_in_count: boolean
+  }
   game_attendees?: {
     id: string
+    player_id: string
     payment_status: string
   }[]
 }
@@ -47,11 +56,14 @@ interface Season {
   }
   season_attendees?: {
     id: string
+    player_id: string
     payment_status: string
   }[]
+  include_organizer_in_count?: boolean
 }
 
 export default function Home() {
+  const { player } = useAuth()
   const [games, setGames] = useState<Game[]>([])
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,6 +88,16 @@ export default function Home() {
           groups (
             name,
             whatsapp_group
+          ),
+          seasons (
+            id,
+            season_signup_deadline,
+            include_organizer_in_count
+          ),
+          game_attendees (
+            id,
+            player_id,
+            payment_status
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -86,36 +108,7 @@ export default function Home() {
         return
       }
 
-      // Get active seasons to check their signup deadlines
-      const { data: activeSeasons, error: seasonsError } = await supabase
-        .from('seasons')
-        .select('id, season_signup_deadline, allow_individual_sales')
-        .gte('first_game_date', new Date().toISOString().split('T')[0])
-
-      if (seasonsError) {
-        console.error('Error fetching seasons for filtering:', seasonsError)
-        return
-      }
-
-      // Filter out individual games from seasons that haven't reached their signup deadline
-      const today = new Date().toISOString().split('T')[0]
-      const filteredGames = (allGames || []).filter(game => {
-        // If it's not part of a season, show it
-        if (!game.season_id) return true
-
-        // If it's part of a season, check if individual sales are allowed and deadline has passed
-        const season = activeSeasons?.find(s => s.id === game.season_id)
-        if (!season) return true // Show if season not found (fallback)
-
-        // Only show individual games if:
-        // 1. Season allows individual sales AND
-        // 2. Season signup deadline has passed
-        return season.allow_individual_sales && 
-               season.season_signup_deadline && 
-               season.season_signup_deadline <= today
-      })
-
-      setGames(filteredGames.slice(0, 6)) // Show only the first 6 filtered games
+      setGames((allGames || []).slice(0, 6)) // Show only the first 6 games
     } catch (err) {
       console.error('Error fetching games:', err)
     } finally {
@@ -134,6 +127,11 @@ export default function Home() {
           groups (
             name,
             whatsapp_group
+          ),
+          season_attendees (
+            id,
+            player_id,
+            payment_status
           )
         `)
         .gte('first_game_date', new Date().toISOString().split('T')[0])
@@ -158,14 +156,14 @@ export default function Home() {
       
       <div className="container mx-auto px-4 pt-8 py-16">
         {/* Hero Section */}
-        <div className="text-center mb-20">
+        <div className="text-center mb-8">
           <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
             Community soccer<br />
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
               games start here
             </span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
             Create a game or find social, soccer groups near you
           </p>
         </div>
@@ -199,19 +197,22 @@ export default function Home() {
               {/* Seasons Section */}
               {seasons.length > 0 && (
                 <div className="max-w-lg mx-auto mb-8">
-                  <div className="text-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                      Available Seasons
-                    </h2>
-                    <p className="text-gray-600">
-                      Join a full season and save on individual games
-                    </p>
-                  </div>
-                  <div className="space-y-4">
                     {seasons.map((season) => {
-                      const seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
+                      // Calculate season attendees including organizer if they should be included
+                      let seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
+                      
+                      // If organizer should be included in count, add 1
+                      if (season.include_organizer_in_count) {
+                        seasonAttendees += 1
+                      }
+                      
                       const seasonSpotsAvailable = season.season_spots - seasonAttendees
                       const gameSpotsAvailable = season.game_spots // Individual game spots (not affected by season signups)
+                      
+                      // Check if current user is attending this season
+                      const isUserAttending = season.season_attendees?.some(att => 
+                        att.payment_status === 'completed' && att.player_id === player?.id
+                      ) || false
                       
                       return (
                         <SeasonCard
@@ -231,10 +232,10 @@ export default function Home() {
                           location={season.location}
                           seasonSpotsAvailable={seasonSpotsAvailable}
                           gameSpotsAvailable={gameSpotsAvailable}
+                          isUserAttending={isUserAttending}
                         />
                       )
                     })}
-                  </div>
                 </div>
               )}
 
@@ -268,7 +269,19 @@ export default function Home() {
                       {/* Games for this date */}
                       <div className="space-y-4">
                         {dateGames.map((game) => {
-                          const attendees = game.total_tickets - game.available_tickets
+                          // Calculate attendees including organizer if they should be included
+                          let attendees = game.total_tickets - game.available_tickets
+                          
+                          // If this game is part of a season and organizer should be included, add 1
+                          if (game.season_id && game.seasons?.include_organizer_in_count) {
+                            attendees += 1
+                          }
+                          
+                          // Check if current user is attending this game
+                          const isUserAttending = !!(player && game.game_attendees?.some(
+                            (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                          ))
+                          
                           return (
                             <HomepageGameCard
                               key={game.id}
@@ -281,6 +294,10 @@ export default function Home() {
                               groupName={game.groups.name}
                               gameId={game.id}
                               tags={['Intermediate', 'Outdoors']}
+                              seasonId={game.season_id || game.seasons?.id}
+                              seasonSignupDeadline={game.season_signup_deadline || game.seasons?.season_signup_deadline}
+                              isUserAttending={isUserAttending}
+                              gameAttendees={game.game_attendees}
                             />
                           )
                         })}
@@ -303,6 +320,7 @@ export default function Home() {
             </>
           )}
         </div>
+
 
         {/* How It Works Section */}
         <div className="p-8 mb-12">

@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
           name,
           photo_url
         ),
+        seasons (
+          id,
+          season_signup_deadline,
+          include_organizer_in_count
+        ),
         game_attendees (
           id,
           payment_status
@@ -69,9 +74,14 @@ export async function GET(request: NextRequest) {
       
       // Count completed attendees
       if (item.game_attendees && Array.isArray(item.game_attendees)) {
-        const completedAttendees = item.game_attendees.filter(
+        let completedAttendees = item.game_attendees.filter(
           (attendee: { payment_status: string }) => attendee.payment_status === 'completed'
         ).length
+        
+        // If this game is part of a season and organizer should be included, add 1
+        if (item.season_id && item.seasons?.include_organizer_in_count) {
+          completedAttendees += 1
+        }
         
         const currentGame = gamesMap.get(item.id)
         currentGame.actualAttendees = completedAttendees
