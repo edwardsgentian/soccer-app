@@ -12,6 +12,12 @@ import Image from 'next/image'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 
+interface GameAttendee {
+  id: string
+  player_id: string
+  payment_status: string
+}
+
 interface GameHistory {
   id: string
   created_at: string
@@ -25,11 +31,7 @@ interface GameHistory {
     season_id?: string
     season_signup_deadline?: string
     total_tickets?: number
-    game_attendees?: {
-      id: string
-      player_id: string
-      payment_status: string
-    }[]
+    game_attendees?: GameAttendee[]
     seasons?: {
       id: string
       season_signup_deadline: string
@@ -134,7 +136,7 @@ export default function ProfilePage() {
         // Filter for games where user attended
         const pastGames = allGames?.filter((game) => {
           const isUserAttended = game.game_attendees?.some(
-            (attendee: any) => 
+            (attendee: GameAttendee) => 
               attendee.player_id === (player?.id || user.id) && 
               attendee.payment_status === 'completed'
           )
@@ -144,9 +146,9 @@ export default function ProfilePage() {
         
         // Transform to match the expected format
         const transformedGames = pastGames.map((game) => ({
-          id: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.id || '',
-          created_at: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.created_at || '',
-          amount_paid: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
+          id: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.id || '',
+          created_at: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.created_at || '',
+          amount_paid: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
           games: {
             name: game.name,
             game_date: game.game_date,
@@ -169,7 +171,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }, [user, player])
+  }, [user])
 
   const fetchCreatedGames = useCallback(async () => {
     if (!supabase || !user) return
@@ -198,7 +200,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created games:', err)
     }
-  }, [user, player])
+  }, [user])
 
   const fetchCreatedGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -223,7 +225,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created groups:', err)
     }
-  }, [user, player])
+  }, [user])
 
   const fetchMemberGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -264,7 +266,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching member groups:', err)
     }
-  }, [user, player])
+  }, [user])
 
   const fetchUpcomingGames = useCallback(async () => {
     if (!supabase || !user) return
@@ -297,10 +299,9 @@ export default function ProfilePage() {
         console.error('Error fetching upcoming games:', error)
       } else {
         // Filter for games where user is attending
-        const today = new Date().toISOString().split('T')[0]
         const upcomingGames = allGames?.filter((game) => {
           const isUserAttending = game.game_attendees?.some(
-            (attendee: any) => 
+            (attendee: GameAttendee) => 
               attendee.player_id === (player?.id || user.id) && 
               attendee.payment_status === 'completed'
           )
@@ -310,9 +311,9 @@ export default function ProfilePage() {
         
         // Transform to match the expected format
         const transformedGames = upcomingGames.map((game) => ({
-          id: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.id || '',
-          created_at: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.created_at || '',
-          amount_paid: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
+          id: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.id || '',
+          created_at: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.created_at || '',
+          amount_paid: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
           games: {
             name: game.name,
             game_date: game.game_date,
@@ -333,7 +334,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching upcoming games:', err)
     }
-  }, [user, player])
+  }, [user])
 
   const fetchUpcomingSeasons = useCallback(async () => {
     if (!supabase || !user) return
@@ -383,7 +384,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching upcoming seasons:', err)
     }
-  }, [user, player])
+  }, [user])
 
   const fetchPastSeasons = useCallback(async () => {
     if (!supabase || !user) return
@@ -433,7 +434,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching past seasons:', err)
     }
-  }, [user, player])
+  }, [user])
 
   useEffect(() => {
     if (user && player) {
