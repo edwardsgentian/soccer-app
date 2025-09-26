@@ -319,36 +319,44 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
             How It Works
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🔍</span>
+          <div className="relative">
+            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-2xl">💳</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Payments made easy</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Upfront or per game, no more keeping track of who&apos;s paid
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Find Games</h3>
-              <p className="text-gray-600">
-                Browse upcoming soccer games in your area. See details like 
-                location, time, price, and who&apos;s attending.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💳</span>
+              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Attendance tracking</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Know exactly how many players are coming
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Book & Pay</h3>
-              <p className="text-gray-600">
-                Secure your spot with a quick payment. No account required - 
-                just enter your details and pay with your card.
-              </p>
-            </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">⚽</span>
+              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-2xl">⚽</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Season setup</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Setup your season in one go, set prices for seasons and games
+                </p>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Play & Connect</h3>
-              <p className="text-gray-600">
-                Show up and play! Meet new people, improve your skills, 
-                and join the community WhatsApp group.
-              </p>
+              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+                <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                  <span className="text-2xl">💬</span>
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Made to work with WhatsApp</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  Operational bridge with where you already run your existing community
+                </p>
+              </div>
             </div>
           </div>
         </div>
