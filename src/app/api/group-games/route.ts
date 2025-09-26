@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
         duration_hours,
         created_at,
         created_by,
+        season_id,
         organizer:players!created_by (
           id,
           name,
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
         ).length
         
         // If this game is part of a season and organizer should be included, add 1
-        if (item.season_id && item.seasons?.include_organizer_in_count) {
+        if (item.season_id && item.seasons?.[0]?.include_organizer_in_count) {
           completedAttendees += 1
         }
         

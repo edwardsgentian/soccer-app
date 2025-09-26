@@ -425,13 +425,6 @@ export default function GroupDetailPage() {
                       {/* Games for this date */}
                       <div className="space-y-4">
                         {dateGames.map((game) => {
-                          // Calculate attendees including organizer if they should be included
-                          let attendees = game.total_tickets - game.available_tickets
-                          
-                          // If this game is part of a season and organizer should be included, add 1
-                          if (game.season_id && game.seasons?.include_organizer_in_count) {
-                            attendees += 1
-                          }
                           
                           // Check if current user is attending this game
                           const isUserAttending = !!(player && game.game_attendees?.some(
