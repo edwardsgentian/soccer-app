@@ -20,6 +20,7 @@ interface Season {
   first_game_time: string
   repeat_type: string
   location: string
+  include_organizer_in_count: boolean
   groups: {
     name: string
     whatsapp_group?: string
