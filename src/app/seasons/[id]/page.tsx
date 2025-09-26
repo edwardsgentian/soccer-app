@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
@@ -84,9 +84,9 @@ export default function SeasonDetailPage() {
     if (seasonId) {
       fetchSeasonDetails()
     }
-  }, [seasonId])
+  }, [seasonId, fetchSeasonDetails])
 
-  const fetchSeasonDetails = async () => {
+  const fetchSeasonDetails = useCallback(async () => {
     if (!supabase) {
       setLoading(false)
       return
@@ -150,7 +150,7 @@ export default function SeasonDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [seasonId])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)

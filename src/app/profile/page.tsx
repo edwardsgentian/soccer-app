@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
 import { Calendar, Edit, Trophy, Users } from 'lucide-react'
+import Image from 'next/image'
 // import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 
@@ -350,9 +351,11 @@ export default function ProfilePage() {
           {/* Profile Photo */}
           <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             {player.photo_url ? (
-              <img
+              <Image
                 src={player.photo_url}
                 alt={player.name}
+                width={128}
+                height={128}
                 className="w-32 h-32 rounded-full object-cover"
               />
             ) : (

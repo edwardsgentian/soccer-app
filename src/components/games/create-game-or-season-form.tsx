@@ -297,13 +297,13 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
     // Create discount code if requested
     if (discountData.create_discount) {
       console.log('Creating discount code...')
-      await createDiscountCode(season.id, 'season')
+      await createDiscountCode(season.id)
     }
     
     console.log('Season creation completed successfully')
   }
 
-  const createDiscountCode = async (seasonId: string | null, _type: 'season' | 'game') => {
+  const createDiscountCode = async (seasonId: string | null) => {
     const { error } = await supabase
       .from('discount_codes')
       .insert({

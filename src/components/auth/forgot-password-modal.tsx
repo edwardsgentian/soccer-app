@@ -38,7 +38,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }: ForgotPa
       } else {
         setError(data.error || 'Failed to send reset email')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to send reset email. Please try again.')
     } finally {
       setLoading(false)
@@ -72,7 +72,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }: ForgotPa
                   Reset Link Sent
                 </h3>
                 <p className="text-gray-600">
-                  We've sent a password reset link to <strong>{email}</strong>
+                  We&apos;ve sent a password reset link to <strong>{email}</strong>
                 </p>
                 <p className="text-sm text-gray-500 mt-2">
                   Check your email and click the link to reset your password.

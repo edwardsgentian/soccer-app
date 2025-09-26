@@ -113,7 +113,7 @@ export default function SuccessPage() {
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
           <p className="text-gray-600 mb-8">
-            You're all set! You'll receive a confirmation email shortly.
+            You&apos;re all set! You&apos;ll receive a confirmation email shortly.
           </p>
           <div className="space-x-4">
             <Link href="/games">

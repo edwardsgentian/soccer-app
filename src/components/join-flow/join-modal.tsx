@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { X, User, Mail, Phone, Lock, Eye, EyeOff, CreditCard } from 'lucide-react'
+import { X, User, Mail, Phone, Lock, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { ForgotPasswordModal } from '@/components/auth/forgot-password-modal'
 
@@ -303,7 +303,7 @@ export function JoinModal({
                   className="text-sm text-green-600 hover:text-green-700"
                   onClick={() => setStep('signup')}
                 >
-                  Don't have an account? Sign up
+                  Don&apos;t have an account? Sign up
                 </button>
               </div>
 
@@ -441,7 +441,7 @@ export function JoinModal({
                   Ready to Complete Payment?
                 </h3>
                 <p className="text-gray-600">
-                  You'll be redirected to our secure payment processor.
+                  You&apos;ll be redirected to our secure payment processor.
                 </p>
               </div>
 

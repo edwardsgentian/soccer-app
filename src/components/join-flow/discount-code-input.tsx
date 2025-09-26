@@ -14,8 +14,7 @@ interface DiscountCodeInputProps {
 export function DiscountCodeInput({ 
   onApplyDiscount, 
   appliedCode, 
-  onRemoveDiscount, 
-  originalPrice 
+  onRemoveDiscount
 }: DiscountCodeInputProps) {
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,7 +33,7 @@ export function DiscountCodeInput({
       } else {
         setError(result.error || 'Invalid discount code')
       }
-    } catch (err) {
+    } catch {
       setError('Failed to apply discount code')
     } finally {
       setLoading(false)
