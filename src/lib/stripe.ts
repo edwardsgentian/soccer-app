@@ -10,7 +10,7 @@ export const getStripe = (): Stripe => {
       throw new Error('STRIPE_SECRET_KEY environment variable is not set')
     }
     stripeInstance = new Stripe(secretKey, {
-      apiVersion: '2025-08-27.basil',
+      apiVersion: '2025-02-24.acacia',
       typescript: true,
     })
   }
