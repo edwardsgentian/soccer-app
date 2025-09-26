@@ -6,10 +6,11 @@ import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, Edit, Trophy, Users } from 'lucide-react'
+import { Calendar, Edit, Trophy, Users, RefreshCw } from 'lucide-react'
 import Image from 'next/image'
 // import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
+import { SeasonCard } from '@/components/season-card'
 
 interface GameHistory {
   id: string
@@ -26,6 +27,7 @@ interface GameHistory {
     seasons?: {
       id: string
       season_signup_deadline: string
+      include_organizer_in_count: boolean
     }
     groups: {
       name: string
@@ -52,6 +54,31 @@ interface CreatedGroup {
   created_by?: string
 }
 
+interface SeasonHistory {
+  id: string
+  created_at: string
+  amount_paid: number
+  seasons: {
+    id: string
+    name: string
+    description?: string
+    season_price: number
+    individual_game_price: number
+    total_games: number
+    season_spots: number
+    game_spots: number
+    first_game_date: string
+    first_game_time: string
+    repeat_type: string
+    location: string
+    include_organizer_in_count: boolean
+    groups: {
+      name: string
+      whatsapp_group?: string
+    }
+  }
+}
+
 export default function ProfilePage() {
   const { user, player, loading: authLoading } = useAuth()
   const [gameHistory, setGameHistory] = useState<GameHistory[]>([])
@@ -59,9 +86,12 @@ export default function ProfilePage() {
   const [createdGroups, setCreatedGroups] = useState<CreatedGroup[]>([])
   const [memberGroups, setMemberGroups] = useState<CreatedGroup[]>([])
   const [upcomingGames, setUpcomingGames] = useState<GameHistory[]>([])
+  const [upcomingSeasons, setUpcomingSeasons] = useState<SeasonHistory[]>([])
+  const [pastSeasons, setPastSeasons] = useState<SeasonHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'attended' | 'groups' | 'upcoming'>('upcoming')
+  const [refreshing, setRefreshing] = useState(false)
 
   const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
@@ -79,6 +109,7 @@ export default function ProfilePage() {
           games (
             name,
             game_date,
+            game_time,
             location,
             duration_hours,
             season_id,
@@ -93,21 +124,30 @@ export default function ProfilePage() {
             )
           )
         `)
-        .eq('player_id', user.id)
+        .eq('player_id', player?.id || user.id)
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: false })
+
+      console.log('Game history query result (all):', { data, error, count: data?.length })
 
       if (error) {
         console.error('Error fetching game history:', error)
       } else {
-        setGameHistory((data as unknown as GameHistory[]) || [])
+        // Filter past games on the client side
+        const today = new Date().toISOString().split('T')[0]
+        const pastGames = (data as unknown as GameHistory[])?.filter(
+          (item) => item.games.game_date < today
+        ) || []
+        
+        console.log('Filtered past games:', { pastGames, count: pastGames.length })
+        setGameHistory(pastGames)
       }
     } catch (err) {
       console.error('Error fetching game history:', err)
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [user, player])
 
   const fetchCreatedGames = useCallback(async () => {
     if (!supabase || !user) return
@@ -136,7 +176,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created games:', err)
     }
-  }, [user])
+  }, [user, player])
 
   const fetchCreatedGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -161,7 +201,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created groups:', err)
     }
-  }, [user])
+  }, [user, player])
 
   const fetchMemberGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -202,7 +242,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching member groups:', err)
     }
-  }, [user])
+  }, [user, player])
 
   const fetchUpcomingGames = useCallback(async () => {
     if (!supabase || !user) return
@@ -220,37 +260,189 @@ export default function ProfilePage() {
             game_time,
             location,
             duration_hours,
+            season_id,
+            season_signup_deadline,
+            seasons (
+              id,
+              season_signup_deadline,
+              include_organizer_in_count
+            ),
             groups (
               name
             )
           )
         `)
-        .eq('player_id', user.id)
+        .eq('player_id', player?.id || user.id)
         .eq('payment_status', 'completed')
-        .gte('games.game_date', new Date().toISOString().split('T')[0])
-        .order('games.game_date', { ascending: true })
+        .order('created_at', { ascending: true })
+
+      console.log('Upcoming games query result (all):', { data, error, count: data?.length })
 
       if (error) {
         console.error('Error fetching upcoming games:', error)
       } else {
-        setUpcomingGames((data as unknown as GameHistory[]) || [])
+        // Filter upcoming games on the client side
+        const today = new Date().toISOString().split('T')[0]
+        const upcomingGames = (data as unknown as GameHistory[])?.filter(
+          (item) => item.games.game_date >= today
+        ) || []
+        
+        console.log('Filtered upcoming games:', { upcomingGames, count: upcomingGames.length })
+        setUpcomingGames(upcomingGames)
       }
     } catch (err) {
       console.error('Error fetching upcoming games:', err)
     }
-  }, [user])
+  }, [user, player])
+
+  const fetchUpcomingSeasons = useCallback(async () => {
+    if (!supabase || !user) return
+
+    try {
+      console.log('Fetching upcoming seasons for user:', user.id, 'player:', player?.id)
+      
+      const { data, error } = await supabase
+        .from('season_attendees')
+        .select(`
+          id,
+          created_at,
+          amount_paid,
+          seasons!inner (
+            id,
+            name,
+            description,
+            season_price,
+            individual_game_price,
+            total_games,
+            season_spots,
+            game_spots,
+            first_game_date,
+            first_game_time,
+            repeat_type,
+            location,
+            include_organizer_in_count,
+            groups (
+              name,
+              whatsapp_group
+            )
+          )
+        `)
+        .eq('player_id', player?.id || user.id)
+        .eq('payment_status', 'completed')
+        .order('created_at', { ascending: true })
+
+      console.log('Upcoming seasons query result (all):', { data, error, count: data?.length })
+
+      if (error) {
+        console.error('Error fetching upcoming seasons:', error)
+      } else {
+        // Filter upcoming seasons on the client side
+        const today = new Date().toISOString().split('T')[0]
+        const upcomingSeasons = (data as unknown as SeasonHistory[])?.filter(
+          (item) => item.seasons.first_game_date >= today
+        ) || []
+        
+        console.log('Filtered upcoming seasons:', { upcomingSeasons, count: upcomingSeasons.length })
+        setUpcomingSeasons(upcomingSeasons)
+      }
+    } catch (err) {
+      console.error('Error fetching upcoming seasons:', err)
+    }
+  }, [user, player])
+
+  const fetchPastSeasons = useCallback(async () => {
+    if (!supabase || !user) return
+
+    try {
+      const { data, error } = await supabase
+        .from('season_attendees')
+        .select(`
+          id,
+          created_at,
+          amount_paid,
+          seasons!inner (
+            id,
+            name,
+            description,
+            season_price,
+            individual_game_price,
+            total_games,
+            season_spots,
+            game_spots,
+            first_game_date,
+            first_game_time,
+            repeat_type,
+            location,
+            include_organizer_in_count,
+            groups (
+              name,
+              whatsapp_group
+            )
+          )
+        `)
+        .eq('player_id', player?.id || user.id)
+        .eq('payment_status', 'completed')
+        .order('created_at', { ascending: false })
+
+      console.log('Past seasons query result (all):', { data, error, count: data?.length })
+
+      if (error) {
+        console.error('Error fetching past seasons:', error)
+      } else {
+        // Filter past seasons on the client side
+        const today = new Date().toISOString().split('T')[0]
+        const pastSeasons = (data as unknown as SeasonHistory[])?.filter(
+          (item) => item.seasons.first_game_date < today
+        ) || []
+        
+        console.log('Filtered past seasons:', { pastSeasons, count: pastSeasons.length })
+        setPastSeasons(pastSeasons)
+      }
+    } catch (err) {
+      console.error('Error fetching past seasons:', err)
+    }
+  }, [user, player])
+
+  const refreshData = useCallback(async () => {
+    if (!user || !player) return
+    
+    setRefreshing(true)
+    console.log('Refreshing profile data...')
+    
+    try {
+      await Promise.all([
+        fetchGameHistory(),
+        fetchCreatedGames(),
+        fetchCreatedGroups(),
+        fetchMemberGroups(),
+        fetchUpcomingGames(),
+        fetchUpcomingSeasons(),
+        fetchPastSeasons()
+      ])
+    } catch (error) {
+      console.error('Error refreshing data:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }, [user, player, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
 
   useEffect(() => {
+    console.log('Profile page useEffect - user:', user, 'player:', player, 'authLoading:', authLoading)
+    
     if (user && player) {
+      console.log('Fetching all data for user:', user.id, 'player:', player.id)
       fetchGameHistory()
       fetchCreatedGames()
       fetchCreatedGroups()
       fetchMemberGroups()
       fetchUpcomingGames()
+      fetchUpcomingSeasons()
+      fetchPastSeasons()
     } else if (!authLoading) {
+      console.log('No user or player data, setting loading to false')
       setLoading(false)
     }
-  }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames])
+  }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -387,15 +579,24 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Edit Profile Button */}
-          <Button
-            onClick={() => setShowEditForm(true)}
-            variant="outline"
-            className="mb-8"
-          >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit Profile
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex gap-4 mb-8">
+            <Button
+              onClick={() => setShowEditForm(true)}
+              variant="outline"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit Profile
+            </Button>
+            <Button
+              onClick={refreshData}
+              variant="outline"
+              disabled={refreshing}
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
         </div>
 
         {/* Tabbed Content Panel */}
@@ -440,60 +641,106 @@ export default function ProfilePage() {
           <div className="p-6">
             {activeTab === 'attended' && (
               <div>
-                  {gameHistory.length === 0 ? (
+                  {gameHistory.length === 0 && pastSeasons.length === 0 ? (
                     <div className="text-center py-12">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No games attended yet.</p>
+                      <p className="text-gray-600">No games or seasons attended yet.</p>
                     </div>
                   ) : (
                     <div className="max-w-lg mx-auto space-y-6">
-                      {(() => {
-                        // Group games by date
-                        const gamesByDate = gameHistory.reduce((acc, game) => {
-                          const date = new Date(game.games.game_date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                          if (!acc[date]) {
-                            acc[date] = []
-                          }
-                          acc[date].push(game)
-                          return acc
-                        }, {} as Record<string, typeof gameHistory>)
-
-                        return Object.entries(gamesByDate).map(([date, dateGames]) => (
-                          <div key={date}>
-                            {/* Date Label */}
-                            <div className="text-center mb-4">
-                              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                {date}
-                              </span>
-                            </div>
-                            
-                            {/* Games for this date */}
-                            <div className="space-y-4">
-                              {dateGames.map((game) => (
-                                <HomepageGameCard
-                                  key={game.id}
-                                  gameName={game.games.name}
-                                  time={game.games.game_time}
-                                  price={0} // Past games show as completed
-                                  location={game.games.location}
-                                  maxAttendees={1}
-                                  groupName={game.games.groups.name}
-                                  gameId={game.id}
-                                  tags={[]}
-                                  seasonId={game.games.season_id || game.games.seasons?.id}
-                                  seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
-                                  isUserAttending={true}
-                                  gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
-                                />
-                              ))}
-                            </div>
+                      {/* Past Seasons Section */}
+                      {pastSeasons.length > 0 && (
+                        <div>
+                          <div className="text-center mb-4">
+                            <span className="text-sm text-gray-500 bg-purple-100 px-3 py-1 rounded-full">
+                              Completed Seasons
+                            </span>
                           </div>
-                        ))
-                      })()}
+                          <div className="space-y-4">
+                            {pastSeasons.map((season) => (
+                              <SeasonCard
+                                key={season.id}
+                                seasonId={season.seasons.id}
+                                seasonName={season.seasons.name}
+                                description={season.seasons.description}
+                                seasonPrice={season.seasons.season_price}
+                                individualGamePrice={season.seasons.individual_game_price}
+                                totalGames={season.seasons.total_games}
+                                seasonSpots={season.seasons.season_spots}
+                                gameSpots={season.seasons.game_spots}
+                                firstGameDate={season.seasons.first_game_date}
+                                firstGameTime={season.seasons.first_game_time}
+                                repeatType={season.seasons.repeat_type}
+                                groupName={season.seasons.groups.name}
+                                location={season.seasons.location}
+                                seasonSpotsAvailable={season.seasons.season_spots - 1} // User attended
+                                gameSpotsAvailable={season.seasons.game_spots}
+                                isUserAttending={true}
+                                isPastSeason={true}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Past Individual Games Section */}
+                      {gameHistory.length > 0 && (
+                        <div>
+                          <div className="text-center mb-4">
+                            <span className="text-sm text-gray-500 bg-blue-100 px-3 py-1 rounded-full">
+                              Individual Games
+                            </span>
+                          </div>
+                          {(() => {
+                            // Group games by date
+                            const gamesByDate = gameHistory.reduce((acc, game) => {
+                              const date = new Date(game.games.game_date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                              if (!acc[date]) {
+                                acc[date] = []
+                              }
+                              acc[date].push(game)
+                              return acc
+                            }, {} as Record<string, typeof gameHistory>)
+
+                            return Object.entries(gamesByDate).map(([date, dateGames]) => (
+                              <div key={date}>
+                                {/* Date Label */}
+                                <div className="text-center mb-4">
+                                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                    {date}
+                                  </span>
+                                </div>
+                                
+                                {/* Games for this date */}
+                                <div className="space-y-4">
+                                  {dateGames.map((game) => (
+                                    <HomepageGameCard
+                                      key={game.id}
+                                      gameName={game.games.name}
+                                      time={game.games.game_time}
+                                      price={game.amount_paid}
+                                      location={game.games.location}
+                                      maxAttendees={1}
+                                      groupName={game.games.groups.name}
+                                      gameId={game.id}
+                                      tags={[]}
+                                      seasonId={game.games.season_id || game.games.seasons?.id}
+                                      seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
+                                      isUserAttending={true}
+                                      gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
+                                      isPastGame={true}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))
+                          })()}
+                        </div>
+                      )}
                     </div>
                   )}
               </div>
@@ -529,60 +776,111 @@ export default function ProfilePage() {
 
             {activeTab === 'upcoming' && (
               <div>
-                  {upcomingGames.length === 0 ? (
+                  {/* Debug info */}
+                  <div className="text-xs text-gray-500 mb-4 text-center">
+                    Debug: {upcomingGames.length} games, {upcomingSeasons.length} seasons
+                  </div>
+                  
+                  {upcomingGames.length === 0 && upcomingSeasons.length === 0 ? (
                     <div className="text-center py-12">
                       <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600">No upcoming games registered.</p>
+                      <p className="text-gray-600">No upcoming games or seasons registered.</p>
+                      <p className="text-xs text-gray-400 mt-2">Try clicking the Refresh button above</p>
                     </div>
                   ) : (
                     <div className="max-w-lg mx-auto space-y-6">
-                      {(() => {
-                        // Group games by date
-                        const gamesByDate = upcomingGames.reduce((acc, game) => {
-                          const date = new Date(game.games.game_date).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            month: 'long',
-                            day: 'numeric'
-                          })
-                          if (!acc[date]) {
-                            acc[date] = []
-                          }
-                          acc[date].push(game)
-                          return acc
-                        }, {} as Record<string, typeof upcomingGames>)
-
-                        return Object.entries(gamesByDate).map(([date, dateGames]) => (
-                          <div key={date}>
-                            {/* Date Label */}
-                            <div className="text-center mb-4">
-                              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                {date}
-                              </span>
-                            </div>
-                            
-                            {/* Games for this date */}
-                            <div className="space-y-4">
-                              {dateGames.map((game) => (
-                                <HomepageGameCard
-                                  key={game.id}
-                                  gameName={game.games.name}
-                                  time={game.games.game_time}
-                                  price={game.amount_paid}
-                                  location={game.games.location}
-                                  maxAttendees={1}
-                                  groupName={game.games.groups.name}
-                                  gameId={game.id}
-                                  tags={[]}
-                                  seasonId={game.games.season_id || game.games.seasons?.id}
-                                  seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
-                                  isUserAttending={true}
-                                  gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
-                                />
-                              ))}
-                            </div>
+                      {/* Seasons Section */}
+                      {upcomingSeasons.length > 0 && (
+                        <div>
+                          <div className="text-center mb-4">
+                            <span className="text-sm text-gray-500 bg-purple-100 px-3 py-1 rounded-full">
+                              Seasons
+                            </span>
                           </div>
-                        ))
-                      })()}
+                          <div className="space-y-4">
+                            {upcomingSeasons.map((season) => (
+                              <SeasonCard
+                                key={season.id}
+                                seasonId={season.seasons.id}
+                                seasonName={season.seasons.name}
+                                description={season.seasons.description}
+                                seasonPrice={season.seasons.season_price}
+                                individualGamePrice={season.seasons.individual_game_price}
+                                totalGames={season.seasons.total_games}
+                                seasonSpots={season.seasons.season_spots}
+                                gameSpots={season.seasons.game_spots}
+                                firstGameDate={season.seasons.first_game_date}
+                                firstGameTime={season.seasons.first_game_time}
+                                repeatType={season.seasons.repeat_type}
+                                groupName={season.seasons.groups.name}
+                                location={season.seasons.location}
+                                seasonSpotsAvailable={season.seasons.season_spots - 1} // User is attending
+                                gameSpotsAvailable={season.seasons.game_spots}
+                                isUserAttending={true}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Individual Games Section */}
+                      {upcomingGames.length > 0 && (
+                        <div>
+                          <div className="text-center mb-4">
+                            <span className="text-sm text-gray-500 bg-blue-100 px-3 py-1 rounded-full">
+                              Individual Games
+                            </span>
+                          </div>
+                          {(() => {
+                            // Group games by date
+                            const gamesByDate = upcomingGames.reduce((acc, game) => {
+                              const date = new Date(game.games.game_date).toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                              if (!acc[date]) {
+                                acc[date] = []
+                              }
+                              acc[date].push(game)
+                              return acc
+                            }, {} as Record<string, typeof upcomingGames>)
+
+                            return Object.entries(gamesByDate).map(([date, dateGames]) => (
+                              <div key={date}>
+                                {/* Date Label */}
+                                <div className="text-center mb-4">
+                                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                    {date}
+                                  </span>
+                                </div>
+                                
+                                {/* Games for this date */}
+                                <div className="space-y-4">
+                                  {dateGames.map((game) => (
+                                    <HomepageGameCard
+                                      key={game.id}
+                                      gameName={game.games.name}
+                                      time={game.games.game_time}
+                                      price={game.amount_paid}
+                                      location={game.games.location}
+                                      maxAttendees={1}
+                                      groupName={game.games.groups.name}
+                                      gameId={game.id}
+                                      tags={[]}
+                                      seasonId={game.games.season_id || game.games.seasons?.id}
+                                      seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
+                                      isUserAttending={true}
+                                      gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
+                                      isPastGame={false}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))
+                          })()}
+                        </div>
+                      )}
                     </div>
                   )}
               </div>
