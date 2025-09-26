@@ -80,12 +80,6 @@ export default function SeasonDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showJoinModal, setShowJoinModal] = useState(false)
 
-  useEffect(() => {
-    if (seasonId) {
-      fetchSeasonDetails()
-    }
-  }, [seasonId, fetchSeasonDetails])
-
   const fetchSeasonDetails = useCallback(async () => {
     if (!supabase) {
       setLoading(false)
@@ -151,6 +145,12 @@ export default function SeasonDetailPage() {
       setLoading(false)
     }
   }, [seasonId])
+
+  useEffect(() => {
+    if (seasonId) {
+      fetchSeasonDetails()
+    }
+  }, [seasonId, fetchSeasonDetails])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
