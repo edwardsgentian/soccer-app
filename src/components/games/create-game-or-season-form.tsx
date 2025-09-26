@@ -220,7 +220,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
 
     // Create discount code if requested
     if (discountData.create_discount) {
-      await createDiscountCode(null, 'game')
+      await createDiscountCode(null)
     }
   }
 
