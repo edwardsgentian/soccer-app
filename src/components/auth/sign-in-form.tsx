@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
+import { ForgotPasswordModal } from './forgot-password-modal'
 
 interface SignInFormProps {
   onSuccess?: () => void
@@ -14,6 +15,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -108,14 +110,20 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
         </div>
 
         <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            Or{' '}
-            <button className="text-green-600 hover:text-green-700 font-medium">
-              continue as guest
-            </button>
-          </p>
+          <button
+            onClick={() => setShowForgotPassword(true)}
+            className="text-sm text-green-600 hover:text-green-700 font-medium"
+          >
+            Forgot your password?
+          </button>
         </div>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onBackToLogin={() => setShowForgotPassword(false)}
+      />
     </div>
   )
 }

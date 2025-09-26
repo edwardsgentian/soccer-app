@@ -129,8 +129,6 @@ export default function ProfilePage() {
         .lt('game_date', new Date().toISOString().split('T')[0])
         .order('game_date', { ascending: false })
 
-      console.log('All past games query result:', { allGames, error, count: allGames?.length })
-
       if (error) {
         console.error('Error fetching game history:', error)
       } else {
@@ -141,13 +139,6 @@ export default function ProfilePage() {
               attendee.player_id === (player?.id || user.id) && 
               attendee.payment_status === 'completed'
           )
-          
-          console.log('Checking past game:', { 
-            gameName: game.name,
-            gameDate: game.game_date,
-            isUserAttended,
-            attendees: game.game_attendees
-          })
           
           return isUserAttended
         }) || []
@@ -172,7 +163,6 @@ export default function ProfilePage() {
           }
         }))
         
-        console.log('Filtered past games:', { pastGames: transformedGames, count: transformedGames.length })
         setGameHistory(transformedGames as GameHistory[])
       }
     } catch (err) {
@@ -304,8 +294,6 @@ export default function ProfilePage() {
         .gte('game_date', new Date().toISOString().split('T')[0])
         .order('game_date', { ascending: true })
 
-      console.log('All upcoming games query result:', { allGames, error, count: allGames?.length })
-
       if (error) {
         console.error('Error fetching upcoming games:', error)
       } else {
@@ -317,13 +305,6 @@ export default function ProfilePage() {
               attendee.player_id === (player?.id || user.id) && 
               attendee.payment_status === 'completed'
           )
-          
-          console.log('Checking game:', { 
-            gameName: game.name,
-            gameDate: game.game_date,
-            isUserAttending,
-            attendees: game.game_attendees
-          })
           
           return isUserAttending
         }) || []
@@ -348,7 +329,6 @@ export default function ProfilePage() {
           }
         }))
         
-        console.log('Filtered upcoming games:', { upcomingGames: transformedGames, count: transformedGames.length })
         setUpcomingGames(transformedGames as GameHistory[])
       }
     } catch (err) {
@@ -360,8 +340,6 @@ export default function ProfilePage() {
     if (!supabase || !user) return
 
     try {
-      console.log('Fetching upcoming seasons for user:', user.id, 'player:', player?.id)
-      
       const { data, error } = await supabase
         .from('season_attendees')
         .select(`
@@ -392,8 +370,6 @@ export default function ProfilePage() {
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: true })
 
-      console.log('Upcoming seasons query result (all):', { data, error, count: data?.length })
-
       if (error) {
         console.error('Error fetching upcoming seasons:', error)
       } else {
@@ -403,7 +379,6 @@ export default function ProfilePage() {
           (item) => item.seasons.first_game_date >= today
         ) || []
         
-        console.log('Filtered upcoming seasons:', { upcomingSeasons, count: upcomingSeasons.length })
         setUpcomingSeasons(upcomingSeasons)
       }
     } catch (err) {
@@ -445,8 +420,6 @@ export default function ProfilePage() {
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: false })
 
-      console.log('Past seasons query result (all):', { data, error, count: data?.length })
-
       if (error) {
         console.error('Error fetching past seasons:', error)
       } else {
@@ -456,7 +429,6 @@ export default function ProfilePage() {
           (item) => item.seasons.first_game_date < today
         ) || []
         
-        console.log('Filtered past seasons:', { pastSeasons, count: pastSeasons.length })
         setPastSeasons(pastSeasons)
       }
     } catch (err) {
@@ -468,7 +440,6 @@ export default function ProfilePage() {
     if (!user || !player) return
     
     setRefreshing(true)
-    console.log('Refreshing profile data...')
     
     try {
       await Promise.all([
@@ -488,10 +459,7 @@ export default function ProfilePage() {
   }, [user, player, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
 
   useEffect(() => {
-    console.log('Profile page useEffect - user:', user, 'player:', player, 'authLoading:', authLoading)
-    
     if (user && player) {
-      console.log('Fetching all data for user:', user.id, 'player:', player.id)
       fetchGameHistory()
       fetchCreatedGames()
       fetchCreatedGroups()
@@ -500,7 +468,6 @@ export default function ProfilePage() {
       fetchUpcomingSeasons()
       fetchPastSeasons()
     } else if (!authLoading) {
-      console.log('No user or player data, setting loading to false')
       setLoading(false)
     }
   }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
@@ -713,9 +680,9 @@ export default function ProfilePage() {
                       {pastSeasons.length > 0 && (
                         <div>
                           <div className="text-center mb-4">
-                            <span className="text-sm text-gray-500 bg-purple-100 px-3 py-1 rounded-full">
+                            <h3 className="text-sm text-gray-600">
                               Completed Seasons
-                            </span>
+                            </h3>
                           </div>
                           <div className="space-y-4">
                             {pastSeasons.map((season) => (
@@ -748,9 +715,9 @@ export default function ProfilePage() {
                       {gameHistory.length > 0 && (
                         <div>
                           <div className="text-center mb-4">
-                            <span className="text-sm text-gray-500 bg-blue-100 px-3 py-1 rounded-full">
+                            <h3 className="text-sm text-gray-600">
                               Individual Games
-                            </span>
+                            </h3>
                           </div>
                           {(() => {
                             // Group games by date
@@ -771,9 +738,9 @@ export default function ProfilePage() {
                               <div key={date}>
                                 {/* Date Label */}
                                 <div className="text-center mb-4">
-                                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                  <h3 className="text-sm text-gray-600">
                                     {date}
-                                  </span>
+                                  </h3>
                                 </div>
                                 
                                 {/* Games for this date */}
@@ -837,16 +804,11 @@ export default function ProfilePage() {
 
             {activeTab === 'upcoming' && (
               <div>
-                  {/* Debug info */}
-                  <div className="text-xs text-gray-500 mb-4 text-center">
-                    Debug: {upcomingGames.length} games, {upcomingSeasons.length} seasons
-                  </div>
                   
                   {upcomingGames.length === 0 && upcomingSeasons.length === 0 ? (
                     <div className="text-center py-12">
                       <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600">No upcoming games or seasons registered.</p>
-                      <p className="text-xs text-gray-400 mt-2">Try clicking the Refresh button above</p>
                     </div>
                   ) : (
                     <div className="max-w-lg mx-auto space-y-6">
@@ -854,9 +816,9 @@ export default function ProfilePage() {
                       {upcomingSeasons.length > 0 && (
                         <div>
                           <div className="text-center mb-4">
-                            <span className="text-sm text-gray-500 bg-purple-100 px-3 py-1 rounded-full">
+                            <h3 className="text-sm text-gray-600">
                               Seasons
-                            </span>
+                            </h3>
                           </div>
                           <div className="space-y-4">
                             {upcomingSeasons.map((season) => (
@@ -888,9 +850,9 @@ export default function ProfilePage() {
                       {upcomingGames.length > 0 && (
                         <div>
                           <div className="text-center mb-4">
-                            <span className="text-sm text-gray-500 bg-blue-100 px-3 py-1 rounded-full">
+                            <h3 className="text-sm text-gray-600">
                               Individual Games
-                            </span>
+                            </h3>
                           </div>
                           {(() => {
                             // Group games by date
@@ -911,9 +873,9 @@ export default function ProfilePage() {
                               <div key={date}>
                                 {/* Date Label */}
                                 <div className="text-center mb-4">
-                                  <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                                  <h3 className="text-sm text-gray-600">
                                     {date}
-                                  </span>
+                                  </h3>
                                 </div>
                                 
                                 {/* Games for this date */}
