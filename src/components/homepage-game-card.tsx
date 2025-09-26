@@ -29,7 +29,7 @@ export function HomepageGameCard({
   time,
   price,
   location,
-  attendees: _attendees,
+  attendees: _,
   maxAttendees,
   groupName,
   gameId,

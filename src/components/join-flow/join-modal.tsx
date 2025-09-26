@@ -89,7 +89,7 @@ export function JoinModal({
       setTimeout(() => {
         setStep('checkout')
       }, 100)
-    } catch (err) {
+    } catch {
       setError('Login failed. Please check your credentials.')
     } finally {
       setLoading(false)

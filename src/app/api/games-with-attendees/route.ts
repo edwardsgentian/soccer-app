@@ -18,6 +18,7 @@ export async function GET() {
         duration_hours,
         created_at,
         created_by,
+        season_id,
         groups (
           name,
           whatsapp_group
