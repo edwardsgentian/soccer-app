@@ -137,7 +137,7 @@ export function SeasonCard({
 
   return (
     <Link href={`/seasons/${seasonId}`} className="block">
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-row max-w-lg mx-auto">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors duration-300 flex flex-row max-w-lg mx-auto">
         {/* Image Section - Left Side */}
         <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient(seasonId)} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
           <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">

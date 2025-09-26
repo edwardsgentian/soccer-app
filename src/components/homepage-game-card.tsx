@@ -21,6 +21,7 @@ interface HomepageGameCardProps {
     player_id: string
     payment_status: string
   }[]
+  isPastGame?: boolean
 }
 
 export function HomepageGameCard({
@@ -35,7 +36,8 @@ export function HomepageGameCard({
   seasonId,
   seasonSignupDeadline,
   isUserAttending,
-  gameAttendees
+  gameAttendees,
+  isPastGame = false
 }: HomepageGameCardProps) {
 
   // Generate random gradient based on gameId for consistency
@@ -119,7 +121,7 @@ export function HomepageGameCard({
     return avatars
   }
 
-  const isPastGame = price === 0
+  // Use the isPastGame prop instead of inferring from price
   // Calculate actual attendee count from game_attendees data
   const actualAttendees = gameAttendees?.filter(att => att.payment_status === 'completed') || []
   const actualAttendeeCount = actualAttendees.length
@@ -135,7 +137,7 @@ export function HomepageGameCard({
   return (
     <Link href={requiresSeasonSignup ? `/seasons/${seasonId}` : `/games/${gameId}`} className="block">
       <div
-        className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-row max-w-lg mx-auto"
+        className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors duration-300 flex flex-row max-w-lg mx-auto"
       >
         {/* Image Section - Left Side */}
         <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
@@ -151,13 +153,13 @@ export function HomepageGameCard({
             <h3 className="font-bold text-gray-900 text-lg">{gameName}</h3>
             
             {/* Price or Status Badge in top right */}
-            {isUserAttending ? (
+            {isPastGame ? (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                Closed
+              </span>
+            ) : isUserAttending ? (
               <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
                 Attending
-              </span>
-            ) : isPastGame ? (
-              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                Completed
               </span>
             ) : requiresSeasonSignup ? (
               <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">

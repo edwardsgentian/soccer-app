@@ -237,7 +237,7 @@ export default function GroupDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Group Info */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden sticky top-8">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-8">
               {/* Group Header */}
               <div className="h-32 bg-gray-50 flex items-center justify-center">
                 <Component className="w-8 h-8 text-gray-400" />

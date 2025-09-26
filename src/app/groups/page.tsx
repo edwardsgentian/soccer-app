@@ -144,7 +144,7 @@ function GroupCard({ group }: { group: Group }) {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors">
       {/* Group Header */}
       <div className="h-32 bg-gray-50 flex items-center justify-center">
         <Component className="w-8 h-8 text-gray-400" />

@@ -6,7 +6,7 @@ import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, Edit, Trophy, Users, RefreshCw } from 'lucide-react'
+import { Calendar, Edit, Trophy, Users } from 'lucide-react'
 import Image from 'next/image'
 // import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
@@ -97,7 +97,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'attended' | 'groups' | 'upcoming'>('upcoming')
-  const [refreshing, setRefreshing] = useState(false)
 
   const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
@@ -436,28 +435,6 @@ export default function ProfilePage() {
     }
   }, [user, player])
 
-  const refreshData = useCallback(async () => {
-    if (!user || !player) return
-    
-    setRefreshing(true)
-    
-    try {
-      await Promise.all([
-        fetchGameHistory(),
-        fetchCreatedGames(),
-        fetchCreatedGroups(),
-        fetchMemberGroups(),
-        fetchUpcomingGames(),
-        fetchUpcomingSeasons(),
-        fetchPastSeasons()
-      ])
-    } catch (error) {
-      console.error('Error refreshing data:', error)
-    } finally {
-      setRefreshing(false)
-    }
-  }, [user, player, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
-
   useEffect(() => {
     if (user && player) {
       fetchGameHistory()
@@ -586,7 +563,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Name */}
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">{player.name}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{player.name}</h1>
           
           {/* Joined Date */}
           <p className="text-gray-600 mb-8">Joined {formatDate(player.member_since)}</p>
@@ -607,24 +584,15 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 mb-8">
-            <Button
-              onClick={() => setShowEditForm(true)}
-              variant="outline"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Profile
-            </Button>
-            <Button
-              onClick={refreshData}
-              variant="outline"
-              disabled={refreshing}
-            >
-              <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </Button>
-          </div>
+          {/* Edit Profile Button */}
+          <Button
+            onClick={() => setShowEditForm(true)}
+            variant="outline"
+            className="mb-8"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
         </div>
 
         {/* Tabbed Content Panel */}
@@ -786,7 +754,7 @@ export default function ProfilePage() {
                 ) : (
                   <div className="space-y-4">
                     {memberGroups.map((group) => (
-                      <div key={group.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                      <div key={group.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="font-semibold text-gray-900">{group.name}</h3>
                           <span className="text-sm text-gray-500">

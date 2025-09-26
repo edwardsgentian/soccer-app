@@ -140,6 +140,32 @@ export default function GameDetailPage() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
+  // Generate random gradient based on gameId for consistency with game cards
+  const getRandomGradient = () => {
+    const gradients = [
+      'from-blue-200 to-blue-300',
+      'from-green-200 to-green-300',
+      'from-purple-200 to-pink-200',
+      'from-pink-200 to-pink-300',
+      'from-red-200 to-red-300',
+      'from-yellow-200 to-yellow-300',
+      'from-indigo-200 to-indigo-300',
+      'from-teal-200 to-teal-300',
+      'from-orange-200 to-orange-300',
+      'from-cyan-200 to-cyan-300',
+      'from-emerald-200 to-emerald-300',
+      'from-violet-200 to-violet-300'
+    ]
+    
+    // Use gameId to consistently select the same gradient
+    const hash = gameId.split('').reduce((a, b) => {
+      a = ((a << 5) - a) + b.charCodeAt(0)
+      return a & a
+    }, 0)
+    
+    return gradients[Math.abs(hash) % gradients.length]
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
@@ -201,13 +227,17 @@ export default function GameDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-              {/* Game Image */}
-              <div className="h-48 bg-gray-50 flex items-center justify-center">
-                <span className="text-6xl text-gray-400">⚽</span>
-              </div>
-
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
               <div className="p-6">
+                {/* Game Image - Left Aligned */}
+                <div className="flex justify-start mb-6">
+                  <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center`}>
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
+                      <span className="text-gray-600 font-bold text-lg">⚽</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Group Name */}
                 <div className="text-sm text-gray-500 mb-2">{game.groups.name}</div>
                 
@@ -283,7 +313,7 @@ export default function GameDetailPage() {
 
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Join This Game</h3>
               
               <div className="space-y-4 mb-6">
