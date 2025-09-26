@@ -100,47 +100,72 @@ export default function ProfilePage() {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('game_attendees')
+      // Query games table directly for past games
+      const { data: allGames, error } = await supabase
+        .from('games')
         .select(`
-          id,
-          created_at,
-          amount_paid,
-          games (
+          *,
+          groups (
             name,
-            game_date,
-            game_time,
-            location,
-            duration_hours,
-            season_id,
+            whatsapp_group
+          ),
+          seasons (
+            id,
             season_signup_deadline,
-            seasons (
-              id,
-              season_signup_deadline,
-              include_organizer_in_count
-            ),
-            groups (
-              name
-            )
+            include_organizer_in_count
+          ),
+          game_attendees (
+            id,
+            player_id,
+            payment_status
           )
         `)
-        .eq('player_id', player?.id || user.id)
-        .eq('payment_status', 'completed')
-        .order('created_at', { ascending: false })
+        .lt('game_date', new Date().toISOString().split('T')[0])
+        .order('game_date', { ascending: false })
 
-      console.log('Game history query result (all):', { data, error, count: data?.length })
+      console.log('All past games query result:', { allGames, error, count: allGames?.length })
 
       if (error) {
         console.error('Error fetching game history:', error)
       } else {
-        // Filter past games on the client side
-        const today = new Date().toISOString().split('T')[0]
-        const pastGames = (data as unknown as GameHistory[])?.filter(
-          (item) => item.games.game_date < today
-        ) || []
+        // Filter for games where user attended
+        const pastGames = allGames?.filter((game) => {
+          const isUserAttended = game.game_attendees?.some(
+            (attendee: any) => 
+              attendee.player_id === (player?.id || user.id) && 
+              attendee.payment_status === 'completed'
+          )
+          
+          console.log('Checking past game:', { 
+            gameName: game.name,
+            gameDate: game.game_date,
+            isUserAttended,
+            attendees: game.game_attendees
+          })
+          
+          return isUserAttended
+        }) || []
         
-        console.log('Filtered past games:', { pastGames, count: pastGames.length })
-        setGameHistory(pastGames)
+        // Transform to match the expected format
+        const transformedGames = pastGames.map((game) => ({
+          id: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.id || '',
+          created_at: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.created_at || '',
+          amount_paid: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
+          games: {
+            name: game.name,
+            game_date: game.game_date,
+            game_time: game.game_time,
+            location: game.location,
+            duration_hours: game.duration_hours,
+            season_id: game.season_id,
+            season_signup_deadline: game.season_signup_deadline,
+            seasons: game.seasons,
+            groups: game.groups
+          }
+        }))
+        
+        console.log('Filtered past games:', { pastGames: transformedGames, count: transformedGames.length })
+        setGameHistory(transformedGames as GameHistory[])
       }
     } catch (err) {
       console.error('Error fetching game history:', err)
@@ -248,47 +273,73 @@ export default function ProfilePage() {
     if (!supabase || !user) return
 
     try {
-      const { data, error } = await supabase
-        .from('game_attendees')
+      // Query games table directly (like homepage does)
+      const { data: allGames, error } = await supabase
+        .from('games')
         .select(`
-          id,
-          created_at,
-          amount_paid,
-          games!inner (
+          *,
+          groups (
             name,
-            game_date,
-            game_time,
-            location,
-            duration_hours,
-            season_id,
+            whatsapp_group
+          ),
+          seasons (
+            id,
             season_signup_deadline,
-            seasons (
-              id,
-              season_signup_deadline,
-              include_organizer_in_count
-            ),
-            groups (
-              name
-            )
+            include_organizer_in_count
+          ),
+          game_attendees (
+            id,
+            player_id,
+            payment_status
           )
         `)
-        .eq('player_id', player?.id || user.id)
-        .eq('payment_status', 'completed')
-        .order('created_at', { ascending: true })
+        .gte('game_date', new Date().toISOString().split('T')[0])
+        .order('game_date', { ascending: true })
 
-      console.log('Upcoming games query result (all):', { data, error, count: data?.length })
+      console.log('All upcoming games query result:', { allGames, error, count: allGames?.length })
 
       if (error) {
         console.error('Error fetching upcoming games:', error)
       } else {
-        // Filter upcoming games on the client side
+        // Filter for games where user is attending
         const today = new Date().toISOString().split('T')[0]
-        const upcomingGames = (data as unknown as GameHistory[])?.filter(
-          (item) => item.games.game_date >= today
-        ) || []
+        const upcomingGames = allGames?.filter((game) => {
+          const isUserAttending = game.game_attendees?.some(
+            (attendee: any) => 
+              attendee.player_id === (player?.id || user.id) && 
+              attendee.payment_status === 'completed'
+          )
+          
+          console.log('Checking game:', { 
+            gameName: game.name,
+            gameDate: game.game_date,
+            isUserAttending,
+            attendees: game.game_attendees
+          })
+          
+          return isUserAttending
+        }) || []
         
-        console.log('Filtered upcoming games:', { upcomingGames, count: upcomingGames.length })
-        setUpcomingGames(upcomingGames)
+        // Transform to match the expected format
+        const transformedGames = upcomingGames.map((game) => ({
+          id: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.id || '',
+          created_at: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.created_at || '',
+          amount_paid: game.game_attendees?.find((a: any) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
+          games: {
+            name: game.name,
+            game_date: game.game_date,
+            game_time: game.game_time,
+            location: game.location,
+            duration_hours: game.duration_hours,
+            season_id: game.season_id,
+            season_signup_deadline: game.season_signup_deadline,
+            seasons: game.seasons,
+            groups: game.groups
+          }
+        }))
+        
+        console.log('Filtered upcoming games:', { upcomingGames: transformedGames, count: transformedGames.length })
+        setUpcomingGames(transformedGames as GameHistory[])
       }
     } catch (err) {
       console.error('Error fetching upcoming games:', err)
