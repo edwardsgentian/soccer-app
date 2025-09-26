@@ -24,6 +24,12 @@ interface GameHistory {
     duration_hours: number
     season_id?: string
     season_signup_deadline?: string
+    total_tickets?: number
+    game_attendees?: {
+      id: string
+      player_id: string
+      payment_status: string
+    }[]
     seasons?: {
       id: string
       season_signup_deadline: string
@@ -159,6 +165,8 @@ export default function ProfilePage() {
             duration_hours: game.duration_hours,
             season_id: game.season_id,
             season_signup_deadline: game.season_signup_deadline,
+            total_tickets: game.total_tickets,
+            game_attendees: game.game_attendees,
             seasons: game.seasons,
             groups: game.groups
           }
@@ -333,6 +341,8 @@ export default function ProfilePage() {
             duration_hours: game.duration_hours,
             season_id: game.season_id,
             season_signup_deadline: game.season_signup_deadline,
+            total_tickets: game.total_tickets,
+            game_attendees: game.game_attendees,
             seasons: game.seasons,
             groups: game.groups
           }
@@ -775,14 +785,14 @@ export default function ProfilePage() {
                                       time={game.games.game_time}
                                       price={game.amount_paid}
                                       location={game.games.location}
-                                      maxAttendees={1}
+                                      maxAttendees={game.games.total_tickets || 10}
                                       groupName={game.games.groups.name}
                                       gameId={game.id}
                                       tags={[]}
                                       seasonId={game.games.season_id || game.games.seasons?.id}
                                       seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
                                       isUserAttending={true}
-                                      gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
+                                      gameAttendees={game.games.game_attendees || []}
                                       isPastGame={true}
                                     />
                                   ))}
@@ -915,14 +925,14 @@ export default function ProfilePage() {
                                       time={game.games.game_time}
                                       price={game.amount_paid}
                                       location={game.games.location}
-                                      maxAttendees={1}
+                                      maxAttendees={game.games.total_tickets || 10}
                                       groupName={game.games.groups.name}
                                       gameId={game.id}
                                       tags={[]}
                                       seasonId={game.games.season_id || game.games.seasons?.id}
                                       seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
                                       isUserAttending={true}
-                                      gameAttendees={[{ id: game.id, player_id: user.id, payment_status: 'completed' }]}
+                                      gameAttendees={game.games.game_attendees || []}
                                       isPastGame={false}
                                     />
                                   ))}
