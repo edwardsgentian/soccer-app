@@ -413,7 +413,6 @@ export default function SeasonDetailPage() {
                                 time={game.game_time}
                                 price={game.price}
                                 location={game.location}
-                                attendees={attendees}
                                 maxAttendees={game.total_tickets}
                                 groupName={season.groups.name}
                                 gameId={game.id}

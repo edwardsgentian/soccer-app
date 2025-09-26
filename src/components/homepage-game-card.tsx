@@ -9,7 +9,6 @@ interface HomepageGameCardProps {
   time: string
   price: number
   location: string
-  attendees: number
   maxAttendees: number
   groupName: string
   gameId: string
@@ -29,7 +28,6 @@ export function HomepageGameCard({
   time,
   price,
   location,
-  attendees: _,
   maxAttendees,
   groupName,
   gameId,

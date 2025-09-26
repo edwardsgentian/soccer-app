@@ -480,7 +480,6 @@ export default function ProfilePage() {
                                   time={game.games.game_time}
                                   price={0} // Past games show as completed
                                   location={game.games.location}
-                                  attendees={1} // They attended
                                   maxAttendees={1}
                                   groupName={game.games.groups.name}
                                   gameId={game.id}
@@ -570,7 +569,6 @@ export default function ProfilePage() {
                                   time={game.games.game_time}
                                   price={game.amount_paid}
                                   location={game.games.location}
-                                  attendees={1} // They're registered
                                   maxAttendees={1}
                                   groupName={game.games.groups.name}
                                   gameId={game.id}

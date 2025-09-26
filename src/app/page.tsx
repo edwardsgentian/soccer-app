@@ -289,7 +289,6 @@ export default function Home() {
                               time={game.game_time}
                               price={game.price}
                               location={game.location}
-                              attendees={attendees}
                               maxAttendees={game.total_tickets}
                               groupName={game.groups.name}
                               gameId={game.id}

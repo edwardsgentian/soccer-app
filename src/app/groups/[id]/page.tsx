@@ -445,7 +445,6 @@ export default function GroupDetailPage() {
                               time={game.game_time}
                               price={game.price}
                               location={game.location}
-                              attendees={attendees}
                               maxAttendees={game.total_tickets}
                               groupName={group.name}
                               gameId={game.id}
