@@ -99,7 +99,7 @@ function SuccessPageContent() {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <div className="text-6xl mb-4">❌</div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Payment Error</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Payment Error</h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link href="/games">
               <Button>
@@ -119,7 +119,7 @@ function SuccessPageContent() {
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
           <p className="text-gray-600 mb-8">
             You&apos;re all set! You&apos;ll receive a confirmation email shortly.
           </p>

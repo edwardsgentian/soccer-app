@@ -144,14 +144,14 @@ export function SeasonCard({
         <div className="absolute top-1 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
         <div className="relative bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-300 flex flex-row">
         {/* Image Section - Left Side */}
-        <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient(seasonId)} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+        <div className={`w-12 h-12 sm:w-24 sm:h-24 bg-gradient-to-br ${getRandomGradient(seasonId)} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
+          <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
             <Image 
               src="/calendar.png" 
               alt="Calendar" 
               width={64} 
               height={64} 
-              className="w-16 h-16 rounded-full object-cover"
+              className="w-8 h-8 sm:w-16 sm:h-16 rounded-full object-cover"
             />
           </div>
         </div>

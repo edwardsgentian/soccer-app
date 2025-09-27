@@ -377,7 +377,7 @@ export default function GroupDetailPage() {
           </div>
 
           {/* Group Name */}
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
           
           {/* Created Date */}
           <p className="text-gray-600 mb-8">Created {formatDate(group.created_at)}</p>

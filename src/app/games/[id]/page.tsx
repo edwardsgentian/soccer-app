@@ -372,7 +372,7 @@ export default function GameDetailPage() {
 
                 {/* Game Info */}
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
                   
                   <div className="space-y-3">
                     <div className="flex items-center text-gray-600">

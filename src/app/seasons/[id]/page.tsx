@@ -281,7 +281,7 @@ export default function SeasonDetailPage() {
                 className="w-16 h-16 mx-auto rounded-full object-cover"
               />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Season Not Found</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Season Not Found</h1>
             <p className="text-gray-600 mb-6">{error || 'The season you are looking for does not exist.'}</p>
             <Button onClick={() => window.history.back()}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -349,7 +349,7 @@ export default function SeasonDetailPage() {
               <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
                 {/* Season Header */}
                 <div className="mb-6">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{season.name}</h1>
+                  <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{season.name}</h1>
                   <p className="text-gray-600 mb-4">{season.groups.name}</p>
                   
                   {season.description && (

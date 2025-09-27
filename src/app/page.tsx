@@ -247,7 +247,7 @@ export default function Home() {
       <div className="container mx-auto px-4 pt-8 py-16">
         {/* Hero Section */}
         <div className="text-center mb-8">
-          <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
             Community soccer<br />
             <span className="bg-gradient-to-r from-black to-black bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
               games start here

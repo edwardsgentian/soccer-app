@@ -108,7 +108,7 @@ function AuthCallbackContent() {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="text-6xl mb-4">❌</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
               Email Confirmation Failed
             </h1>
             <p className="text-xl text-gray-600 mb-8">
