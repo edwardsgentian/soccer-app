@@ -522,11 +522,11 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
                 </div>
               </div>
 
-              {/* First Game */}
+              {/* Game Start */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Game Date
+                    Game Start Date
                   </label>
                   <input
                     type="date"
@@ -538,7 +538,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    First Game Time
+                    Game Start Time
                   </label>
                   <input
                     type="time"

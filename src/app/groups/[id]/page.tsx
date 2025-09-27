@@ -570,7 +570,7 @@ export default function GroupDetailPage() {
                       <Button
                         onClick={() => setShowCreateGameModal(true)}
                       >
-                        Create First Game
+                        Create Game
                       </Button>
                     )}
                   </div>

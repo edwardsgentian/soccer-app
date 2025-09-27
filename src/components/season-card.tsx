@@ -184,7 +184,7 @@ export function SeasonCard({
               <Clock className="w-4 h-4 mr-2 text-gray-500" />
               <span>{formatTime(firstGameTime)}</span>
               <Calendar className="w-4 h-4 ml-2 mr-2 text-gray-500" />
-              <span>First game, {formatFirstGameDate(firstGameDate)}</span>
+              <span>Starts {formatFirstGameDate(firstGameDate)}</span>
             </div>
             <div className="flex items-center text-gray-600 text-sm">
               <MapPin className="w-4 h-4 mr-2 text-gray-500" />

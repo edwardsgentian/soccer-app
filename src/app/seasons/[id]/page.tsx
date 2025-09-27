@@ -363,7 +363,7 @@ export default function SeasonDetailPage() {
                   <div className="flex items-start text-gray-600">
                     <Clock className="w-5 h-5 mr-3 text-gray-500 mt-0.5" />
                     <div>
-                      <div className="font-medium text-gray-900">First Game</div>
+                      <div className="font-medium text-gray-900">Starts</div>
                       <div className="text-sm">{formatDate(season.first_game_date)}</div>
                       <div className="text-sm">{formatTime(season.first_game_time)}</div>
                     </div>
