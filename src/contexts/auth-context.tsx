@@ -197,7 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const result = await Promise.race([
         queryPromise,
         timeoutPromise
-      ])
+      ]) as { data: any; error: any }
       const { data: playerData, error: playerError } = result
 
       console.log('Player query result:', { playerData, playerError })
