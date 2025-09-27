@@ -35,6 +35,11 @@ interface Game {
     player_id: string
     payment_status: string
   }[]
+  season_attendees?: {
+    id: string
+    player_id: string
+    payment_status: string
+  }[]
 }
 
 interface Season {
