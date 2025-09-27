@@ -118,7 +118,7 @@ export default function SeasonDetailPage() {
       console.log('Season ID:', seasonData.id)
       console.log('Season Spots:', seasonData.season_spots)
       console.log('Season Attendees Count:', seasonData.season_attendees?.length || 0)
-      console.log('Season Attendees Details:', seasonData.season_attendees?.map(att => ({
+      console.log('Season Attendees Details:', seasonData.season_attendees?.map((att: { id: string; player_id: string; payment_status: string; players?: { name: string } }) => ({
         id: att.id,
         player_id: att.player_id,
         payment_status: att.payment_status,
