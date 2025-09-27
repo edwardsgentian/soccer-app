@@ -179,7 +179,7 @@ export default function Home() {
         gamesWithSeasonAttendees.forEach(game => {
           if (game.season_id) {
             console.log(`Homepage - Game ${game.name} (season game) - total attendees: ${game.game_attendees?.length || 0}`)
-            const attendingCount = game.game_attendees?.filter(att => 
+            const attendingCount = game.game_attendees?.filter((att: any) => 
               att.payment_status === 'completed' && 
               (att.attendance_status === 'attending' || !att.attendance_status)
             ).length || 0
