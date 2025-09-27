@@ -6,11 +6,28 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, ArrowLeft, Instagram, Globe, MessageCircle, Component, Users } from 'lucide-react'
+import { ArrowLeft, Instagram, Globe, MessageCircle, Component, Users } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
+
+interface Member {
+  id: string
+  name: string
+  email: string
+  photo_url?: string
+}
+
+interface MemberData {
+  player_id: string
+  players: {
+    id: string
+    name: string
+    email: string
+    photo_url?: string
+  }
+}
 
 interface Group {
   id: string
@@ -85,7 +102,7 @@ export default function GroupDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showCreateGameModal, setShowCreateGameModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'games' | 'seasons' | 'members'>('games')
-  const [members, setMembers] = useState<any[]>([])
+  const [members, setMembers] = useState<Member[]>([])
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -183,7 +200,7 @@ export default function GroupDetailPage() {
         console.error('Error fetching members:', membersError)
       } else {
         // Remove duplicates and format members data
-        const uniqueMembers = membersData?.reduce((acc: any[], member: any) => {
+        const uniqueMembers = membersData?.reduce((acc: Member[], member: MemberData) => {
           const existingMember = acc.find(m => m.player_id === member.player_id)
           if (!existingMember) {
             acc.push({

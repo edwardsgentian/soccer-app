@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, MapPin, CalendarCheck, Calendar, SmilePlus } from 'lucide-react'
+import { Clock, MapPin, Calendar, SmilePlus } from 'lucide-react'
 
 interface SeasonCardProps {
   seasonId: string

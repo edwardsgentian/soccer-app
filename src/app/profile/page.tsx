@@ -173,7 +173,7 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [user, player?.id])
 
   const fetchCreatedGames = useCallback(async () => {
     if (!supabase || !user) return
@@ -202,7 +202,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created games:', err)
     }
-  }, [user])
+  }, [user, player?.id])
 
   const fetchCreatedGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -227,7 +227,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created groups:', err)
     }
-  }, [user])
+  }, [user, player?.id])
 
   const fetchMemberGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -268,7 +268,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching member groups:', err)
     }
-  }, [user])
+  }, [user, player?.id])
 
   const fetchUpcomingGames = useCallback(async () => {
     if (!supabase || !user) return
@@ -336,7 +336,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching upcoming games:', err)
     }
-  }, [user])
+  }, [user, player?.id])
 
   const fetchUpcomingSeasons = useCallback(async () => {
     if (!supabase || !user) return
@@ -386,7 +386,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching upcoming seasons:', err)
     }
-  }, [user])
+  }, [user, player?.id])
 
   const fetchPastSeasons = useCallback(async () => {
     if (!supabase || !user) return
@@ -436,7 +436,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching past seasons:', err)
     }
-  }, [user])
+  }, [user, player?.id])
 
   useEffect(() => {
     if (user && player) {
