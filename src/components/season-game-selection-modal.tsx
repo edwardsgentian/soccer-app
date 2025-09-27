@@ -35,13 +35,7 @@ export function SeasonGameSelectionModal({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (isOpen && seasonId) {
-      fetchSeasonGames()
-    }
-  }, [isOpen, seasonId])
-
-  const fetchSeasonGames = async () => {
+  const fetchSeasonGames = useCallback(async () => {
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -68,7 +62,13 @@ export function SeasonGameSelectionModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [seasonId])
+
+  useEffect(() => {
+    if (isOpen && seasonId) {
+      fetchSeasonGames()
+    }
+  }, [isOpen, seasonId, fetchSeasonGames])
 
   const handleGameToggle = (gameId: string) => {
     setGameAttendance(prev => ({

@@ -6,8 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { HomepageGameCard } from '@/components/homepage-game-card'
-import { CalendarCheck, Clock, MapPin, Calendar, Users, DollarSign, ArrowLeft } from 'lucide-react'
+import { Clock, MapPin, Calendar, DollarSign, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { JoinModal } from '@/components/join-flow/join-modal'
 import { AttendanceToggle } from '@/components/attendance-toggle'
@@ -106,7 +105,7 @@ export default function GameDetailPage() {
         .order('created_at', { ascending: true })
 
       // Also fetch season attendees for this game
-      let seasonAttendeesData: any[] = []
+      let seasonAttendeesData: Attendee[] = []
       if (gameData?.season_id) {
         const { data: seasonAttendees, error: seasonAttendeesError } = await supabase
           .from('season_attendees')

@@ -194,10 +194,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setTimeout(() => reject(new Error('Login request timed out')), 10000)
       )
 
-      const { data: playerData, error: playerError } = await Promise.race([
+      const result = await Promise.race([
         queryPromise,
         timeoutPromise
-      ]) as any
+      ])
+      const { data: playerData, error: playerError } = result
 
       console.log('Player query result:', { playerData, playerError })
 
