@@ -202,7 +202,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created games:', err)
     }
-  }, [user, player?.id])
+  }, [user])
 
   const fetchCreatedGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -227,7 +227,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching created groups:', err)
     }
-  }, [user, player?.id])
+  }, [user])
 
   const fetchMemberGroups = useCallback(async () => {
     if (!supabase || !user) return
@@ -268,7 +268,7 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Error fetching member groups:', err)
     }
-  }, [user, player?.id])
+  }, [user])
 
   const fetchUpcomingGames = useCallback(async () => {
     if (!supabase || !user) return

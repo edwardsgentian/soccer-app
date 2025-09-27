@@ -201,7 +201,7 @@ export default function GroupDetailPage() {
       } else {
         // Remove duplicates and format members data
         const uniqueMembers = membersData?.reduce((acc: Member[], member: MemberData) => {
-          const existingMember = acc.find(m => m.player_id === member.player_id)
+          const existingMember = acc.find(m => m.id === member.players.id)
           if (!existingMember) {
             acc.push({
               id: member.players.id,
