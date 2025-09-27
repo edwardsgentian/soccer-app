@@ -12,21 +12,21 @@ import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
 
-interface Member {
+interface Player {
   id: string
   name: string
   email: string
   photo_url?: string
 }
 
-interface MemberData {
+interface PlayerData {
   player_id: string
   players: {
     id: string
     name: string
     email: string
     photo_url?: string
-  }
+  }[]
 }
 
 interface Group {
@@ -101,8 +101,8 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateGameModal, setShowCreateGameModal] = useState(false)
-  const [activeTab, setActiveTab] = useState<'games' | 'seasons' | 'members'>('games')
-  const [members, setMembers] = useState<Member[]>([])
+  const [activeTab, setActiveTab] = useState<'games' | 'seasons' | 'players'>('games')
+  const [players, setPlayers] = useState<Player[]>([])
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -181,8 +181,8 @@ export default function GroupDetailPage() {
         setSeasons(seasonsData || [])
       }
 
-      // Fetch members (people who have attended games in this group)
-      const { data: membersData, error: membersError } = await supabase
+      // Fetch players (people who have attended games in this group)
+      const { data: playersData, error: playersError } = await supabase
         .from('game_attendees')
         .select(`
           player_id,
@@ -196,23 +196,24 @@ export default function GroupDetailPage() {
         .eq('payment_status', 'completed')
         .in('game_id', gamesData?.map(game => game.id) || [])
 
-      if (membersError) {
-        console.error('Error fetching members:', membersError)
+      if (playersError) {
+        console.error('Error fetching players:', playersError)
       } else {
-        // Remove duplicates and format members data
-        const uniqueMembers = membersData?.reduce((acc: Member[], member: MemberData) => {
-          const existingMember = acc.find(m => m.id === member.players.id)
-          if (!existingMember) {
+        // Remove duplicates and format players data
+        const uniquePlayers = playersData?.reduce((acc: Player[], playerData: PlayerData) => {
+          const player = playerData.players[0] // Get the first (and only) player from the array
+          const existingPlayer = acc.find(p => p.id === player.id)
+          if (!existingPlayer) {
             acc.push({
-              id: member.players.id,
-              name: member.players.name,
-              email: member.players.email,
-              photo_url: member.players.photo_url
+              id: player.id,
+              name: player.name,
+              email: player.email,
+              photo_url: player.photo_url
             })
           }
           return acc
         }, []) || []
-        setMembers(uniqueMembers)
+        setPlayers(uniquePlayers)
       }
     } catch (err) {
       console.error('Error fetching group details:', err)
@@ -314,8 +315,8 @@ export default function GroupDetailPage() {
                 <div className="text-sm text-gray-600">Seasons</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{members.length}</div>
-                <div className="text-sm text-gray-600">Members</div>
+                <div className="text-2xl font-bold text-gray-900">{players.length}</div>
+                <div className="text-sm text-gray-600">Players</div>
               </div>
             </div>
 
@@ -404,16 +405,16 @@ export default function GroupDetailPage() {
             >
               Seasons
             </button>
-            <button
-              onClick={() => setActiveTab('members')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                activeTab === 'members'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Members
-            </button>
+              <button
+                onClick={() => setActiveTab('players')}
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
+                  activeTab === 'players'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Players
+              </button>
           </div>
         </div>
 
@@ -522,34 +523,34 @@ export default function GroupDetailPage() {
               </div>
             )}
 
-              {activeTab === 'members' && (
+              {activeTab === 'players' && (
                 <div className="space-y-6">
-                  {members.length > 0 ? (
+                  {players.length > 0 ? (
                     <div className="flex justify-center">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
-                        {members.map((member) => (
-                          <div key={member.id} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                        {players.map((player) => (
+                          <div key={player.id} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
                             <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
-                              {member.photo_url ? (
+                              {player.photo_url ? (
                                 <Image
-                                  src={member.photo_url}
-                                  alt={member.name}
+                                  src={player.photo_url}
+                                  alt={player.name}
                                   width={48}
                                   height={48}
                                   className="w-12 h-12 rounded-full object-cover"
                                 />
                               ) : (
                                 <span className="text-lg font-semibold text-gray-600">
-                                  {member.name.charAt(0).toUpperCase()}
+                                  {player.name.charAt(0).toUpperCase()}
                                 </span>
                               )}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-sm font-medium text-gray-900 truncate">
-                                {member.name}
+                                {player.name}
                               </p>
                               <p className="text-sm text-gray-500 truncate">
-                                {member.email}
+                                {player.email}
                               </p>
                             </div>
                           </div>
@@ -562,10 +563,10 @@ export default function GroupDetailPage() {
                       <Users className="w-16 h-16 text-gray-400 mx-auto" />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      No members yet
+                      No players yet
                     </h3>
                     <p className="text-gray-600 mb-6">
-                      Members will appear here once they attend games in this group.
+                      Players will appear here once they attend games in this group.
                     </p>
                   </div>
                 )}
