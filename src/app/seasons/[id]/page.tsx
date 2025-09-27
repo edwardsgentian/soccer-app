@@ -166,7 +166,7 @@ export default function SeasonDetailPage() {
 
               // Get season attendees for this game's season (we already have this from seasonData)
               const seasonAttendees = seasonData.season_attendees?.filter(
-                attendee => attendee.payment_status === 'completed'
+                (attendee: { payment_status: string }) => attendee.payment_status === 'completed'
               ) || []
 
               // Combine season attendees with their attendance status for this game
