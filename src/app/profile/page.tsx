@@ -34,6 +34,11 @@ interface GameHistory {
     season_signup_deadline?: string
     total_tickets?: number
     game_attendees?: GameAttendee[]
+    season_attendees?: {
+      id: string
+      player_id: string
+      payment_status: string
+    }[]
     seasons?: {
       id: string
       season_signup_deadline: string
