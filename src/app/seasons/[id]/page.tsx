@@ -312,7 +312,7 @@ export default function SeasonDetailPage() {
   console.log('Unique Attendees Count:', deduplicatedAttendees.length)
   console.log('Final Count:', seasonAttendeesCount)
   console.log('Available Spots:', seasonSpotsAvailable)
-  console.log('Deduplicated Attendees:', deduplicatedAttendees.map(att => ({
+  console.log('Deduplicated Attendees:', deduplicatedAttendees.map((att: { id: string; player_id: string; payment_status: string; players?: { name: string; photo_url?: string } }) => ({
     id: att.id,
     player_id: att.player_id,
     name: att.players?.name,
