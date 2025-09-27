@@ -63,6 +63,11 @@ interface Game {
     payment_status: string
     attendance_status?: 'attending' | 'not_attending'
   }[]
+  season_attendees?: {
+    id: string
+    player_id: string
+    payment_status: string
+  }[]
 }
 
 interface Season {
