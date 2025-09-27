@@ -235,7 +235,7 @@ export default function GameDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [gameId, player?.id, user?.id])
+  }, [gameId, player, user])
 
   useEffect(() => {
     if (gameId) {
