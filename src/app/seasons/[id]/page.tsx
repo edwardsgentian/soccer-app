@@ -396,7 +396,7 @@ export default function SeasonDetailPage() {
                         <div>
                           <div className="text-xs font-medium text-gray-700 mb-2">Players signed up:</div>
                           <div className="space-y-1">
-                            {deduplicatedAttendees.map((attendee) => (
+                            {deduplicatedAttendees.map((attendee: { id: string; player_id: string; payment_status: string; players?: { name: string; photo_url?: string } }) => (
                               <div key={attendee.id} className="flex items-center text-xs text-gray-600">
                                 <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                                 <span>{attendee.players?.name || 'Unknown Player'}</span>
