@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, ArrowLeft, Instagram, Globe, MessageCircle, Component } from 'lucide-react'
+import { Calendar, ArrowLeft, Instagram, Globe, MessageCircle, Component, Users } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
@@ -83,6 +84,8 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateGameModal, setShowCreateGameModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'games' | 'seasons' | 'members'>('games')
+  const [members, setMembers] = useState<any[]>([])
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -94,19 +97,14 @@ export default function GroupDetailPage() {
       // Fetch group details
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
-        .select(`
-          *,
-          organizer:players!created_by (
-            id,
-            name,
-            photo_url
-          )
-        `)
+        .select('*')
         .eq('id', groupId)
         .single()
 
       if (groupError) {
-        throw groupError
+        console.error('Error fetching group:', groupError)
+        setError('Failed to load group details')
+        return
       }
 
       setGroup(groupData)
@@ -116,6 +114,10 @@ export default function GroupDetailPage() {
         .from('games')
         .select(`
           *,
+          groups (
+            name,
+            whatsapp_group
+          ),
           seasons (
             id,
             season_signup_deadline,
@@ -134,7 +136,7 @@ export default function GroupDetailPage() {
       if (gamesError) {
         console.error('Error fetching games:', gamesError)
       } else {
-        setGames((gamesData as unknown as Game[]) || [])
+        setGames(gamesData || [])
       }
 
       // Fetch seasons for this group
@@ -142,6 +144,10 @@ export default function GroupDetailPage() {
         .from('seasons')
         .select(`
           *,
+          groups (
+            name,
+            whatsapp_group
+          ),
           season_attendees (
             id,
             player_id,
@@ -155,10 +161,45 @@ export default function GroupDetailPage() {
       if (seasonsError) {
         console.error('Error fetching seasons:', seasonsError)
       } else {
-        setSeasons((seasonsData as unknown as Season[]) || [])
+        setSeasons(seasonsData || [])
+      }
+
+      // Fetch members (people who have attended games in this group)
+      const { data: membersData, error: membersError } = await supabase
+        .from('game_attendees')
+        .select(`
+          player_id,
+          players!inner (
+            id,
+            name,
+            email,
+            photo_url
+          )
+        `)
+        .eq('payment_status', 'completed')
+        .in('game_id', gamesData?.map(game => game.id) || [])
+
+      if (membersError) {
+        console.error('Error fetching members:', membersError)
+      } else {
+        // Remove duplicates and format members data
+        const uniqueMembers = membersData?.reduce((acc: any[], member: any) => {
+          const existingMember = acc.find(m => m.player_id === member.player_id)
+          if (!existingMember) {
+            acc.push({
+              id: member.players.id,
+              name: member.players.name,
+              email: member.players.email,
+              photo_url: member.players.photo_url
+            })
+          }
+          return acc
+        }, []) || []
+        setMembers(uniqueMembers)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Group not found')
+      console.error('Error fetching group details:', err)
+      setError('Failed to load group details')
     } finally {
       setLoading(false)
     }
@@ -173,20 +214,18 @@ export default function GroupDetailPage() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
-      weekday: 'long',
-      year: 'numeric',
+      year: 'numeric', 
       month: 'long', 
       day: 'numeric' 
     })
   }
-
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-4 py-16">
-          <div className="text-center py-12">
+          <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="text-gray-600 mt-4">Loading group details...</p>
           </div>
@@ -223,7 +262,7 @@ export default function GroupDetailPage() {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16">
+      <div className="container mx-auto px-4 py-16 max-w-4xl">
         {/* Back Button */}
         <Button
           variant="outline"
@@ -234,233 +273,293 @@ export default function GroupDetailPage() {
           Back to Groups
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Group Info */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden sticky top-8">
-              {/* Group Header */}
-              <div className="h-32 bg-gray-50 flex items-center justify-center">
-                <Component className="w-8 h-8 text-gray-400" />
+        {/* Group Header - Profile Style */}
+        <div className="text-center mb-12">
+          {/* Group Icon */}
+          <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Component className="w-16 h-16 text-gray-600" />
+          </div>
+
+          {/* Group Name */}
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
+          
+          {/* Created Date */}
+          <p className="text-gray-600 mb-8">Created {formatDate(group.created_at)}</p>
+
+            {/* Group Stats */}
+            <div className="flex justify-center gap-8 mb-8">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">{games.length}</div>
+                <div className="text-sm text-gray-600">Games</div>
               </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">{seasons.length}</div>
+                <div className="text-sm text-gray-600">Seasons</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-gray-900">{members.length}</div>
+                <div className="text-sm text-gray-600">Members</div>
+              </div>
+            </div>
 
-              <div className="p-6">
-                {/* Group Name */}
-                <h1 className="text-2xl font-bold text-gray-900 mb-4">{group.name}</h1>
+          {/* About Section */}
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
+            <p className="text-gray-600 leading-relaxed mb-6">{group.description}</p>
 
-                
-                {/* Description */}
-                <p className="text-gray-600 mb-6">{group.description}</p>
+            {/* Tags */}
+            {group.tags && group.tags.length > 0 && (
+              <div className="mb-6 text-center">
+                <div className="flex flex-wrap gap-2 justify-center">
+                  {group.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                {/* Tags */}
-                {group.tags && group.tags.length > 0 && (
-                  <div className="mb-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Tags</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {group.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+            {/* Social Links */}
+            <div className="text-center">
+              <div className="flex flex-wrap justify-center gap-4">
+                {group.whatsapp_group && (
+                  <a
+                    href={group.whatsapp_group}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-green-600 hover:text-green-700 transition-colors"
+                  >
+                    <MessageCircle className="w-5 h-5 mr-2" />
+                    WhatsApp Group
+                  </a>
                 )}
-
-                {/* Social Links */}
-                <div className="space-y-3 mb-6">
-                  {group.instagram && (
-                    <a
-                      href={`https://instagram.com/${group.instagram.replace('@', '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-gray-600 hover:text-pink-600 transition-colors"
-                    >
-                      <Instagram className="w-5 h-5 mr-3" />
-                      <span>{group.instagram}</span>
-                    </a>
-                  )}
-                  {group.website && (
-                    <a
-                      href={group.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-                    >
-                      <Globe className="w-5 h-5 mr-3" />
-                      <span>Visit Website</span>
-                    </a>
-                  )}
-                  {group.whatsapp_group && (
-                    <a
-                      href={group.whatsapp_group}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-gray-600 hover:text-green-600 transition-colors"
-                    >
-                      <MessageCircle className="w-5 h-5 mr-3" />
-                      <span>Join WhatsApp Group</span>
-                    </a>
-                  )}
-                </div>
-
-                {/* Created Date */}
-                <div className="flex items-center text-gray-500 text-sm">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <span>Created {formatDate(group.created_at)}</span>
-                </div>
+                {group.instagram && (
+                  <a
+                    href={group.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-pink-600 hover:text-pink-700 transition-colors"
+                  >
+                    <Instagram className="w-5 h-5 mr-2" />
+                    Instagram
+                  </a>
+                )}
+                {group.website && (
+                  <a
+                    href={group.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
+                  >
+                    <Globe className="w-5 h-5 mr-2" />
+                    Website
+                  </a>
+                )}
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Games List */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                  Upcoming Games
-                </h2>
-                <p className="text-gray-600">
-                  Games organized by {group.name}
-                </p>
-              </div>
-              <Button
-                onClick={() => setShowCreateGameModal(true)}
-                size="sm"
-              >
-                Create Game
-              </Button>
-            </div>
+        {/* Tab Headers - Profile Style */}
+        <div className="px-6 pt-6 flex justify-center">
+          <div className="flex bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveTab('games')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
+                activeTab === 'games'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Games
+            </button>
+            <button
+              onClick={() => setActiveTab('seasons')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
+                activeTab === 'seasons'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Seasons
+            </button>
+            <button
+              onClick={() => setActiveTab('members')}
+              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
+                activeTab === 'members'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Members
+            </button>
+          </div>
+        </div>
 
-            {games.length === 0 && seasons.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">⚽</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No upcoming games or seasons
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  This group hasn&apos;t scheduled any games or seasons yet.
-                </p>
-                <Button
-                  onClick={() => setShowCreateGameModal(true)}
-                >
-                  Create First Game
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Seasons Section */}
-                {seasons.length > 0 && (
-                  <div className="max-w-lg mx-auto mb-8">
-                    {seasons.map((season) => {
-                      // Calculate season attendees including organizer if they should be included
-                      let seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
-                      
-                      // If organizer should be included in count, add 1
-                      if (season.include_organizer_in_count) {
-                        seasonAttendees += 1
-                      }
-                      
-                      const seasonSpotsAvailable = season.season_spots - seasonAttendees
-                      const gameSpotsAvailable = season.game_spots
-                      
-                      // Check if current user is attending this season
-                      const isUserAttending = season.season_attendees?.some(att => 
-                        att.payment_status === 'completed' && att.player_id === player?.id
-                      ) || false
-                      
-                      return (
-                        <SeasonCard
-                          key={season.id}
-                          seasonId={season.id}
-                          seasonName={season.name}
-                          description={season.description}
-                          seasonPrice={season.season_price}
-                          individualGamePrice={season.individual_game_price}
-                          totalGames={season.total_games}
-                          seasonSpots={season.season_spots}
-                          gameSpots={season.game_spots}
-                          firstGameDate={season.first_game_date}
-                          firstGameTime={season.first_game_time}
-                          repeatType={season.repeat_type}
-                          groupName={group?.name || ''}
-                          location={season.location}
-                          seasonSpotsAvailable={seasonSpotsAvailable}
-                          gameSpotsAvailable={gameSpotsAvailable}
-                          isUserAttending={isUserAttending}
-                        />
-                      )
-                    })}
+        {/* Tabbed Content */}
+        <div className="bg-white overflow-hidden">
+
+          {/* Tab Content */}
+          <div className="p-6">
+            {activeTab === 'games' && (
+              <div className="space-y-6">
+                {games.length > 0 ? (
+                  games.map((game) => (
+                    <HomepageGameCard
+                      key={game.id}
+                      gameId={game.id}
+                      gameName={game.name}
+                      time={game.game_time}
+                      location={game.location}
+                      price={game.price}
+                      maxAttendees={game.total_tickets}
+                      gameAttendees={game.game_attendees || []}
+                      seasonId={game.season_id}
+                      seasonSignupDeadline={game.season_signup_deadline}
+                      groupName={group.name}
+                      tags={[]}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <Image 
+                        src="/game.png" 
+                        alt="Game" 
+                        width={64} 
+                        height={64} 
+                        className="w-16 h-16 mx-auto rounded-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No games yet
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      This group hasn&apos;t created any games yet.
+                    </p>
+                    {player && (
+                      <Button
+                        onClick={() => setShowCreateGameModal(true)}
+                      >
+                        Create First Game
+                      </Button>
+                    )}
                   </div>
                 )}
+              </div>
+            )}
 
-                {/* Games Section */}
-                {games.length > 0 && (
-              <div className="max-w-lg mx-auto space-y-6">
-                {(() => {
-                  // Group games by date
-                  const gamesByDate = games.reduce((acc, game) => {
-                    const date = new Date(game.game_date).toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric'
-                    })
-                    if (!acc[date]) {
-                      acc[date] = []
-                    }
-                    acc[date].push(game)
-                    return acc
-                  }, {} as Record<string, typeof games>)
+            {activeTab === 'seasons' && (
+              <div className="space-y-6">
+                {seasons.length > 0 ? (
+                  seasons.map((season) => (
+                    <SeasonCard
+                      key={season.id}
+                      seasonId={season.id}
+                      seasonName={season.name}
+                      description={season.description}
+                      seasonPrice={season.season_price}
+                      individualGamePrice={season.individual_game_price}
+                      totalGames={season.total_games}
+                      seasonSpots={season.season_spots}
+                      gameSpots={season.game_spots}
+                      firstGameDate={season.first_game_date}
+                      firstGameTime={season.first_game_time}
+                      repeatType={season.repeat_type}
+                      groupName={group.name}
+                      location={season.location}
+                      seasonSpotsAvailable={season.season_spots - (season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0)}
+                      gameSpotsAvailable={season.game_spots}
+                    />
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <Image 
+                        src="/calendar.png" 
+                        alt="Calendar" 
+                        width={64} 
+                        height={64} 
+                        className="w-16 h-16 mx-auto rounded-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No seasons yet
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      This group hasn&apos;t created any seasons yet.
+                    </p>
+                    {player && (
+                      <Button
+                        onClick={() => setShowCreateGameModal(true)}
+                      >
+                        Create First Season
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-                  return Object.entries(gamesByDate).map(([date, dateGames]) => (
-                    <div key={date}>
-                      {/* Date Label */}
-                      <div className="text-center mb-4">
-                        <h3 className="text-sm text-gray-600">
-                          {date}
-                        </h3>
-                      </div>
-                      
-                      {/* Games for this date */}
-                      <div className="space-y-4">
-                        {dateGames.map((game) => {
-                          
-                          // Check if current user is attending this game
-                          const isUserAttending = !!(player && game.game_attendees?.some(
-                            (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
-                          ))
-                          
-                          return (
-                            <HomepageGameCard
-                              key={game.id}
-                              gameName={game.name}
-                              time={game.game_time}
-                              price={game.price}
-                              location={game.location}
-                              maxAttendees={game.total_tickets}
-                              groupName={group.name}
-                              gameId={game.id}
-                              tags={group.tags || []}
-                              seasonId={game.season_id || game.seasons?.id}
-                              seasonSignupDeadline={game.season_signup_deadline || game.seasons?.season_signup_deadline}
-                              isUserAttending={isUserAttending}
-                              gameAttendees={game.game_attendees}
-                            />
-                          )
-                        })}
+              {activeTab === 'members' && (
+                <div className="space-y-6">
+                  {members.length > 0 ? (
+                    <div className="flex justify-center">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
+                        {members.map((member) => (
+                          <div key={member.id} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                              {member.photo_url ? (
+                                <Image
+                                  src={member.photo_url}
+                                  alt={member.name}
+                                  width={48}
+                                  height={48}
+                                  className="w-12 h-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-lg font-semibold text-gray-600">
+                                  {member.name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {member.name}
+                              </p>
+                              <p className="text-sm text-gray-500 truncate">
+                                {member.email}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))
-                })()}
-                </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <div className="mb-4">
+                      <Users className="w-16 h-16 text-gray-400 mx-auto" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No members yet
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Members will appear here once they attend games in this group.
+                    </p>
+                  </div>
                 )}
-              </>
+              </div>
             )}
+
           </div>
         </div>
       </div>
 
+      {/* Create Game Modal */}
       <GameManagementModal
         isOpen={showCreateGameModal}
         onClose={() => setShowCreateGameModal(false)}

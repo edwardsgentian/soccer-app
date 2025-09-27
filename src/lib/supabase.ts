@@ -16,6 +16,10 @@ const finalKey = supabaseAnonKey || fallbackKey
 // Create client with final values
 export const supabase = createClient(finalUrl, finalKey)
 
+// Debug logging
+console.log('Supabase client created with URL:', finalUrl)
+console.log('Supabase client created with Key:', finalKey ? 'Key present' : 'No key')
+
 // For server-side operations that require service role
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 export const supabaseAdmin = serviceRoleKey

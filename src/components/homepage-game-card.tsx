@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Clock, MapPin, SmilePlus } from "lucide-react"
+import Image from 'next/image'
+import { Clock, MapPin, SmilePlus, Lock } from "lucide-react"
 // import { motion } from 'framer-motion'
 
 interface HomepageGameCardProps {
@@ -43,18 +44,18 @@ export function HomepageGameCard({
   // Generate random gradient based on gameId for consistency
   const getRandomGradient = () => {
     const gradients = [
-      'from-blue-200 to-blue-300',
-      'from-green-200 to-green-300',
-      'from-purple-200 to-pink-200',
-      'from-pink-200 to-pink-300',
-      'from-red-200 to-red-300',
-      'from-yellow-200 to-yellow-300',
-      'from-indigo-200 to-indigo-300',
-      'from-teal-200 to-teal-300',
-      'from-orange-200 to-orange-300',
-      'from-cyan-200 to-cyan-300',
-      'from-emerald-200 to-emerald-300',
-      'from-violet-200 to-violet-300'
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100'
     ]
     
     // Use gameId to consistently select the same gradient
@@ -137,12 +138,18 @@ export function HomepageGameCard({
   return (
     <Link href={requiresSeasonSignup ? `/seasons/${seasonId}` : `/games/${gameId}`} className="block">
       <div
-        className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors duration-300 flex flex-row max-w-lg mx-auto"
+        className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-300 flex flex-row max-w-lg mx-auto"
       >
         {/* Image Section - Left Side */}
         <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-            <span className="text-gray-600 font-bold text-lg">⚽</span>
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+            <Image 
+              src="/game.png" 
+              alt="Game" 
+              width={64} 
+              height={64} 
+              className="w-16 h-16 rounded-full object-cover"
+            />
           </div>
         </div>
 
@@ -162,9 +169,15 @@ export function HomepageGameCard({
                 Attending
               </span>
             ) : requiresSeasonSignup ? (
-              <span className="px-3 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">
-                Season Signup Open
-              </span>
+              <div className="relative group">
+                <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full flex items-center gap-1">
+                  <Lock className="w-3 h-3" />
+                </span>
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 w-48">
+                  Individual games will only be available to book after the season signup has ended
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+                </div>
+              </div>
             ) : (
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-medium">
                 ${price}

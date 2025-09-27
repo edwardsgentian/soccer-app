@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
@@ -188,7 +189,15 @@ export default function GamesPage() {
           </div>
         ) : games.length === 0 && seasons.length === 0 ? (
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <div className="mb-4">
+              <Image 
+                src="/game.png" 
+                alt="Game" 
+                width={64} 
+                height={64} 
+                className="w-16 h-16 mx-auto rounded-full object-cover"
+              />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No upcoming games or seasons yet
             </h3>

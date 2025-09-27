@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
@@ -143,18 +144,18 @@ export default function GameDetailPage() {
   // Generate random gradient based on gameId for consistency with game cards
   const getRandomGradient = () => {
     const gradients = [
-      'from-blue-200 to-blue-300',
-      'from-green-200 to-green-300',
-      'from-purple-200 to-pink-200',
-      'from-pink-200 to-pink-300',
-      'from-red-200 to-red-300',
-      'from-yellow-200 to-yellow-300',
-      'from-indigo-200 to-indigo-300',
-      'from-teal-200 to-teal-300',
-      'from-orange-200 to-orange-300',
-      'from-cyan-200 to-cyan-300',
-      'from-emerald-200 to-emerald-300',
-      'from-violet-200 to-violet-300'
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100'
     ]
     
     // Use gameId to consistently select the same gradient
@@ -186,7 +187,15 @@ export default function GameDetailPage() {
         <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="text-center py-12">
-            <div className="text-6xl mb-4">⚽</div>
+            <div className="mb-4">
+              <Image 
+                src="/game.png" 
+                alt="Game" 
+                width={64} 
+                height={64} 
+                className="w-16 h-16 mx-auto"
+              />
+            </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Game Not Found
             </h3>
@@ -232,8 +241,14 @@ export default function GameDetailPage() {
                 {/* Game Image - Left Aligned */}
                 <div className="flex justify-start mb-6">
                   <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center`}>
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-                      <span className="text-gray-600 font-bold text-lg">⚽</span>
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+                      <Image 
+                        src="/game.png" 
+                        alt="Game" 
+                        width={64} 
+                        height={64} 
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
                     </div>
                   </div>
                 </div>

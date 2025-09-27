@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Clock, MapPin, CalendarCheck, Calendar, SmilePlus } from 'lucide-react'
 
 interface SeasonCardProps {
@@ -24,18 +25,18 @@ interface SeasonCardProps {
 }
 
 const gradients = [
-  'from-blue-200 to-blue-300',
-  'from-green-200 to-green-300',
-  'from-purple-200 to-pink-200',
-  'from-pink-200 to-pink-300',
-  'from-red-200 to-red-300',
-  'from-yellow-200 to-yellow-300',
-  'from-indigo-200 to-indigo-300',
-  'from-teal-200 to-teal-300',
-  'from-orange-200 to-orange-300',
-  'from-cyan-200 to-cyan-300',
-  'from-emerald-200 to-emerald-300',
-  'from-violet-200 to-violet-300'
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100',
+  'from-stone-200 to-yellow-100'
 ]
 
 const getRandomGradient = (seasonId: string) => {
@@ -137,18 +138,28 @@ export function SeasonCard({
 
   return (
     <Link href={`/seasons/${seasonId}`} className="block">
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 transition-colors duration-300 flex flex-row max-w-lg mx-auto">
+      <div className="relative max-w-lg mx-auto">
+        {/* Stack of cards effect - positioned below main card */}
+        <div className="absolute top-2 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
+        <div className="absolute top-1 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
+        <div className="relative bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-300 flex flex-row">
         {/* Image Section - Left Side */}
         <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient(seasonId)} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
-          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm">
-            <CalendarCheck className="w-6 h-6 text-gray-600" />
+          <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+            <Image 
+              src="/calendar.png" 
+              alt="Calendar" 
+              width={64} 
+              height={64} 
+              className="w-16 h-16 rounded-full object-cover"
+            />
           </div>
         </div>
 
         {/* Content Section - Right Side */}
         <div className="flex-1 p-4 pt-4">
           {/* Top Row: Season Name + Price */}
-          <div className="flex items-start justify-between mb-2">
+          <div className="flex items-start justify-between mb-3">
             <h3 className="font-bold text-gray-900 text-lg">{seasonName}</h3>
             
             {/* Season Price or Attending status in top right */}
@@ -168,7 +179,7 @@ export function SeasonCard({
           </div>
 
           {/* Time and Location */}
-          <div className="space-y-1 mb-3">
+          <div className="space-y-1 mb-4">
             <div className="flex items-center text-gray-600 text-sm">
               <Clock className="w-4 h-4 mr-2 text-gray-500" />
               <span>{formatTime(firstGameTime)}</span>
@@ -209,6 +220,7 @@ export function SeasonCard({
               Outdoors
             </span>
           </div>
+        </div>
         </div>
       </div>
     </Link>

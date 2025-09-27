@@ -3,9 +3,9 @@
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { AuthModal } from "@/components/auth/auth-modal"
-import { Citrus } from "lucide-react"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -20,7 +20,13 @@ export function Header() {
           {/* Logo */}
           <div className="flex-1">
             <Link href="/" className="flex items-center hover:opacity-80 transition-opacity">
-              <Citrus className="w-8 h-8 text-black" />
+              <Image 
+                src="/face.png" 
+                alt="Logo" 
+                width={32} 
+                height={32} 
+                className="w-8 h-8"
+              />
             </Link>
           </div>
 
@@ -49,27 +55,16 @@ export function Header() {
                 </Button>
               </div>
             ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    setAuthMode('signin')
-                    setAuthModalOpen(true)
-                  }}
-                >
-                  Sign In
-                </Button>
-                <Button 
-                  size="sm" 
-                  onClick={() => {
-                    setAuthMode('signup')
-                    setAuthModalOpen(true)
-                  }}
-                >
-                  Create Account
-                </Button>
-              </>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  setAuthMode('signin')
+                  setAuthModalOpen(true)
+                }}
+              >
+                Sign In
+              </Button>
             )}
           </div>
 
@@ -118,29 +113,17 @@ export function Header() {
                     </Button>
                   </div>
                 ) : (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => {
-                        setAuthMode('signin')
-                        setAuthModalOpen(true)
-                        setIsMenuOpen(false)
-                      }}
-                    >
-                      Sign In
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={() => {
-                        setAuthMode('signup')
-                        setAuthModalOpen(true)
-                        setIsMenuOpen(false)
-                      }}
-                    >
-                      Create Account
-                    </Button>
-                  </>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setAuthMode('signin')
+                      setAuthModalOpen(true)
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    Sign In
+                  </Button>
                 )}
               </div>
             </nav>

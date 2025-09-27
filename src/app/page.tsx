@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { Button } from "@/components/ui/button";
 import { HomepageGameCard } from "@/components/homepage-game-card";
 import { SeasonCard } from "@/components/season-card";
@@ -69,12 +70,15 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    console.log('Homepage useEffect called')
     fetchUpcomingGames()
     fetchUpcomingSeasons()
   }, [])
 
   const fetchUpcomingGames = async () => {
+    console.log('fetchUpcomingGames called, supabase:', !!supabase)
     if (!supabase) {
+      console.log('No supabase client, setting loading to false')
       setLoading(false)
       return
     }
@@ -117,7 +121,11 @@ export default function Home() {
   }
 
   const fetchUpcomingSeasons = async () => {
-    if (!supabase) return
+    console.log('fetchUpcomingSeasons called, supabase:', !!supabase)
+    if (!supabase) {
+      console.log('No supabase client in fetchUpcomingSeasons')
+      return
+    }
 
     try {
       const { data, error } = await supabase
@@ -159,7 +167,7 @@ export default function Home() {
         <div className="text-center mb-8">
           <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
             Community soccer<br />
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
+            <span className="bg-gradient-to-r from-black to-black bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
               games start here
             </span>
           </h1>
@@ -179,7 +187,15 @@ export default function Home() {
             </div>
           ) : games.length === 0 && seasons.length === 0 ? (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">⚽</div>
+              <div className="mb-4">
+                <Image 
+                  src="/game.png" 
+                  alt="Game" 
+                  width={64} 
+                  height={64} 
+                  className="w-16 h-16 mx-auto rounded-full object-cover"
+                />
+              </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 No upcoming games or seasons yet
               </h3>
@@ -196,7 +212,7 @@ export default function Home() {
             <>
               {/* Seasons Section */}
               {seasons.length > 0 && (
-                <div className="max-w-lg mx-auto mb-8">
+                <div className="max-w-lg mx-auto mb-8 mt-24">
                     {seasons.map((season) => {
                       // Calculate season attendees including organizer if they should be included
                       let seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
@@ -319,45 +335,67 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-gray-900 text-center mb-8">
             How It Works
           </h2>
-          <div className="relative">
-            <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                <div className="w-16 h-16 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-2xl">💳</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-2 max-w-2xl mx-auto">
+              <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-xs mx-auto">
+                <div className="w-24 h-24 bg-green-100 rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                  <Image 
+                    src="/card.png" 
+                    alt="Card" 
+                    width={96} 
+                    height={96} 
+                    className="w-24 h-24 rounded-lg object-cover"
+                  />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Payments made easy</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
                   Upfront or per game, no more keeping track of who&apos;s paid
                 </p>
               </div>
-              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-2xl">📊</span>
+              <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-xs mx-auto">
+                <div className="w-24 h-24 bg-blue-100 rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                  <Image 
+                    src="/checklist.png" 
+                    alt="Checklist" 
+                    width={96} 
+                    height={96} 
+                    className="w-24 h-24 rounded-lg object-cover"
+                  />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Attendance tracking</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
                   Know exactly how many players are coming
                 </p>
               </div>
-              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                <div className="w-16 h-16 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-2xl">⚽</span>
+              <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-xs mx-auto">
+                <div className="w-24 h-24 bg-purple-100 rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                  <Image 
+                    src="/season.png" 
+                    alt="Season" 
+                    width={96} 
+                    height={96} 
+                    className="w-24 h-24 rounded-lg object-cover"
+                  />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Season setup</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
                   Setup your season in one go, set prices for seasons and games
                 </p>
               </div>
-              <div className="flex-shrink-0 w-80 bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
-                <div className="w-16 h-16 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
-                  <span className="text-2xl">💬</span>
+              <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm max-w-xs mx-auto">
+                <div className="w-24 h-24 bg-orange-100 rounded-lg flex items-center justify-center mb-4 overflow-hidden">
+                  <Image 
+                    src="/whatsapp.png" 
+                    alt="WhatsApp" 
+                    width={96} 
+                    height={96} 
+                    className="w-24 h-24 rounded-lg object-cover"
+                  />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Made to work with WhatsApp</h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
                   Operational bridge with where you already run your existing community
                 </p>
               </div>
-            </div>
           </div>
         </div>
       </div>

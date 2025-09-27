@@ -11,6 +11,7 @@ import Image from 'next/image'
 // import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
+import { AuthModal } from '@/components/auth/auth-modal'
 
 interface GameAttendee {
   id: string
@@ -99,6 +100,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'attended' | 'groups' | 'upcoming'>('upcoming')
+  const [authModalOpen, setAuthModalOpen] = useState(false)
 
   const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
@@ -481,25 +483,41 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">👤</div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              Sign In Required
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Please sign in to view your profile.
-            </p>
-            <Button
-              onClick={() => window.location.href = '/'}
-            >
-              Go to Home
-            </Button>
+      <>
+        <div className="min-h-screen bg-white">
+          <Header />
+          <div className="container mx-auto px-4 py-16">
+            <div className="text-center py-12">
+              <div className="mb-4">
+                <Image
+                  src="/0_2.jpeg"
+                  alt="User"
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 mx-auto rounded-full object-cover"
+                />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Sign In Required
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Please sign in to view your profile.
+              </p>
+              <Button
+                onClick={() => setAuthModalOpen(true)}
+              >
+                Sign In
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+        
+        <AuthModal
+          isOpen={authModalOpen}
+          onClose={() => setAuthModalOpen(false)}
+          initialMode="signin"
+        />
+      </>
     )
   }
 
@@ -540,6 +558,7 @@ export default function ProfilePage() {
   }
 
   return (
+    <>
     <div className="min-h-screen bg-white">
       <Header />
       
@@ -883,6 +902,13 @@ export default function ProfilePage() {
 
       </div>
     </div>
+    
+    <AuthModal
+      isOpen={authModalOpen}
+      onClose={() => setAuthModalOpen(false)}
+      initialMode="signin"
+    />
+    </>
   )
 }
 
