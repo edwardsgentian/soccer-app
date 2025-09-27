@@ -245,7 +245,7 @@ export default function Home() {
       </div>
       
       <div className="container mx-auto px-4 pt-8 py-16">
-        {/* Hero Section */}
+        {/* Hero Section - Mobile Optimized */}
         <div className="text-center mb-8">
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-light text-gray-900 mb-8 leading-tight">
             Community soccer<br />
