@@ -170,7 +170,7 @@ export default function SeasonDetailPage() {
               ) || []
 
               // Combine season attendees with their attendance status for this game
-              const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
+              const seasonAttendeesWithStatus = seasonAttendees.map((attendee: { id: string; player_id: string; payment_status: string }) => {
                 const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
                 return {
                   id: attendee.id,
