@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
 import { ForgotPasswordModal } from './forgot-password-modal'
 
 interface SignInFormProps {
@@ -11,6 +11,7 @@ interface SignInFormProps {
 }
 
 export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
+  const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -23,19 +24,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
     setError(null)
 
     try {
-      if (!supabase) {
-        throw new Error('Supabase client not initialized')
-      }
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
-      if (error) {
-        throw error
-      }
-
+      await login(email, password)
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')

@@ -89,7 +89,7 @@ export default function GameDetailPage() {
 
       setGame(gameData)
 
-      // Fetch attendees (both individual and season attendees)
+      // Fetch attendees
       const { data: attendeesData, error: attendeesError } = await supabase
         .from('game_attendees')
         .select(`
@@ -105,57 +105,10 @@ export default function GameDetailPage() {
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: true })
 
-      // Also fetch season attendees for this game
-      let seasonAttendeesData: any[] = []
-      if (gameData?.season_id) {
-        const { data: seasonAttendees, error: seasonAttendeesError } = await supabase
-          .from('season_attendees')
-          .select(`
-            id,
-            created_at,
-            players (
-              name,
-              photo_url
-            )
-          `)
-          .eq('season_id', gameData.season_id)
-          .eq('payment_status', 'completed')
-
-        if (!seasonAttendeesError && seasonAttendees) {
-          // Get specific game attendance for season attendees
-          const { data: seasonGameAttendance } = await supabase
-            .from('season_game_attendance')
-            .select('season_attendee_id, attendance_status')
-            .eq('game_id', gameId)
-
-          // Combine season attendees with their game attendance status
-          seasonAttendeesData = seasonAttendees.map(attendee => {
-            const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-            return {
-              id: attendee.id,
-              created_at: attendee.created_at,
-              attendance_status: gameAttendance?.attendance_status || 'attending', // Default to attending
-              players: attendee.players
-            }
-          })
-        }
-      }
-
       if (attendeesError) {
         console.error('Error fetching attendees:', attendeesError)
       } else {
-        // Combine individual game attendees with season attendees
-        const allAttendees = [
-          ...(attendeesData || []),
-          ...seasonAttendeesData
-        ]
-        
-        // Remove duplicates (in case someone is both an individual and season attendee)
-        const uniqueAttendees = allAttendees.filter((attendee, index, self) => 
-          index === self.findIndex(a => a.players.name === attendee.players.name)
-        )
-        
-        setAttendees(uniqueAttendees as Attendee[])
+        setAttendees((attendeesData as unknown as Attendee[]) || [])
       }
 
       // Check user's attendance status if logged in
@@ -433,7 +386,7 @@ export default function GameDetailPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                {hasPaid ? 'Your Attendance' : 'Join This Game'}
+                {hasPaid ? 'Your Attendance' : 'Join This Game'} (Debug: hasPaid={hasPaid.toString()}, status={userAttendanceStatus})
               </h3>
               
               <div className="space-y-4 mb-6">
@@ -500,7 +453,12 @@ export default function GameDetailPage() {
         onClose={() => setShowJoinModal(false)}
         gameId={gameId}
         gameName={game.name}
-        price={game.price}
+        gamePrice={game.price}
+        groupName={game.groups.name}
+        onSuccess={() => {
+          setShowJoinModal(false)
+          fetchGameDetails() // Refresh the page data
+        }}
       />
     </div>
   )

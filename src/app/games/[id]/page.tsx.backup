@@ -6,11 +6,10 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { HomepageGameCard } from '@/components/homepage-game-card'
-import { CalendarCheck, Clock, MapPin, Calendar, Users, DollarSign, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/contexts/auth-context'
+import { Calendar, Clock, MapPin, DollarSign, ArrowLeft } from 'lucide-react'
 import { JoinModal } from '@/components/join-flow/join-modal'
 import { AttendanceToggle } from '@/components/attendance-toggle'
+import { useAuth } from '@/contexts/auth-context'
 
 interface Game {
   id: string
@@ -21,16 +20,20 @@ interface Game {
   location: string
   price: number
   total_tickets: number
+  available_tickets: number
+  created_at: string
   season_id?: string
+  season_signup_deadline?: string
   groups: {
     name: string
     whatsapp_group?: string
+    description?: string
   }
   seasons?: {
     id: string
     season_signup_deadline: string
     include_organizer_in_count: boolean
-  }[]
+  }
 }
 
 interface Attendee {
@@ -63,8 +66,6 @@ export default function GameDetailPage() {
     }
 
     try {
-      console.log('=== FETCH GAME DETAILS CALLED ===')
-      
       // Fetch game details
       const { data: gameData, error: gameError } = await supabase
         .from('games')
@@ -72,7 +73,13 @@ export default function GameDetailPage() {
           *,
           groups (
             name,
-            whatsapp_group
+            whatsapp_group,
+            description
+          ),
+          organizer:players!created_by (
+            id,
+            name,
+            photo_url
           ),
           seasons (
             id,
@@ -89,7 +96,7 @@ export default function GameDetailPage() {
 
       setGame(gameData)
 
-      // Fetch attendees (both individual and season attendees)
+      // Fetch attendees
       const { data: attendeesData, error: attendeesError } = await supabase
         .from('game_attendees')
         .select(`
@@ -105,60 +112,14 @@ export default function GameDetailPage() {
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: true })
 
-      // Also fetch season attendees for this game
-      let seasonAttendeesData: any[] = []
-      if (gameData?.season_id) {
-        const { data: seasonAttendees, error: seasonAttendeesError } = await supabase
-          .from('season_attendees')
-          .select(`
-            id,
-            created_at,
-            players (
-              name,
-              photo_url
-            )
-          `)
-          .eq('season_id', gameData.season_id)
-          .eq('payment_status', 'completed')
-
-        if (!seasonAttendeesError && seasonAttendees) {
-          // Get specific game attendance for season attendees
-          const { data: seasonGameAttendance } = await supabase
-            .from('season_game_attendance')
-            .select('season_attendee_id, attendance_status')
-            .eq('game_id', gameId)
-
-          // Combine season attendees with their game attendance status
-          seasonAttendeesData = seasonAttendees.map(attendee => {
-            const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-            return {
-              id: attendee.id,
-              created_at: attendee.created_at,
-              attendance_status: gameAttendance?.attendance_status || 'attending', // Default to attending
-              players: attendee.players
-            }
-          })
-        }
-      }
-
       if (attendeesError) {
         console.error('Error fetching attendees:', attendeesError)
       } else {
-        // Combine individual game attendees with season attendees
-        const allAttendees = [
-          ...(attendeesData || []),
-          ...seasonAttendeesData
-        ]
-        
-        // Remove duplicates (in case someone is both an individual and season attendee)
-        const uniqueAttendees = allAttendees.filter((attendee, index, self) => 
-          index === self.findIndex(a => a.players.name === attendee.players.name)
-        )
-        
-        setAttendees(uniqueAttendees as Attendee[])
+        setAttendees((attendeesData as unknown as Attendee[]) || [])
       }
 
       // Check user's attendance status if logged in
+      console.log('=== FETCH GAME DETAILS CALLED ===')
       console.log('Checking attendance - player:', !!player, 'user:', !!user)
       if (player || user) {
         const playerId = player?.id || user?.id
@@ -174,31 +135,60 @@ export default function GameDetailPage() {
 
           if (gameAttendanceError) {
             console.error('Error checking game attendance:', gameAttendanceError)
+            console.error('Error details:', {
+              message: gameAttendanceError.message,
+              details: gameAttendanceError.details,
+              hint: gameAttendanceError.hint,
+              code: gameAttendanceError.code
+            })
+            // If the error is due to missing column, try without attendance_status
+            if (gameAttendanceError.message?.includes('attendance_status') || gameAttendanceError.code === '42703') {
+              console.log('attendance_status column not found, trying without it')
+              const { data: fallbackAttendance, error: fallbackError } = await supabase
+                .from('game_attendees')
+                .select('payment_status')
+                .eq('game_id', gameId)
+                .eq('player_id', playerId)
+                .eq('payment_status', 'completed')
+              
+              if (fallbackError) {
+                console.error('Fallback query also failed:', fallbackError)
+              } else if (fallbackAttendance && fallbackAttendance.length > 0) {
+                console.log('Fallback successful, user has paid')
+                setHasPaid(true)
+                setUserAttendanceStatus('attending') // Default to attending
+                return
+              }
+            }
           } else {
             console.log('Individual game attendance query successful, data:', userGameAttendance)
           }
 
           if (userGameAttendance && userGameAttendance.length > 0) {
-            console.log('Individual game attendance found:', userGameAttendance[0])
             setHasPaid(true)
             setUserAttendanceStatus(userGameAttendance[0].attendance_status || 'attending')
-          } else if (gameData?.season_id) {
-            // Check season attendance
-            console.log('No individual game attendance found, checking season attendance for season ID:', gameData.season_id)
-            const { data: seasonAttendee, error: seasonAttendeeError } = await supabase
-              .from('season_attendees')
-              .select('id')
-              .eq('player_id', playerId)
-              .eq('payment_status', 'completed')
-              .eq('season_id', gameData.season_id)
+          } else {
+            // Check season attendance - first get the season attendee ID
+            if (game?.season_id) {
+              const { data: seasonAttendee, error: seasonAttendeeError } = await supabase
+                .from('season_attendees')
+                .select('id')
+                .eq('player_id', playerId)
+                .eq('payment_status', 'completed')
+                .eq('season_id', game.season_id)
 
             if (seasonAttendeeError) {
               console.error('Error checking season attendee:', seasonAttendeeError)
+              console.error('Season attendee error details:', {
+                message: seasonAttendeeError.message,
+                details: seasonAttendeeError.details,
+                hint: seasonAttendeeError.hint,
+                code: seasonAttendeeError.code
+              })
             }
 
             if (seasonAttendee && seasonAttendee.length > 0) {
-              console.log('Season attendee found:', seasonAttendee[0])
-              // Check specific game attendance within season
+              // Now check the specific game attendance
               const { data: seasonAttendance, error: seasonAttendanceError } = await supabase
                 .from('season_game_attendance')
                 .select('attendance_status')
@@ -207,21 +197,33 @@ export default function GameDetailPage() {
 
               if (seasonAttendanceError) {
                 console.error('Error checking season game attendance:', seasonAttendanceError)
-                // If table doesn't exist, default to attending
-                if (seasonAttendanceError.message?.includes('relation "season_game_attendance" does not exist')) {
+                console.error('Season game attendance error details:', {
+                  message: seasonAttendanceError.message,
+                  details: seasonAttendanceError.details,
+                  hint: seasonAttendanceError.hint,
+                  code: seasonAttendanceError.code
+                })
+                // If table doesn't exist yet, just set as attending
+                if (seasonAttendanceError.message?.includes('relation "season_game_attendance" does not exist') || 
+                    seasonAttendanceError.code === '42P01') {
                   console.log('season_game_attendance table not found, defaulting to attending')
                   setHasPaid(true)
                   setUserAttendanceStatus('attending')
+                  return
                 }
-              } else if (seasonAttendance && seasonAttendance.length > 0) {
+              }
+
+              if (seasonAttendance && seasonAttendance.length > 0) {
                 console.log('Season game attendance found:', seasonAttendance[0])
                 setHasPaid(true)
                 setUserAttendanceStatus(seasonAttendance[0].attendance_status)
               } else {
                 // User has purchased season but hasn't set attendance for this specific game
                 console.log('Season attendee found, but no specific game attendance. Defaulting to attending.')
+                console.log('Before setting state - hasPaid:', hasPaid, 'userAttendanceStatus:', userAttendanceStatus)
                 setHasPaid(true)
-                setUserAttendanceStatus('attending')
+                setUserAttendanceStatus('attending') // Default to attending
+                console.log('After setting state - hasPaid should be true, userAttendanceStatus should be attending')
               }
             }
           }
@@ -232,7 +234,7 @@ export default function GameDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [gameId, player?.id, user?.id])
+  }, [gameId])
 
   useEffect(() => {
     if (gameId) {
@@ -251,8 +253,8 @@ export default function GameDetailPage() {
     return date.toLocaleDateString('en-US', { 
       weekday: 'long',
       year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+      month: 'long', 
+      day: 'numeric' 
     })
   }
 
@@ -264,8 +266,16 @@ export default function GameDetailPage() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
+  // Generate random gradient based on gameId for consistency with game cards
   const getRandomGradient = () => {
     const gradients = [
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
+      'from-stone-200 to-yellow-100',
       'from-stone-200 to-yellow-100',
       'from-stone-200 to-yellow-100',
       'from-stone-200 to-yellow-100',
@@ -317,8 +327,10 @@ export default function GameDetailPage() {
             <p className="text-gray-600 mb-6">
               The game you&apos;re looking for doesn&apos;t exist or has been removed.
             </p>
-            <Button onClick={() => window.history.back()}>
-              Go Back
+            <Button
+              onClick={() => window.location.href = '/games'}
+            >
+              Back to Games
             </Button>
           </div>
         </div>
@@ -326,6 +338,7 @@ export default function GameDetailPage() {
     )
   }
 
+  // Use actual attendee count from the fetched attendees data
   const attendingPlayers = attendees.filter(attendee => 
     attendee.attendance_status === 'attending' || !attendee.attendance_status
   )
@@ -334,97 +347,109 @@ export default function GameDetailPage() {
   const isFullyBooked = spotsLeft <= 0
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <Header />
       
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Button
           variant="outline"
-          onClick={() => window.history.back()}
+          onClick={() => window.location.href = '/games'}
           className="mb-6"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
+          Back to Games
         </Button>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg border border-gray-200 p-8">
-              {/* Game Header */}
-              <div className="flex items-start space-x-6 mb-8">
-                {/* Game Icon */}
-                <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                    <Image 
-                      src="/game.png" 
-                      alt="Game" 
-                      width={64} 
-                      height={64} 
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  </div>
-                </div>
-
-                {/* Game Info */}
-                <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{formatDate(game.game_date)}</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-600">
-                      <Clock className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{formatTime(game.game_time)}</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{game.location}</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-600">
-                      <DollarSign className="w-5 h-5 mr-3" />
-                      <span className="font-medium">${game.price} per player</span>
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+              <div className="p-6">
+                {/* Game Image - Left Aligned */}
+                <div className="flex justify-start mb-6">
+                  <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center`}>
+                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
+                      <Image 
+                        src="/game.png" 
+                        alt="Game" 
+                        width={64} 
+                        height={64} 
+                        className="w-16 h-16 rounded-full object-cover"
+                      />
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Description */}
-              {game.description && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">About This Game</h3>
-                  <p className="text-gray-600">{game.description}</p>
-                </div>
-              )}
-
-              {/* Attendees */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Players Attending ({totalAttendees}/{game.total_tickets})
-                </h3>
+                {/* Group Name */}
+                <div className="text-sm text-gray-500 mb-2">{game.groups.name}</div>
                 
-                {attendingPlayers.length === 0 ? (
-                  <p className="text-gray-500">No players are attending yet.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {attendingPlayers.map((attendee) => (
-                      <div key={attendee.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <span className="text-green-600 font-semibold text-sm">
-                            {attendee.players.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-gray-900 font-medium">{attendee.players.name}</span>
-                      </div>
-                    ))}
+                {/* Game Name */}
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">{game.name}</h1>
+
+
+                {/* Game Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center text-gray-600">
+                    <Calendar className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{formatDate(game.game_date)}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600">
+                    <Clock className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{formatTime(game.game_time)}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600">
+                    <MapPin className="w-5 h-5 mr-3" />
+                    <span className="font-medium">{game.location}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-gray-600">
+                    <DollarSign className="w-5 h-5 mr-3" />
+                    <span className="font-medium">${game.price} per player</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                {game.description && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">About This Game</h3>
+                    <p className="text-gray-600">{game.description}</p>
                   </div>
                 )}
+
+                {/* Group Description */}
+                {game.groups.description && (
+                  <div className="mb-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">About {game.groups.name}</h3>
+                    <p className="text-gray-600">{game.groups.description}</p>
+                  </div>
+                )}
+
+                {/* Attendees */}
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                    Players Attending ({totalAttendees}/{game.total_tickets})
+                  </h3>
+                  
+                  {attendingPlayers.length === 0 ? (
+                    <p className="text-gray-500">No players are attending yet.</p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {attendingPlayers.map((attendee) => (
+                        <div key={attendee.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                          <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                            <span className="text-green-600 font-semibold text-sm">
+                              {attendee.players.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-gray-900 font-medium">{attendee.players.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -433,7 +458,7 @@ export default function GameDetailPage() {
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
               <h3 className="text-xl font-bold text-gray-900 mb-4">
-                {hasPaid ? 'Your Attendance' : 'Join This Game'}
+                {hasPaid ? 'Your Attendance' : 'Join This Game'} (Debug: hasPaid={hasPaid.toString()}, status={userAttendanceStatus})
               </h3>
               
               <div className="space-y-4 mb-6">
@@ -479,15 +504,22 @@ export default function GameDetailPage() {
                 </Button>
               )}
 
-              {/* WhatsApp Group */}
               {game.groups.whatsapp_group && (
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
-                >
-                  Join WhatsApp Group
-                </Button>
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <a
+                      href={game.groups.whatsapp_group}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Join WhatsApp Group
+                    </a>
+                  </Button>
+                </div>
               )}
             </div>
           </div>
@@ -499,8 +531,8 @@ export default function GameDetailPage() {
         isOpen={showJoinModal}
         onClose={() => setShowJoinModal(false)}
         gameId={gameId}
-        gameName={game.name}
-        price={game.price}
+        price={game?.price || 0}
+        gameName={game?.name}
       />
     </div>
   )

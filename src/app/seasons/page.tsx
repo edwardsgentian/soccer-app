@@ -21,7 +21,6 @@ interface Season {
   first_game_time: string
   repeat_type: string
   location: string
-  include_organizer_in_count: boolean
   groups: {
     name: string
     whatsapp_group?: string
@@ -127,12 +126,7 @@ export default function SeasonsPage() {
           <div className="max-w-lg mx-auto space-y-4">
             {seasons.map((season) => {
               // Calculate season attendees including organizer if they should be included
-              let seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
-              
-              // If organizer should be included in count, add 1
-              if (season.include_organizer_in_count) {
-                seasonAttendees += 1
-              }
+              const seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
               
               const seasonSpotsAvailable = season.season_spots - seasonAttendees
               const gameSpotsAvailable = season.game_spots

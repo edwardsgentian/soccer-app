@@ -177,20 +177,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
+    console.log('Login attempt for email:', email)
     if (!supabase) throw new Error('Supabase not initialized')
 
     try {
-      // First, find the player by email
-      const { data: playerData, error: playerError } = await supabase
+      console.log('Querying players table...')
+      
+      // Add timeout to prevent hanging
+      const queryPromise = supabase
         .from('players')
         .select('*')
         .eq('email', email)
         .single()
 
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Login request timed out')), 10000)
+      )
+
+      const { data: playerData, error: playerError } = await Promise.race([
+        queryPromise,
+        timeoutPromise
+      ]) as any
+
+      console.log('Player query result:', { playerData, playerError })
+
       if (playerError) {
         console.error('Login error:', playerError)
         if (playerError.code === 'PGRST116') {
           // Not found - invalid email
+          console.log('User not found in database for email:', email)
           throw new Error('Invalid email or password')
         } else {
           throw new Error('Login failed. Please try again.')
@@ -198,12 +213,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (!playerData) {
+        console.log('No player data returned for email:', email)
         throw new Error('Invalid email or password')
       }
 
-      // Check password (simple comparison for now)
+      console.log('User found:', {
+        id: playerData.id,
+        email: playerData.email,
+        name: playerData.name,
+        hasPasswordHash: !!playerData.password_hash
+      })
+
+      // Check password (handle both plain text and base64 encoded passwords)
       const hashedPassword = btoa(password)
-      if (playerData.password_hash !== hashedPassword) {
+      const isPlainTextMatch = playerData.password_hash === password
+      const isHashedMatch = playerData.password_hash === hashedPassword
+      
+      console.log('Password check:', {
+        providedPassword: password,
+        hashedProvided: hashedPassword,
+        storedHash: playerData.password_hash,
+        isPlainTextMatch,
+        isHashedMatch,
+        finalMatch: isPlainTextMatch || isHashedMatch
+      })
+      
+      if (!isPlainTextMatch && !isHashedMatch) {
+        console.log('Password mismatch for user:', email)
         throw new Error('Invalid email or password')
       }
 

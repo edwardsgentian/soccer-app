@@ -54,7 +54,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
     repeat_interval: '1',
     allow_individual_sales: false,
     season_signup_deadline: '',
-    include_organizer_in_count: true,
+    include_organizer_in_count: false,
   })
 
   // Custom game dates for seasons
@@ -245,7 +245,7 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
         repeat_interval: parseInt(seasonData.repeat_interval),
         allow_individual_sales: seasonData.allow_individual_sales,
         season_signup_deadline: seasonData.season_signup_deadline,
-        include_organizer_in_count: seasonData.include_organizer_in_count,
+        include_organizer_in_count: false,
         location: formData.location,
         created_by: player?.id
       })
@@ -670,18 +670,6 @@ export function CreateGameOrSeasonForm({ groupId, onSuccess }: CreateGameOrSeaso
                   />
                   <label htmlFor="allow_individual_sales" className="text-sm text-gray-700">
                     Allow individual games to be sold if games aren&apos;t full
-                  </label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    id="include_organizer"
-                    checked={seasonData.include_organizer_in_count}
-                    onChange={(e) => handleSeasonChange('include_organizer_in_count', e.target.checked)}
-                    className="text-blue-600"
-                  />
-                  <label htmlFor="include_organizer" className="text-sm text-gray-700">
-                    Include you in the count as attending this season
                   </label>
                 </div>
               </div>

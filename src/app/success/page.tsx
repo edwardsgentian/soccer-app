@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
+import { SeasonGameSelectionModal } from '@/components/season-game-selection-modal'
 
 function SuccessPageContent() {
   const { player, user, restoreAuth } = useAuth()
@@ -15,6 +16,8 @@ function SuccessPageContent() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [paymentProcessed, setPaymentProcessed] = useState(false)
+  const [showSeasonGameSelection, setShowSeasonGameSelection] = useState(false)
+  const [purchasedSeasonId, setPurchasedSeasonId] = useState<string | null>(null)
 
   useEffect(() => {
     console.log('Success page - User state:', { user: !!user, player: !!player })
@@ -58,6 +61,11 @@ function SuccessPageContent() {
       console.log('Payment API response data:', JSON.stringify(data, null, 2))
 
       if (data.success) {
+        // Check if this was a season purchase
+        if (data.seasonId) {
+          setPurchasedSeasonId(data.seasonId)
+          setShowSeasonGameSelection(true)
+        }
         setLoading(false)
       } else {
         setError(data.error || 'Payment processing failed')
@@ -130,6 +138,19 @@ function SuccessPageContent() {
           </div>
         </div>
       </div>
+
+      {/* Season Game Selection Modal */}
+      {showSeasonGameSelection && purchasedSeasonId && player && (
+        <SeasonGameSelectionModal
+          isOpen={showSeasonGameSelection}
+          onClose={() => setShowSeasonGameSelection(false)}
+          seasonId={purchasedSeasonId}
+          playerId={player.id}
+          onSuccess={() => {
+            console.log('Season game selection completed')
+          }}
+        />
+      )}
     </div>
   )
 }

@@ -100,7 +100,11 @@ export default function SeasonDetailPage() {
           season_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            players (
+              name,
+              photo_url
+            )
           )
         `)
         .eq('id', seasonId)
@@ -109,6 +113,17 @@ export default function SeasonDetailPage() {
       if (seasonError) {
         throw seasonError
       }
+
+      console.log('=== RAW SEASON DATA ===')
+      console.log('Season ID:', seasonData.id)
+      console.log('Season Spots:', seasonData.season_spots)
+      console.log('Season Attendees Count:', seasonData.season_attendees?.length || 0)
+      console.log('Season Attendees Details:', seasonData.season_attendees?.map(att => ({
+        id: att.id,
+        player_id: att.player_id,
+        payment_status: att.payment_status,
+        player_name: att.players?.name
+      })))
 
       setSeason(seasonData)
 
@@ -129,7 +144,8 @@ export default function SeasonDetailPage() {
           game_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            attendance_status
           )
         `)
         .eq('season_id', seasonId)
@@ -138,7 +154,65 @@ export default function SeasonDetailPage() {
       if (gamesError) {
         console.error('Error fetching games:', gamesError)
       } else {
-        setGames((gamesData as unknown as Game[]) || [])
+        // For each game, combine individual game attendees with season attendees
+        const gamesWithCombinedAttendees = await Promise.all(
+          (gamesData || []).map(async (game) => {
+            try {
+              // Fetch season game attendance for this specific game
+              const { data: seasonGameAttendance } = await supabase
+                .from('season_game_attendance')
+                .select('season_attendee_id, attendance_status')
+                .eq('game_id', game.id)
+
+              // Get season attendees for this game's season (we already have this from seasonData)
+              const seasonAttendees = seasonData.season_attendees?.filter(
+                attendee => attendee.payment_status === 'completed'
+              ) || []
+
+              // Combine season attendees with their attendance status for this game
+              const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
+                const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
+                return {
+                  id: attendee.id,
+                  player_id: attendee.player_id,
+                  payment_status: 'completed',
+                  attendance_status: gameAttendance?.attendance_status || 'attending'
+                }
+              })
+
+              // Combine individual game attendees with season attendees
+              const allAttendees = [
+                ...(game.game_attendees || []),
+                ...seasonAttendeesWithStatus
+              ]
+
+              // Remove duplicates based on player_id
+              const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
+                index === self.findIndex(a => a.player_id === attendee.player_id)
+              )
+
+              return {
+                ...game,
+                game_attendees: uniqueAttendees
+              }
+            } catch (err) {
+              console.error('Error combining attendees for game:', game.id, err)
+              return game
+            }
+          })
+        )
+
+        // Debug: Log attendee data for season games
+        gamesWithCombinedAttendees.forEach(game => {
+          console.log(`Season page - Game ${game.name} - total attendees: ${game.game_attendees?.length || 0}`)
+          const attendingCount = game.game_attendees?.filter(att => 
+            att.payment_status === 'completed' && 
+            (att.attendance_status === 'attending' || !att.attendance_status)
+          ).length || 0
+          console.log(`Season page - Game ${game.name} - attending count: ${attendingCount}`)
+        })
+
+        setGames((gamesWithCombinedAttendees as unknown as Game[]) || [])
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Season not found')
@@ -219,15 +293,31 @@ export default function SeasonDetailPage() {
     )
   }
 
-  // Calculate season attendees including organizer if they should be included
-  let seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
+  // Get unique season attendees (remove duplicates by player_id)
+  const uniqueSeasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed') || []
+  const deduplicatedAttendees = uniqueSeasonAttendees.filter((attendee, index, self) =>
+    index === self.findIndex(a => a.player_id === attendee.player_id)
+  )
   
-  // If organizer should be included in count, add 1
-  if (season.include_organizer_in_count) {
-    seasonAttendees += 1
-  }
+  // Calculate season attendees count (no organizer logic)
+  const seasonAttendeesCount = deduplicatedAttendees.length
   
-  const seasonSpotsAvailable = season.season_spots - seasonAttendees
+  const seasonSpotsAvailable = season.season_spots - seasonAttendeesCount
+  
+  // Debug logging
+  console.log('=== SEASON ATTENDEES CALCULATION ===')
+  console.log('Total Spots:', season.season_spots)
+  console.log('Raw Attendees Count:', season.season_attendees?.length || 0)
+  console.log('Paid Attendees Count:', uniqueSeasonAttendees.length)
+  console.log('Unique Attendees Count:', deduplicatedAttendees.length)
+  console.log('Final Count:', seasonAttendeesCount)
+  console.log('Available Spots:', seasonSpotsAvailable)
+  console.log('Deduplicated Attendees:', deduplicatedAttendees.map(att => ({
+    id: att.id,
+    player_id: att.player_id,
+    name: att.players?.name,
+    payment_status: att.payment_status
+  })))
   
   // Check if current user is attending this season
   const isUserAttending = season.season_attendees?.some(att => 
@@ -297,9 +387,24 @@ export default function SeasonDetailPage() {
                   
                   <div className="flex items-start text-gray-600">
                     <Users className="w-5 h-5 mr-3 text-gray-500 mt-0.5" />
-                    <div>
+                    <div className="flex-1">
                       <div className="font-medium text-gray-900">Season Spots</div>
-                      <div className="text-sm">{seasonSpotsAvailable} of {season.season_spots} available</div>
+                      <div className="text-sm mb-3">{seasonSpotsAvailable} of {season.season_spots} available</div>
+                      
+                      {/* Show season attendees */}
+                      {deduplicatedAttendees.length > 0 && (
+                        <div>
+                          <div className="text-xs font-medium text-gray-700 mb-2">Players signed up:</div>
+                          <div className="space-y-1">
+                            {deduplicatedAttendees.map((attendee) => (
+                              <div key={attendee.id} className="flex items-center text-xs text-gray-600">
+                                <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                                <span>{attendee.players?.name || 'Unknown Player'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
@@ -411,10 +516,19 @@ export default function SeasonDetailPage() {
                         <div className="space-y-4">
                           {dateGames.map((game) => {
                             
-                            // Check if current user is attending this game
-                            const isUserAttending = !!(player && game.game_attendees?.some(
+                            // Check if current user is attending this game (individual purchase)
+                            const isUserAttendingIndividual = !!(player && game.game_attendees?.some(
                               (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
                             ))
+                            
+                            // Check if user has purchased the season
+                            const hasPurchasedSeason = !!(player && season.season_attendees?.some(
+                              (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                            ))
+                            
+                            // For season games, if they purchased the season, they're considered attending by default
+                            // The actual attendance status will be managed on the game page
+                            const isUserAttending = isUserAttendingIndividual || hasPurchasedSeason
                             
                             return (
                               <HomepageGameCard
@@ -430,6 +544,7 @@ export default function SeasonDetailPage() {
                                 seasonId={season.id}
                                 seasonSignupDeadline={season.season_signup_deadline}
                                 isUserAttending={isUserAttending}
+                                hasPurchasedSeason={hasPurchasedSeason}
                                 gameAttendees={game.game_attendees}
                               />
                             )

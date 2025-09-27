@@ -17,6 +17,7 @@ interface GameAttendee {
   id: string
   player_id: string
   payment_status: string
+  attendance_status?: 'attending' | 'not_attending'
 }
 
 interface GameHistory {
@@ -36,7 +37,6 @@ interface GameHistory {
     seasons?: {
       id: string
       season_signup_deadline: string
-      include_organizer_in_count: boolean
     }
     groups: {
       name: string
@@ -80,7 +80,6 @@ interface SeasonHistory {
     first_game_time: string
     repeat_type: string
     location: string
-    include_organizer_in_count: boolean
     groups: {
       name: string
       whatsapp_group?: string
@@ -120,13 +119,13 @@ export default function ProfilePage() {
           ),
           seasons (
             id,
-            season_signup_deadline,
-            include_organizer_in_count
+            season_signup_deadline
           ),
           game_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            attendance_status
           )
         `)
         .lt('game_date', new Date().toISOString().split('T')[0])
@@ -137,13 +136,14 @@ export default function ProfilePage() {
       } else {
         // Filter for games where user attended
         const pastGames = allGames?.filter((game) => {
-          const isUserAttended = game.game_attendees?.some(
+          const userAttendee = game.game_attendees?.find(
             (attendee: GameAttendee) => 
               attendee.player_id === (player?.id || user.id) && 
               attendee.payment_status === 'completed'
           )
           
-          return isUserAttended
+          // User must have paid AND be marked as attending (or have no attendance_status set, which defaults to attending)
+          return userAttendee && (userAttendee.attendance_status === 'attending' || !userAttendee.attendance_status)
         }) || []
         
         // Transform to match the expected format
@@ -285,13 +285,13 @@ export default function ProfilePage() {
           ),
           seasons (
             id,
-            season_signup_deadline,
-            include_organizer_in_count
+            season_signup_deadline
           ),
           game_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            attendance_status
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -300,15 +300,79 @@ export default function ProfilePage() {
       if (error) {
         console.error('Error fetching upcoming games:', error)
       } else {
-        // Filter for games where user is attending
-        const upcomingGames = allGames?.filter((game) => {
-          const isUserAttending = game.game_attendees?.some(
+        // For each game, if it's part of a season, fetch season attendees
+        const gamesWithSeasonAttendees = await Promise.all(
+          (allGames || []).map(async (game) => {
+            if (game.season_id) {
+              try {
+                // Fetch season attendees for this game's season
+                const { data: seasonAttendees, error: seasonError } = await supabase
+                  .from('season_attendees')
+                  .select(`
+                    id,
+                    created_at,
+                    player_id,
+                    players (
+                      name,
+                      photo_url
+                    )
+                  `)
+                  .eq('season_id', game.season_id)
+                  .eq('payment_status', 'completed')
+
+                if (!seasonError && seasonAttendees) {
+                  // Fetch season game attendance for this specific game
+                  const { data: seasonGameAttendance } = await supabase
+                    .from('season_game_attendance')
+                    .select('season_attendee_id, attendance_status')
+                    .eq('game_id', game.id)
+
+                  // Combine season attendees with their attendance status for this game
+                  const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
+                    const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
+                    return {
+                      id: attendee.id,
+                      player_id: attendee.player_id,
+                      payment_status: 'completed',
+                      attendance_status: gameAttendance?.attendance_status || 'attending'
+                    }
+                  })
+
+                  // Combine individual game attendees with season attendees
+                  const allAttendees = [
+                    ...(game.game_attendees || []),
+                    ...seasonAttendeesWithStatus
+                  ]
+
+                  // Remove duplicates based on player_id
+                  const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
+                    index === self.findIndex(a => a.player_id === attendee.player_id)
+                  )
+
+                  return {
+                    ...game,
+                    game_attendees: uniqueAttendees,
+                    season_attendees: seasonAttendees
+                  }
+                }
+              } catch (err) {
+                console.error('Error fetching season attendees for game:', game.id, err)
+              }
+            }
+            return game
+          })
+        )
+
+        // Filter for games where user is attending (including season attendees)
+        const upcomingGames = gamesWithSeasonAttendees?.filter((game) => {
+          const userAttendee = game.game_attendees?.find(
             (attendee: GameAttendee) => 
               attendee.player_id === (player?.id || user.id) && 
               attendee.payment_status === 'completed'
           )
           
-          return isUserAttending
+          // User must have paid AND be marked as attending (or have no attendance_status set, which defaults to attending)
+          return userAttendee && (userAttendee.attendance_status === 'attending' || !userAttendee.attendance_status)
         }) || []
         
         // Transform to match the expected format
@@ -361,7 +425,6 @@ export default function ProfilePage() {
             first_game_time,
             repeat_type,
             location,
-            include_organizer_in_count,
             groups (
               name,
               whatsapp_group
@@ -411,7 +474,6 @@ export default function ProfilePage() {
             first_game_time,
             repeat_type,
             location,
-            include_organizer_in_count,
             groups (
               name,
               whatsapp_group
@@ -747,6 +809,9 @@ export default function ProfilePage() {
                                       seasonId={game.games.season_id || game.games.seasons?.id}
                                       seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
                                       isUserAttending={true}
+                                      hasPurchasedSeason={game.games.season_id && game.games.season_attendees?.some(
+                                        (attendee) => attendee.player_id === (player?.id || user.id) && attendee.payment_status === 'completed'
+                                      ) || false}
                                       gameAttendees={game.games.game_attendees || []}
                                       isPastGame={true}
                                     />
@@ -882,6 +947,9 @@ export default function ProfilePage() {
                                       seasonId={game.games.season_id || game.games.seasons?.id}
                                       seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
                                       isUserAttending={true}
+                                      hasPurchasedSeason={game.games.season_id && game.games.season_attendees?.some(
+                                        (attendee) => attendee.player_id === (player?.id || user.id) && attendee.payment_status === 'completed'
+                                      ) || false}
                                       gameAttendees={game.games.game_attendees || []}
                                       isPastGame={false}
                                     />

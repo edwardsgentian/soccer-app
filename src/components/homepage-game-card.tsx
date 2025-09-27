@@ -17,10 +17,12 @@ interface HomepageGameCardProps {
   seasonId?: string
   seasonSignupDeadline?: string
   isUserAttending?: boolean
+  hasPurchasedSeason?: boolean
   gameAttendees?: {
     id: string
     player_id: string
     payment_status: string
+    attendance_status?: 'attending' | 'not_attending'
   }[]
   isPastGame?: boolean
 }
@@ -36,8 +38,9 @@ export function HomepageGameCard({
   tags,
   seasonId,
   seasonSignupDeadline,
-  isUserAttending,
-  gameAttendees,
+  isUserAttending = false,
+  hasPurchasedSeason = false,
+  gameAttendees = [],
   isPastGame = false
 }: HomepageGameCardProps) {
 
@@ -122,17 +125,25 @@ export function HomepageGameCard({
     return avatars
   }
 
-  // Use the isPastGame prop instead of inferring from price
-  // Calculate actual attendee count from game_attendees data
-  const actualAttendees = gameAttendees?.filter(att => att.payment_status === 'completed') || []
+  // Calculate actual attendee count based on attendance status
+  const actualAttendees = gameAttendees?.filter(att => 
+    att.payment_status === 'completed' && 
+    (att.attendance_status === 'attending' || !att.attendance_status)
+  ) || []
   const actualAttendeeCount = actualAttendees.length
   const availableSpots = maxAttendees - actualAttendeeCount
+  
+  // Debug: Log attendee count for season games
+  if (seasonId) {
+    console.log(`Game card ${gameName} - maxAttendees: ${maxAttendees}, total attendees: ${gameAttendees?.length || 0}, attending: ${actualAttendeeCount}, available: ${availableSpots}`)
+  }
   
   // Check if season signup period is still open
   const isSeasonSignupOpen = seasonSignupDeadline && new Date(seasonSignupDeadline) > new Date()
   
   // If this is a season game and signup is still open, no one can join individual games
-  const requiresSeasonSignup = seasonId && isSeasonSignupOpen
+  // UNLESS they have already purchased the season
+  const requiresSeasonSignup = seasonId && isSeasonSignupOpen && !hasPurchasedSeason
   
 
   return (
@@ -167,6 +178,10 @@ export function HomepageGameCard({
             ) : isUserAttending ? (
               <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
                 Attending
+              </span>
+            ) : hasPurchasedSeason ? (
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+                Not Attending
               </span>
             ) : requiresSeasonSignup ? (
               <div className="relative group">

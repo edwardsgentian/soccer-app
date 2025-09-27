@@ -56,12 +56,12 @@ interface Game {
   seasons?: {
     id: string
     season_signup_deadline: string
-    include_organizer_in_count: boolean
   }
   game_attendees?: {
     id: string
     player_id: string
     payment_status: string
+    attendance_status?: 'attending' | 'not_attending'
   }[]
 }
 
@@ -87,7 +87,6 @@ interface Season {
     player_id: string
     payment_status: string
   }[]
-  include_organizer_in_count?: boolean
 }
 
 export default function GroupDetailPage() {
@@ -137,13 +136,13 @@ export default function GroupDetailPage() {
           ),
           seasons (
             id,
-            season_signup_deadline,
-            include_organizer_in_count
+            season_signup_deadline
           ),
           game_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            attendance_status
           )
         `)
         .eq('group_id', groupId)
@@ -153,7 +152,69 @@ export default function GroupDetailPage() {
       if (gamesError) {
         console.error('Error fetching games:', gamesError)
       } else {
-        setGames(gamesData || [])
+        // For each game, if it's part of a season, fetch season attendees
+        const gamesWithSeasonAttendees = await Promise.all(
+          (gamesData || []).map(async (game) => {
+            if (game.season_id) {
+              try {
+                // Fetch season attendees for this game's season
+                const { data: seasonAttendees, error: seasonError } = await supabase
+                  .from('season_attendees')
+                  .select(`
+                    id,
+                    created_at,
+                    player_id,
+                    players (
+                      name,
+                      photo_url
+                    )
+                  `)
+                  .eq('season_id', game.season_id)
+                  .eq('payment_status', 'completed')
+
+                if (!seasonError && seasonAttendees) {
+                  // Fetch season game attendance for this specific game
+                  const { data: seasonGameAttendance } = await supabase
+                    .from('season_game_attendance')
+                    .select('season_attendee_id, attendance_status')
+                    .eq('game_id', game.id)
+
+                  // Combine season attendees with their attendance status for this game
+                  const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
+                    const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
+                    return {
+                      id: attendee.id,
+                      player_id: attendee.player_id,
+                      payment_status: 'completed',
+                      attendance_status: gameAttendance?.attendance_status || 'attending'
+                    }
+                  })
+
+                  // Combine individual game attendees with season attendees
+                  const allAttendees = [
+                    ...(game.game_attendees || []),
+                    ...seasonAttendeesWithStatus
+                  ]
+
+                  // Remove duplicates based on player_id
+                  const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
+                    index === self.findIndex(a => a.player_id === attendee.player_id)
+                  )
+
+                  return {
+                    ...game,
+                    game_attendees: uniqueAttendees,
+                    season_attendees: seasonAttendees
+                  }
+                }
+              } catch (err) {
+                console.error('Error fetching season attendees for game:', game.id, err)
+              }
+            }
+            return game
+          })
+        )
+        setGames(gamesWithSeasonAttendees)
       }
 
       // Fetch seasons for this group
@@ -199,9 +260,21 @@ export default function GroupDetailPage() {
       if (playersError) {
         console.error('Error fetching players:', playersError)
       } else {
+        console.log('Players data received:', playersData)
         // Remove duplicates and format players data
         const uniquePlayers = playersData?.reduce((acc: Player[], playerData: PlayerData) => {
+          // Check if players array exists and has at least one element
+          if (!playerData.players || !Array.isArray(playerData.players) || playerData.players.length === 0) {
+            console.warn('Invalid player data structure:', playerData)
+            return acc
+          }
+          
           const player = playerData.players[0] // Get the first (and only) player from the array
+          if (!player || !player.id) {
+            console.warn('Invalid player object:', player)
+            return acc
+          }
+          
           const existingPlayer = acc.find(p => p.id === player.id)
           if (!existingPlayer) {
             acc.push({
@@ -418,6 +491,18 @@ export default function GroupDetailPage() {
           </div>
         </div>
 
+        {/* Add Game/Season Button */}
+        {player && (
+          <div className="px-6 pb-4 flex justify-center">
+            <Button
+              onClick={() => setShowCreateGameModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              Add Game/Season
+            </Button>
+          </div>
+        )}
+
         {/* Tabbed Content */}
         <div className="bg-white overflow-hidden">
 
@@ -426,22 +511,39 @@ export default function GroupDetailPage() {
             {activeTab === 'games' && (
               <div className="space-y-6">
                 {games.length > 0 ? (
-                  games.map((game) => (
-                    <HomepageGameCard
-                      key={game.id}
-                      gameId={game.id}
-                      gameName={game.name}
-                      time={game.game_time}
-                      location={game.location}
-                      price={game.price}
-                      maxAttendees={game.total_tickets}
-                      gameAttendees={game.game_attendees || []}
-                      seasonId={game.season_id}
-                      seasonSignupDeadline={game.season_signup_deadline}
-                      groupName={group.name}
-                      tags={[]}
-                    />
-                  ))
+                  games.map((game) => {
+                    // Check if user has purchased the season (for season games)
+                    const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(
+                      (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                    ) || false
+
+                    // Check if current user is attending this game
+                    const isUserAttending = !!(player && game.game_attendees?.some(
+                      (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                    ))
+
+                    // For season games, if they purchased the season, they're considered attending by default
+                    const isUserAttendingSeason = isUserAttending || hasPurchasedSeason
+
+                    return (
+                      <HomepageGameCard
+                        key={game.id}
+                        gameId={game.id}
+                        gameName={game.name}
+                        time={game.game_time}
+                        location={game.location}
+                        price={game.price}
+                        maxAttendees={game.total_tickets}
+                        gameAttendees={game.game_attendees || []}
+                        seasonId={game.season_id}
+                        seasonSignupDeadline={game.season_signup_deadline}
+                        groupName={group.name}
+                        tags={[]}
+                        isUserAttending={isUserAttendingSeason}
+                        hasPurchasedSeason={hasPurchasedSeason}
+                      />
+                    )
+                  })
                 ) : (
                   <div className="text-center py-12">
                     <div className="mb-4">

@@ -161,7 +161,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Payment processed successfully' 
+      message: 'Payment processed successfully',
+      seasonId: seasonId || null
     })
   } catch (error) {
     console.error('Error processing payment:', error)
