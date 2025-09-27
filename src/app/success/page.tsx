@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
-import { CheckCircle, ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
@@ -128,7 +128,7 @@ function SuccessPageContent() {
               className="w-30 h-30 mx-auto rounded-lg object-cover"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">You're in!</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">You&apos;re in!</h1>
           <p className="text-gray-600 mb-8">
             You&apos;re all set! You&apos;ll receive a confirmation email shortly.
           </p>
