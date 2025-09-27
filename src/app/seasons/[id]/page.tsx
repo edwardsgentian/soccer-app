@@ -205,7 +205,7 @@ export default function SeasonDetailPage() {
         // Debug: Log attendee data for season games
         gamesWithCombinedAttendees.forEach(game => {
           console.log(`Season page - Game ${game.name} - total attendees: ${game.game_attendees?.length || 0}`)
-          const attendingCount = game.game_attendees?.filter(att => 
+          const attendingCount = game.game_attendees?.filter((att: { payment_status: string; attendance_status?: string }) => 
             att.payment_status === 'completed' && 
             (att.attendance_status === 'attending' || !att.attendance_status)
           ).length || 0
