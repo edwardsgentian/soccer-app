@@ -159,6 +159,37 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send confirmation email
+    try {
+      console.log('Sending confirmation email to:', playerEmail)
+      
+      // For now, we'll just log the email details
+      // In production, you would integrate with an email service like SendGrid, Resend, or Nodemailer
+      const emailData = {
+        to: playerEmail,
+        subject: "You're in! Payment Confirmed",
+        gameId: gameId || null,
+        seasonId: seasonId || null,
+        playerName: playerName || 'Player',
+        amount: session.amount_total ? session.amount_total / 100 : 0
+      }
+      
+      console.log('Email data:', emailData)
+      
+      // TODO: Implement actual email sending here
+      // Example with a service like Resend:
+      // await resend.emails.send({
+      //   from: 'noreply@yoursite.com',
+      //   to: playerEmail,
+      //   subject: "You're in! Payment Confirmed",
+      //   html: `<h1>You're in!</h1><p>Your payment has been confirmed...</p>`
+      // })
+      
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError)
+      // Don't fail the payment processing if email fails
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Payment processed successfully',

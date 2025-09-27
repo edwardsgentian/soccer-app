@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { CheckCircle, ArrowLeft } from 'lucide-react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/auth-context'
 import { SeasonGameSelectionModal } from '@/components/season-game-selection-modal'
@@ -118,20 +119,22 @@ function SuccessPageContent() {
       <Header />
       <div className="container mx-auto px-4 py-16">
         <div className="text-center">
-          <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Payment Successful!</h1>
+          <div className="mb-6">
+            <Image 
+              src="/success.jpeg" 
+              alt="Success" 
+              width={120} 
+              height={120} 
+              className="w-30 h-30 mx-auto rounded-lg object-cover"
+            />
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">You're in!</h1>
           <p className="text-gray-600 mb-8">
             You&apos;re all set! You&apos;ll receive a confirmation email shortly.
           </p>
-          <div className="space-x-4">
-            <Link href="/games">
-              <Button>
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Games
-              </Button>
-            </Link>
+          <div>
             <Link href="/profile">
-              <Button variant="outline">
+              <Button>
                 View My Games
               </Button>
             </Link>

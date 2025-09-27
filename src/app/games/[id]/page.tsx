@@ -356,9 +356,9 @@ export default function GameDetailPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg border border-gray-200 p-8">
               {/* Game Header */}
-              <div className="flex items-start space-x-6 mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 mb-8">
                 {/* Game Icon */}
-                <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0`}>
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
                     <Image 
                       src="/game.png" 
@@ -371,26 +371,26 @@ export default function GameDetailPage() {
                 </div>
 
                 {/* Game Info */}
-                <div className="flex-1">
+                <div className="flex-1 text-center sm:text-left">
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
                   
                   <div className="space-y-3">
-                    <div className="flex items-center text-gray-600">
+                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
                       <Calendar className="w-5 h-5 mr-3" />
                       <span className="font-medium">{formatDate(game.game_date)}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600">
+                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
                       <Clock className="w-5 h-5 mr-3" />
                       <span className="font-medium">{formatTime(game.game_time)}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600">
+                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
                       <MapPin className="w-5 h-5 mr-3" />
                       <span className="font-medium">{game.location}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600">
+                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
                       <DollarSign className="w-5 h-5 mr-3" />
                       <span className="font-medium">${game.price} per player</span>
                     </div>
