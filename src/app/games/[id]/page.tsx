@@ -134,7 +134,7 @@ export default function GameDetailPage() {
               id: attendee.id,
               created_at: attendee.created_at,
               attendance_status: gameAttendance?.attendance_status || 'attending', // Default to attending
-              players: attendee.players
+              players: attendee.players[0] || { name: 'Unknown Player' }
             }
           })
         }
