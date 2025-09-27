@@ -294,7 +294,7 @@ export default function SeasonDetailPage() {
   }
 
   // Get unique season attendees (remove duplicates by player_id)
-  const uniqueSeasonAttendees = season.season_attendees?.filter((att: { payment_status: string }) => att.payment_status === 'completed') || []
+  const uniqueSeasonAttendees = season.season_attendees?.filter((att: { payment_status: string; players?: { name: string; photo_url?: string } }) => att.payment_status === 'completed') || []
   const deduplicatedAttendees = uniqueSeasonAttendees.filter((attendee, index, self) =>
     index === self.findIndex(a => a.player_id === attendee.player_id)
   )
