@@ -151,7 +151,11 @@ export default function GameDetailPage() {
         
         // Remove duplicates (in case someone is both an individual and season attendee)
         const uniqueAttendees = allAttendees.filter((attendee, index, self) => 
-          index === self.findIndex(a => a.players.name === attendee.players.name)
+          index === self.findIndex(a => {
+            const attendeeName = Array.isArray(a.players) ? a.players[0]?.name : a.players?.name
+            const currentName = Array.isArray(attendee.players) ? attendee.players[0]?.name : attendee.players?.name
+            return attendeeName === currentName
+          })
         )
         
         setAttendees(uniqueAttendees as Attendee[])
