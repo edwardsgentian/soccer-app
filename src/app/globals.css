@@ -76,6 +76,23 @@ h1 {
   font-weight: 500;
 }
 
+/* Responsive h1 for homepage */
+.homepage-h1 {
+  font-size: 1.5rem !important;
+}
+
+@media (min-width: 640px) {
+  .homepage-h1 {
+    font-size: 3rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .homepage-h1 {
+    font-size: 4.5rem !important;
+  }
+}
+
 /* Ensure gradient text works properly */
 .bg-clip-text {
   -webkit-background-clip: text;
