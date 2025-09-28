@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
 import { Calendar, Edit, Trophy, Users } from 'lucide-react'
 import Image from 'next/image'
-// import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { AuthModal } from '@/components/auth/auth-modal'
@@ -38,6 +38,14 @@ interface GameHistory {
       id: string
       player_id: string
       payment_status: string
+    }[]
+    season_game_attendance?: {
+      attendance_status: 'attending' | 'not_attending'
+      season_attendees: {
+        id: string
+        player_id: string
+        payment_status: string
+      }
     }[]
     seasons?: {
       id: string
@@ -131,6 +139,14 @@ export default function ProfilePage() {
             player_id,
             payment_status,
             attendance_status
+          ),
+          season_game_attendance (
+            attendance_status,
+            season_attendees (
+              id,
+              player_id,
+              payment_status
+            )
           )
         `)
         .lt('game_date', new Date().toISOString().split('T')[0])
@@ -297,6 +313,14 @@ export default function ProfilePage() {
             player_id,
             payment_status,
             attendance_status
+          ),
+          season_game_attendance (
+            attendance_status,
+            season_attendees (
+              id,
+              player_id,
+              payment_status
+            )
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -684,46 +708,57 @@ export default function ProfilePage() {
 
         {/* Tabbed Content Panel */}
         <div>
-          {/* Tab Headers - Luma Style with Sliding Animation */}
-          <div className="px-6 pt-6 flex justify-center">
+          {/* Tab Headers - Motion.dev Style */}
+          <motion.div 
+            className="px-6 pt-6 flex justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
             <div className="flex bg-gray-100 p-1 rounded-lg">
-              <button
-                onClick={() => setActiveTab('upcoming')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                  activeTab === 'upcoming'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Upcoming
-              </button>
-              <button
-                onClick={() => setActiveTab('attended')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                  activeTab === 'attended'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Past
-              </button>
-              <button
-                onClick={() => setActiveTab('groups')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                  activeTab === 'groups'
-                    ? 'bg-white text-black shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Groups
-              </button>
+              {['upcoming', 'attended', 'groups'].map((tab) => (
+                <motion.button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as 'upcoming' | 'attended' | 'groups')}
+                  className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md text-center transition-colors ${
+                    activeTab === tab
+                      ? 'text-black bg-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {activeTab === tab && (
+                    <motion.div
+                      className="absolute inset-0 bg-white rounded-md shadow-sm"
+                      layoutId="activeTab"
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30
+                      }}
+                      style={{ zIndex: -1 }}
+                    />
+                  )}
+                  <span className="relative z-10">
+                    {tab === 'upcoming' ? 'Upcoming' : tab === 'attended' ? 'Past' : 'Groups'}
+                  </span>
+                </motion.button>
+              ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* Tab Content */}
           <div className="p-6">
-            {activeTab === 'attended' && (
-              <div>
+            <AnimatePresence mode="wait">
+              {activeTab === 'attended' && (
+                <motion.div
+                  key="attended"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
                   {gameHistory.length === 0 && pastSeasons.length === 0 ? (
                     <div className="text-center py-12">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -818,6 +853,7 @@ export default function ProfilePage() {
                                         (attendee) => attendee.player_id === (player?.id || user.id) && attendee.payment_status === 'completed'
                                       ) || false}
                                       gameAttendees={game.games.game_attendees || []}
+                                      seasonGameAttendance={game.games.season_game_attendance || []}
                                       isPastGame={true}
                                     />
                                   ))}
@@ -829,13 +865,17 @@ export default function ProfilePage() {
                       )}
                     </div>
                   )}
-              </div>
-            )}
+                </motion.div>
+              )}
 
-
-            {activeTab === 'groups' && (
-              /* Groups Content */
-              <div>
+              {activeTab === 'groups' && (
+                <motion.div
+                  key="groups"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
                 {memberGroups.length === 0 ? (
                   <div className="text-center py-12">
                     <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -857,11 +897,17 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 )}
-              </div>
-            )}
+                </motion.div>
+              )}
 
-            {activeTab === 'upcoming' && (
-              <div>
+              {activeTab === 'upcoming' && (
+                <motion.div
+                  key="upcoming"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
                   
                   {upcomingGames.length === 0 && upcomingSeasons.length === 0 ? (
                     <div className="text-center py-12">
@@ -956,6 +1002,7 @@ export default function ProfilePage() {
                                         (attendee) => attendee.player_id === (player?.id || user.id) && attendee.payment_status === 'completed'
                                       ) || false}
                                       gameAttendees={game.games.game_attendees || []}
+                                      seasonGameAttendance={game.games.season_game_attendance || []}
                                       isPastGame={false}
                                     />
                                   ))}
@@ -967,8 +1014,9 @@ export default function ProfilePage() {
                       )}
                     </div>
                   )}
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 

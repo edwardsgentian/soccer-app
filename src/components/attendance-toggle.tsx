@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Check, X, Users, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
 
 interface AttendanceToggleProps {
   gameId: string
@@ -41,25 +41,31 @@ export function AttendanceToggle({
     setError(null)
 
     try {
+      const requestData = {
+        gameId,
+        seasonId,
+        playerId,
+        attendanceStatus: newStatus
+      }
+      console.log('Sending attendance update request:', requestData)
+      
       const response = await fetch('/api/update-attendance', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          gameId,
-          seasonId,
-          playerId,
-          attendanceStatus: newStatus
-        })
+        body: JSON.stringify(requestData)
       })
 
       const result = await response.json()
+      console.log('API response:', { status: response.status, result })
 
       if (!response.ok) {
+        console.error('API error response:', result)
         throw new Error(result.error || 'Failed to update attendance')
       }
 
+      console.log('Calling onStatusChange with:', newStatus)
       onStatusChange(newStatus)
     } catch (err) {
       console.error('Error updating attendance:', err)
@@ -83,14 +89,14 @@ export function AttendanceToggle({
       return (
         <>
           <Check className="w-4 h-4 mr-2" />
-          Attending
+          ✓ Attending
         </>
       )
     } else {
       return (
         <>
           <X className="w-4 h-4 mr-2" />
-          Not Attending
+          ○ Not Attending
         </>
       )
     }
@@ -104,30 +110,61 @@ export function AttendanceToggle({
 
   const getButtonClassName = () => {
     if (!hasPaid) return 'opacity-50 cursor-not-allowed'
-    if (currentStatus === 'attending') return 'bg-green-600 hover:bg-green-700 text-white'
+    if (currentStatus === 'attending') return 'bg-green-600 hover:bg-green-700 text-white border-green-600'
     if (isGameFull && currentStatus === 'not_attending') return 'opacity-50 cursor-not-allowed'
-    return ''
+    return 'border-gray-300 hover:border-gray-400'
   }
 
   const isDisabled = !hasPaid || loading || (isGameFull && currentStatus === 'not_attending')
 
   return (
-    <div className="space-y-2">
-      <Button
-        onClick={handleToggle}
-        disabled={isDisabled}
-        variant={getButtonVariant()}
-        className={getButtonClassName()}
-      >
-        {loading ? (
-          <>
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-            Updating...
-          </>
-        ) : (
-          getButtonContent()
-        )}
-      </Button>
+    <div className="space-y-3">
+      {/* Toggle Switch */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <span className="text-sm font-medium text-gray-700">
+            {currentStatus === 'attending' ? 'Attending' : 'Not Attending'}
+          </span>
+          {loading && (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400"></div>
+          )}
+        </div>
+        
+        <motion.button
+          onClick={handleToggle}
+          disabled={isDisabled}
+          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 ${
+            currentStatus === 'attending' 
+              ? 'bg-green-600' 
+              : 'bg-gray-200'
+          } ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          whileTap={{ scale: 0.95 }}
+        >
+          <motion.span
+            className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-lg transition-transform`}
+            animate={{
+              x: currentStatus === 'attending' ? 20 : 2
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 30
+            }}
+          />
+        </motion.button>
+      </div>
+
+      {/* Status Icons */}
+      <div className="flex items-center justify-center space-x-4">
+        <div className={`flex items-center space-x-2 ${currentStatus === 'attending' ? 'text-green-600' : 'text-gray-400'}`}>
+          <Check className="w-4 h-4" />
+          <span className="text-sm">Attending</span>
+        </div>
+        <div className={`flex items-center space-x-2 ${currentStatus === 'not_attending' ? 'text-red-600' : 'text-gray-400'}`}>
+          <X className="w-4 h-4" />
+          <span className="text-sm">Not Attending</span>
+        </div>
+      </div>
 
       {error && (
         <div className="flex items-center text-red-600 text-sm">

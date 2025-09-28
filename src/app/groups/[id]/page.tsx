@@ -11,6 +11,7 @@ import { GameManagementModal } from '@/components/games/game-management-modal'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
+import { motion, AnimatePresence } from 'framer-motion'
 
 interface Player {
   id: string
@@ -310,7 +311,7 @@ export default function GroupDetailPage() {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
     return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
+      year: 'numeric',
       month: 'long', 
       day: 'numeric' 
     })
@@ -374,9 +375,9 @@ export default function GroupDetailPage() {
           {/* Group Icon */}
           <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Component className="w-16 h-16 text-gray-600" />
-          </div>
+              </div>
 
-          {/* Group Name */}
+                {/* Group Name */}
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
           
           {/* Created Date */}
@@ -403,23 +404,23 @@ export default function GroupDetailPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
             <p className="text-gray-600 leading-relaxed mb-6">{group.description}</p>
 
-            {/* Tags */}
-            {group.tags && group.tags.length > 0 && (
+                {/* Tags */}
+                {group.tags && group.tags.length > 0 && (
               <div className="mb-6 text-center">
                 <div className="flex flex-wrap gap-2 justify-center">
-                  {group.tags.map((tag, index) => (
-                    <span
-                      key={index}
+                      {group.tags.map((tag, index) => (
+                        <span
+                          key={index}
                       className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Social Links */}
+                {/* Social Links */}
             <div className="text-center">
               <div className="flex flex-wrap justify-center gap-4">
                 {group.whatsapp_group && (
@@ -433,79 +434,83 @@ export default function GroupDetailPage() {
                     WhatsApp Group
                   </a>
                 )}
-                {group.instagram && (
-                  <a
+                  {group.instagram && (
+                    <a
                     href={group.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                      target="_blank"
+                      rel="noopener noreferrer"
                     className="flex items-center text-pink-600 hover:text-pink-700 transition-colors"
-                  >
+                    >
                     <Instagram className="w-5 h-5 mr-2" />
                     Instagram
-                  </a>
-                )}
-                {group.website && (
-                  <a
-                    href={group.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    </a>
+                  )}
+                  {group.website && (
+                    <a
+                      href={group.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
                     className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
                   >
                     <Globe className="w-5 h-5 mr-2" />
                     Website
-                  </a>
-                )}
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Tab Headers - Profile Style */}
-        <div className="px-6 pt-6 flex justify-center">
+        {/* Tab Headers - Motion.dev Style */}
+        <motion.div 
+          className="px-6 pt-6 flex justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <div className="flex bg-gray-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('games')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                activeTab === 'games'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Games
-            </button>
-            <button
-              onClick={() => setActiveTab('seasons')}
-              className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                activeTab === 'seasons'
-                  ? 'bg-white text-black shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Seasons
-            </button>
-              <button
-                onClick={() => setActiveTab('players')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md text-center flex items-center justify-center ${
-                  activeTab === 'players'
-                    ? 'bg-white text-black shadow-sm'
+            {['games', 'seasons', 'players'].map((tab) => (
+              <motion.button
+                key={tab}
+                onClick={() => setActiveTab(tab as 'games' | 'seasons' | 'players')}
+                className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md text-center transition-colors ${
+                  activeTab === tab
+                    ? 'text-black bg-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900'
                 }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                Players
-              </button>
-          </div>
-        </div>
+                {activeTab === tab && (
+                  <motion.div
+                    className="absolute inset-0 bg-white rounded-md shadow-sm"
+                    layoutId="activeTab"
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 30
+                    }}
+                    style={{ zIndex: -1 }}
+                  />
+                )}
+                <span className="relative z-10">
+                  {tab === 'games' ? 'Games' : tab === 'seasons' ? 'Seasons' : 'Players'}
+                </span>
+              </motion.button>
+            ))}
+              </div>
+        </motion.div>
 
         {/* Add Game/Season Button */}
         {player && (
           <div className="px-6 pb-4 flex justify-center">
-            <Button
-              onClick={() => setShowCreateGameModal(true)}
+              <Button
+                onClick={() => setShowCreateGameModal(true)}
               className="bg-green-600 hover:bg-green-700 text-white"
-            >
+              >
               Add Game/Season
-            </Button>
-          </div>
+              </Button>
+            </div>
         )}
 
         {/* Tabbed Content */}
@@ -513,8 +518,16 @@ export default function GroupDetailPage() {
 
           {/* Tab Content */}
           <div className="p-6">
-            {activeTab === 'games' && (
-              <div className="space-y-6">
+            <AnimatePresence mode="wait">
+              {activeTab === 'games' && (
+                <motion.div
+                  key="games"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
                 {games.length > 0 ? (
                   games.map((game) => {
                     // Check if user has purchased the season (for season games)
@@ -550,7 +563,7 @@ export default function GroupDetailPage() {
                     )
                   })
                 ) : (
-                  <div className="text-center py-12">
+              <div className="text-center py-12">
                     <div className="mb-4">
                       <Image 
                         src="/game.png" 
@@ -560,43 +573,50 @@ export default function GroupDetailPage() {
                         className="w-16 h-16 mx-auto rounded-full object-cover"
                       />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       No games yet
-                    </h3>
-                    <p className="text-gray-600 mb-6">
+                </h3>
+                <p className="text-gray-600 mb-6">
                       This group hasn&apos;t created any games yet.
-                    </p>
+                </p>
                     {player && (
-                      <Button
-                        onClick={() => setShowCreateGameModal(true)}
-                      >
+                <Button
+                  onClick={() => setShowCreateGameModal(true)}
+                >
                         Create Game
-                      </Button>
+                </Button>
                     )}
-                  </div>
-                )}
               </div>
-            )}
+                )}
+                </motion.div>
+              )}
 
-            {activeTab === 'seasons' && (
-              <div className="space-y-6">
+              {activeTab === 'seasons' && (
+                <motion.div
+                  key="seasons"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
                 {seasons.length > 0 ? (
                   seasons.map((season) => (
-                    <SeasonCard
-                      key={season.id}
-                      seasonId={season.id}
-                      seasonName={season.name}
-                      description={season.description}
-                      seasonPrice={season.season_price}
-                      individualGamePrice={season.individual_game_price}
-                      totalGames={season.total_games}
-                      seasonSpots={season.season_spots}
-                      gameSpots={season.game_spots}
-                      firstGameDate={season.first_game_date}
-                      firstGameTime={season.first_game_time}
-                      repeatType={season.repeat_type}
+                        <SeasonCard
+                          key={season.id}
+                          seasonId={season.id}
+                          seasonName={season.name}
+                          description={season.description}
+                          seasonPrice={season.season_price}
+                          individualGamePrice={season.individual_game_price}
+                          totalGames={season.total_games}
+                          seasonSpots={season.season_spots}
+                          gameSpots={season.game_spots}
+                          firstGameDate={season.first_game_date}
+                          firstGameTime={season.first_game_time}
+                          repeatType={season.repeat_type}
                       groupName={group.name}
-                      location={season.location}
+                          location={season.location}
                       seasonSpotsAvailable={season.season_spots - (season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0)}
                       gameSpotsAvailable={season.game_spots}
                     />
@@ -627,11 +647,18 @@ export default function GroupDetailPage() {
                     )}
                   </div>
                 )}
-              </div>
-            )}
+                </motion.div>
+              )}
 
               {activeTab === 'players' && (
-                <div className="space-y-6">
+                <motion.div
+                  key="players"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="space-y-6"
+                >
                   {players.length > 0 ? (
                     <div className="flex justify-center">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
@@ -675,11 +702,11 @@ export default function GroupDetailPage() {
                     <p className="text-gray-600 mb-6">
                       Players will appear here once they attend games in this group.
                     </p>
-                  </div>
+                </div>
                 )}
-              </div>
+                </motion.div>
             )}
-
+            </AnimatePresence>
           </div>
         </div>
       </div>

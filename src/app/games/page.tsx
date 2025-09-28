@@ -40,6 +40,14 @@ interface Game {
     player_id: string
     payment_status: string
   }[]
+  season_game_attendance?: {
+    attendance_status: 'attending' | 'not_attending'
+    season_attendees: {
+      id: string
+      player_id: string
+      payment_status: string
+    }
+  }[]
 }
 
 interface Season {
@@ -101,6 +109,14 @@ export default function GamesPage() {
             player_id,
             payment_status,
             attendance_status
+          ),
+          season_game_attendance (
+            attendance_status,
+            season_attendees (
+              id,
+              player_id,
+              payment_status
+            )
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -378,6 +394,7 @@ export default function GamesPage() {
                           isUserAttending={isUserAttendingSeason}
                           hasPurchasedSeason={hasPurchasedSeason}
                           gameAttendees={game.game_attendees}
+                          seasonGameAttendance={game.season_game_attendance}
                         />
                       )
                     })}

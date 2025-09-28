@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -64,7 +64,23 @@ export default function GameDetailPage() {
     try {
       console.log('=== FETCH GAME DETAILS CALLED ===')
       
-      // Fetch game details
+      // First, try a simple query to see if the game exists at all
+      console.log('Fetching game details for ID:', gameId)
+      const { data: simpleGameData, error: simpleGameError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('id', gameId)
+        .single()
+
+      console.log('Simple game query result:', simpleGameData)
+      console.log('Simple game query error:', simpleGameError)
+
+      if (simpleGameError) {
+        console.error('Simple game query failed:', simpleGameError)
+        throw simpleGameError
+      }
+
+      // Use the exact same query structure as the homepage
       const { data: gameData, error: gameError } = await supabase
         .from('games')
         .select(`
@@ -77,89 +93,233 @@ export default function GameDetailPage() {
             id,
             season_signup_deadline,
             include_organizer_in_count
+          ),
+          game_attendees (
+            id,
+            player_id,
+            payment_status,
+            attendance_status,
+            players (
+              name,
+              photo_url
+            )
+          ),
+          season_game_attendance (
+            attendance_status,
+            season_attendees (
+              id,
+              player_id,
+              payment_status
+            )
           )
         `)
         .eq('id', gameId)
         .single()
 
+      console.log('Game with basic joins query result:', gameData)
+      console.log('Game with basic joins query error:', gameError)
+      console.log('Game data game_attendees:', gameData?.game_attendees)
+      console.log('Game data season_game_attendance:', gameData?.season_game_attendance)
+
       if (gameError) {
-        throw gameError
+        console.error('Game with basic joins query failed:', gameError)
+        // Use the simple data if joins fail
+        setGame(simpleGameData)
+      } else {
+        setGame(gameData)
       }
 
-      setGame(gameData)
-
-      // Fetch attendees (both individual and season attendees)
-      const { data: attendeesData, error: attendeesError } = await supabase
+      // Try a direct query on game_attendees table to see what's there
+      const { data: directAttendees, error: directAttendeesError } = await supabase
         .from('game_attendees')
         .select(`
           id,
-          created_at,
+          player_id,
+          payment_status,
           attendance_status,
+          game_id,
           players (
             name,
             photo_url
           )
         `)
         .eq('game_id', gameId)
-        .eq('payment_status', 'completed')
-        .order('created_at', { ascending: true })
 
-      // Also fetch season attendees for this game
-      let seasonAttendeesData: Attendee[] = []
-      if (gameData?.season_id) {
-        const { data: seasonAttendees, error: seasonAttendeesError } = await supabase
-          .from('season_attendees')
-          .select(`
+      // Also try to get ALL game_attendees to see if there are any at all
+      const { data: allGameAttendees, error: allGameAttendeesError } = await supabase
+        .from('game_attendees')
+        .select(`
+          id,
+          player_id,
+          payment_status,
+          attendance_status,
+          game_id
+        `)
+        .limit(10)
+
+      console.log('All game_attendees (first 10):', allGameAttendees)
+      console.log('All game_attendees error:', allGameAttendeesError)
+
+      console.log('Direct game_attendees query result:', directAttendees)
+      console.log('Direct game_attendees query error:', directAttendeesError)
+      console.log('Game ID being queried:', gameId)
+      console.log('Direct attendees length:', directAttendees?.length)
+      console.log('Direct attendees raw data:', JSON.stringify(directAttendees, null, 2))
+
+      // Also try the nested query approach like the homepage
+      const { data: gameWithNestedAttendees, error: nestedError } = await supabase
+        .from('games')
+        .select(`
+          *,
+          game_attendees (
             id,
-            created_at,
-            players (
-              name,
-              photo_url
-            )
-          `)
-          .eq('season_id', gameData.season_id)
-          .eq('payment_status', 'completed')
+            player_id,
+            payment_status,
+            attendance_status
+          )
+        `)
+        .eq('id', gameId)
+        .single()
 
-        if (!seasonAttendeesError && seasonAttendees) {
-          // Get specific game attendance for season attendees
-          const { data: seasonGameAttendance } = await supabase
-            .from('season_game_attendance')
-            .select('season_attendee_id, attendance_status')
-            .eq('game_id', gameId)
+      console.log('Nested query result:', gameWithNestedAttendees)
+      console.log('Nested query error:', nestedError)
+      console.log('Nested game_attendees:', gameWithNestedAttendees?.game_attendees)
 
-          // Combine season attendees with their game attendance status
-          seasonAttendeesData = seasonAttendees.map(attendee => {
-            const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-            return {
-              id: attendee.id,
-              created_at: attendee.created_at,
-              attendance_status: gameAttendance?.attendance_status || 'attending', // Default to attending
-              players: attendee.players[0] || { name: 'Unknown Player' }
-            }
-          })
+      // Filter the direct results
+      const attendeesData = directAttendees?.filter((att: any) => 
+        att.payment_status === 'completed' &&
+        (att.attendance_status === 'attending' || !att.attendance_status)
+      ) || []
+
+      // Also try filtering the nested results
+      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: any) => 
+        att.payment_status === 'completed' &&
+        (att.attendance_status === 'attending' || !att.attendance_status)
+      ) || []
+
+      console.log('Direct filtered attendees:', attendeesData)
+      console.log('Nested filtered attendees:', nestedAttendeesData)
+
+      // Use the exact same processing logic as the homepage
+      let individualAttendees = gameData?.game_attendees?.filter((att: any) => 
+        att.payment_status === 'completed' && 
+        (att.attendance_status === 'attending' || !att.attendance_status)
+      ) || []
+      
+      // If the nested query didn't return individual attendees, try the direct query like the homepage does
+      if (individualAttendees.length === 0 && directAttendees && directAttendees.length > 0) {
+        console.log('Nested query returned no individual attendees, using direct query results')
+        individualAttendees = directAttendees.filter((att: any) => 
+          att.payment_status === 'completed' && 
+          (att.attendance_status === 'attending' || !att.attendance_status)
+        )
+      }
+      
+      // Count season attendees who are attending this specific game
+      const seasonAttendees = gameData?.season_game_attendance?.filter((att: any) => 
+        att.attendance_status === 'attending' && 
+        att.season_attendees.payment_status === 'completed'
+      ) || []
+
+      console.log('Individual attendees (homepage logic):', individualAttendees)
+      console.log('Season attendees (homepage logic):', seasonAttendees)
+      
+      // Debug individual attendees structure
+      if (individualAttendees.length > 0) {
+        console.log('First individual attendee structure:', individualAttendees[0])
+        console.log('Individual attendee players:', individualAttendees[0]?.players)
+      }
+
+      // Also fetch season attendees for this game (same logic as homepage)
+      let seasonAttendeesData: any[] = []
+      if (gameData?.season_id) {
+        console.log('Season game detected, fetching season attendees like homepage...')
+        
+        try {
+          // Fetch season attendees for this game's season (same as homepage)
+          const { data: seasonAttendeesRaw, error: seasonError } = await supabase
+            .from('season_attendees')
+            .select(`
+              id,
+              created_at,
+              player_id,
+              players (
+                name,
+                photo_url
+              )
+            `)
+            .eq('season_id', gameData.season_id)
+            .eq('payment_status', 'completed')
+
+          if (!seasonError && seasonAttendeesRaw) {
+            console.log('Season attendees fetched:', seasonAttendeesRaw)
+            
+            // Fetch season game attendance for this specific game
+            const { data: seasonGameAttendance } = await supabase
+              .from('season_game_attendance')
+              .select('season_attendee_id, attendance_status')
+              .eq('game_id', gameId)
+
+            console.log('Season game attendance fetched:', seasonGameAttendance)
+
+            // Combine season attendees with their attendance status for this game
+            const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: any) => {
+              const gameAttendance = seasonGameAttendance?.find((ga: any) => ga.season_attendee_id === attendee.id)
+              return {
+                id: attendee.id,
+                created_at: attendee.created_at,
+                player_id: attendee.player_id,
+                payment_status: 'completed',
+                attendance_status: gameAttendance?.attendance_status || 'attending',
+                players: attendee.players || { name: 'Unknown Player' }
+              }
+            })
+
+            seasonAttendeesData = seasonAttendeesWithStatus
+            console.log('Season attendees with status:', seasonAttendeesData)
+          }
+        } catch (err) {
+          console.error('Error fetching season attendees:', err)
         }
       }
 
-      if (attendeesError) {
-        console.error('Error fetching attendees:', attendeesError)
-      } else {
-        // Combine individual game attendees with season attendees
-        const allAttendees = [
-          ...(attendeesData || []),
-          ...seasonAttendeesData
-        ]
+      // Use the exact same deduplication logic as the homepage
+      const allAttendees = [...individualAttendees, ...seasonAttendeesData]
+      const uniqueAttendees = allAttendees.filter((attendee, index, self) => {
+        const attendeePlayerId = attendee.player_id
         
-        // Remove duplicates (in case someone is both an individual and season attendee)
-        const uniqueAttendees = allAttendees.filter((attendee, index, self) => 
-          index === self.findIndex(a => {
-            const attendeeName = Array.isArray(a.players) ? a.players[0]?.name : a.players?.name
-            const currentName = Array.isArray(attendee.players) ? attendee.players[0]?.name : attendee.players?.name
-            return attendeeName === currentName
-          })
-        )
+        // Find all attendees with the same player_id
+        const duplicates = self.filter(a => a.player_id === attendeePlayerId)
         
-        setAttendees(uniqueAttendees as Attendee[])
-      }
+        // If there are duplicates, prioritize season attendance (season attendees come after individual)
+        if (duplicates.length > 1) {
+          const hasSeasonAttendance = duplicates.some(d => d.payment_status === 'completed' && d.attendance_status)
+          if (hasSeasonAttendance) {
+            // Only keep the season attendance (last occurrence)
+            return index === self.findLastIndex(a => a.player_id === attendeePlayerId)
+          }
+        }
+        
+        // If no duplicates or no season attendance, keep the first occurrence
+        return index === self.findIndex(a => a.player_id === attendeePlayerId)
+      })
+      
+      // Normalize the attendee data structure for display
+      const normalizedAttendees = uniqueAttendees.map(attendee => {
+        // All attendees now have the same structure
+        return {
+          id: attendee.id,
+          created_at: attendee.created_at || new Date().toISOString(),
+          player_id: attendee.player_id,
+          attendance_status: attendee.attendance_status,
+          payment_status: attendee.payment_status,
+          players: attendee.players || { name: 'Unknown Player' }
+        }
+      })
+
+      console.log('All attendees:', uniqueAttendees)
+      console.log('Normalized attendees:', normalizedAttendees)
+      setAttendees(normalizedAttendees as Attendee[])
 
       // Check user's attendance status if logged in
       console.log('Checking attendance - player:', !!player, 'user:', !!user)
@@ -236,6 +396,17 @@ export default function GameDetailPage() {
       setLoading(false)
     }
   }, [gameId, player, user])
+
+  const handleAttendanceStatusChange = (newStatus: 'attending' | 'not_attending') => {
+    console.log('=== ATTENDANCE STATUS CHANGED ===', newStatus)
+    setUserAttendanceStatus(newStatus)
+    // Refresh the game details to update the attendees list
+    console.log('Calling fetchGameDetails to refresh data...')
+    // Force a refresh by calling the function directly
+    setTimeout(() => {
+      fetchGameDetails()
+    }, 100) // Small delay to ensure the database update has completed
+  }
 
   useEffect(() => {
     if (gameId) {
@@ -356,9 +527,9 @@ export default function GameDetailPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg border border-gray-200 p-8">
               {/* Game Header */}
-              <div className="flex flex-col sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 mb-8">
+              <div className="flex flex-col space-y-6 mb-8">
                 {/* Game Icon */}
-                <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center flex-shrink-0 mx-auto sm:mx-0`}>
+                <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center flex-shrink-0`}>
                   <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
                     <Image 
                       src="/game.png" 
@@ -371,26 +542,26 @@ export default function GameDetailPage() {
                 </div>
 
                 {/* Game Info */}
-                <div className="flex-1 text-center sm:text-left">
+                <div className="flex-1 text-left w-full">
                   <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
                   
                   <div className="space-y-3">
-                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
+                    <div className="flex items-center text-gray-600">
                       <Calendar className="w-5 h-5 mr-3" />
                       <span className="font-medium">{formatDate(game.game_date)}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
+                    <div className="flex items-center text-gray-600">
                       <Clock className="w-5 h-5 mr-3" />
                       <span className="font-medium">{formatTime(game.game_time)}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
+                    <div className="flex items-center text-gray-600">
                       <MapPin className="w-5 h-5 mr-3" />
                       <span className="font-medium">{game.location}</span>
                     </div>
                     
-                    <div className="flex items-center text-gray-600 justify-center sm:justify-start">
+                    <div className="flex items-center text-gray-600">
                       <DollarSign className="w-5 h-5 mr-3" />
                       <span className="font-medium">${game.price} per player</span>
                     </div>
@@ -464,7 +635,7 @@ export default function GameDetailPage() {
                     currentStatus={userAttendanceStatus || 'not_attending'}
                     hasPaid={hasPaid}
                     isGameFull={isFullyBooked}
-                    onStatusChange={setUserAttendanceStatus}
+                    onStatusChange={handleAttendanceStatusChange}
                   />
                 </div>
               ) : (

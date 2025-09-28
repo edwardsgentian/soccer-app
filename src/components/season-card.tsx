@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Clock, MapPin, Calendar, SmilePlus } from 'lucide-react'
+import { motion } from 'framer-motion'
 
 interface SeasonCardProps {
   seasonId: string
@@ -137,12 +138,19 @@ export function SeasonCard({
   const seasonAttendees = seasonSpots - seasonSpotsAvailable
 
   return (
-    <Link href={`/seasons/${seasonId}`} className="block">
-      <div className="relative max-w-lg mx-auto">
-        {/* Stack of cards effect - positioned below main card */}
-        <div className="absolute top-2 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
-        <div className="absolute top-1 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
-        <div className="relative bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-300 flex flex-row">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -2 }}
+      className="max-w-lg mx-auto"
+    >
+      <Link href={`/seasons/${seasonId}`} className="block">
+        <div className="relative">
+          {/* Stack of cards effect - positioned below main card */}
+          <div className="absolute top-2 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
+          <div className="absolute top-1 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
+          <div className="relative bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300 flex flex-row">
         {/* Image Section - Left Side */}
         <div className={`w-12 h-12 sm:w-24 sm:h-24 bg-gradient-to-br ${getRandomGradient(seasonId)} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
           <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
@@ -224,5 +232,6 @@ export function SeasonCard({
         </div>
       </div>
     </Link>
+    </motion.div>
   )
 }

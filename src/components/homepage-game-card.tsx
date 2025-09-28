@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Clock, MapPin, SmilePlus, Lock } from "lucide-react"
-// import { motion } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 interface HomepageGameCardProps {
   gameName: string
@@ -24,6 +24,14 @@ interface HomepageGameCardProps {
     payment_status: string
     attendance_status?: 'attending' | 'not_attending'
   }[]
+  seasonGameAttendance?: {
+    attendance_status: 'attending' | 'not_attending'
+    season_attendees: {
+      id: string
+      player_id: string
+      payment_status: string
+    }
+  }[]
   isPastGame?: boolean
 }
 
@@ -41,6 +49,7 @@ export function HomepageGameCard({
   isUserAttending = false,
   hasPurchasedSeason = false,
   gameAttendees = [],
+  seasonGameAttendance = [],
   isPastGame = false
 }: HomepageGameCardProps) {
 
@@ -126,16 +135,117 @@ export function HomepageGameCard({
   }
 
   // Calculate actual attendee count based on attendance status
-  const actualAttendees = gameAttendees?.filter(att => 
+  const individualAttendees = gameAttendees?.filter(att => 
     att.payment_status === 'completed' && 
     (att.attendance_status === 'attending' || !att.attendance_status)
   ) || []
-  const actualAttendeeCount = actualAttendees.length
-  const availableSpots = maxAttendees - actualAttendeeCount
   
-  // Debug: Log attendee count for season games
+  // Count season attendees who are attending this specific game
+  const seasonAttendees = seasonGameAttendance?.filter(att => 
+    att.attendance_status === 'attending' && 
+    att.season_attendees.payment_status === 'completed'
+  ) || []
+  
+  // Remove duplicates - if someone is both an individual and season attendee, only count them once
+  // Prioritize season attendance over individual attendance
+  const allAttendees = [...individualAttendees, ...seasonAttendees]
+  const uniqueAttendees = allAttendees.filter((attendee, index, self) => {
+    const attendeePlayerId = attendee.player_id || attendee.season_attendees?.player_id
+    
+    // Find all attendees with the same player_id
+    const duplicates = self.filter(a => {
+      const aPlayerId = a.player_id || a.season_attendees?.player_id
+      return aPlayerId === attendeePlayerId
+    })
+    
+    // If there are duplicates, prioritize season attendance
+    if (duplicates.length > 1) {
+      const hasSeasonAttendance = duplicates.some(d => d.season_attendees)
+      if (hasSeasonAttendance) {
+        // Only keep the season attendance
+        return attendee.season_attendees !== undefined
+      }
+    }
+    
+    // If no duplicates or no season attendance, keep the first occurrence
+    return index === self.findIndex(a => {
+      const aPlayerId = a.player_id || a.season_attendees?.player_id
+      return aPlayerId === attendeePlayerId
+    })
+  })
+  
+  const actualAttendeeCount = uniqueAttendees.length
+  const availableSpots = maxAttendees - actualAttendeeCount
+
+  // Debug: Log detailed attendee count for season games
   if (seasonId) {
-    console.log(`Game card ${gameName} - maxAttendees: ${maxAttendees}, total attendees: ${gameAttendees?.length || 0}, attending: ${actualAttendeeCount}, available: ${availableSpots}`)
+    console.log(`=== GAME CARD DEBUG: ${gameName} ===`)
+    console.log('Game ID:', gameId)
+    console.log('maxAttendees:', maxAttendees)
+    console.log('gameAttendees raw:', gameAttendees)
+    console.log('individualAttendees filtered:', individualAttendees)
+    console.log('seasonGameAttendance raw:', seasonGameAttendance)
+    console.log('seasonAttendees filtered:', seasonAttendees)
+    console.log('uniqueAttendees after deduplication (by name):', uniqueAttendees)
+    console.log('total attending:', actualAttendeeCount)
+    console.log('available spots:', availableSpots)
+    
+    // Detailed breakdown
+    console.log('--- INDIVIDUAL ATTENDEES BREAKDOWN ---')
+    individualAttendees.forEach((att, index) => {
+      console.log(`Individual ${index + 1}:`, {
+        player_id: att.player_id,
+        payment_status: att.payment_status,
+        attendance_status: att.attendance_status
+      })
+    })
+    
+    console.log('--- SEASON ATTENDEES BREAKDOWN ---')
+    seasonAttendees.forEach((att, index) => {
+      console.log(`Season ${index + 1}:`, {
+        attendance_status: att.attendance_status,
+        season_attendee_id: att.season_attendees?.id,
+        player_id: att.season_attendees?.player_id,
+        payment_status: att.season_attendees?.payment_status
+      })
+    })
+    
+    console.log('--- UNIQUE ATTENDEES BREAKDOWN ---')
+    uniqueAttendees.forEach((att, index) => {
+      console.log(`Unique ${index + 1}:`, {
+        player_id: att.player_id || att.season_attendees?.player_id,
+        attendance_status: att.attendance_status,
+        payment_status: att.payment_status || att.season_attendees?.payment_status,
+        type: att.player_id ? 'individual' : 'season',
+        raw_individual_player_id: att.player_id,
+        raw_season_player_id: att.season_attendees?.player_id
+      })
+    })
+    
+    console.log('--- DEDUPLICATION DEBUG ---')
+    console.log('All attendees before deduplication:', allAttendees.map(att => ({
+      player_id: att.player_id || att.season_attendees?.player_id,
+      type: att.player_id ? 'individual' : 'season'
+    })))
+    
+    // Debug the deduplication logic step by step
+    allAttendees.forEach((attendee, index) => {
+      const attendeePlayerId = attendee.player_id || attendee.season_attendees?.player_id
+      const duplicates = allAttendees.filter(a => {
+        const aPlayerId = a.player_id || a.season_attendees?.player_id
+        return aPlayerId === attendeePlayerId
+      })
+      console.log(`Attendee ${index + 1} (${attendeePlayerId}):`, {
+        type: attendee.player_id ? 'individual' : 'season',
+        duplicates_count: duplicates.length,
+        has_season_attendance: duplicates.some(d => d.season_attendees),
+        will_keep: duplicates.length > 1 ? 
+          (duplicates.some(d => d.season_attendees) ? attendee.season_attendees !== undefined : false) :
+          true
+      })
+    })
+    
+    console.log('=====================================')
   }
   
   // Check if season signup period is still open
@@ -147,10 +257,17 @@ export function HomepageGameCard({
   
 
   return (
-    <Link href={requiresSeasonSignup ? `/seasons/${seasonId}` : `/games/${gameId}`} className="block">
-      <div
-        className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-colors duration-300 flex flex-row max-w-lg mx-auto"
-      >
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ y: -2 }}
+      className="max-w-lg mx-auto"
+    >
+      <Link href={requiresSeasonSignup ? `/seasons/${seasonId}` : `/games/${gameId}`} className="block">
+        <div
+          className="bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-300 flex flex-row"
+        >
         {/* Image Section - Left Side */}
         <div className={`w-12 h-12 sm:w-24 sm:h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0`}>
           <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
@@ -245,5 +362,6 @@ export function HomepageGameCard({
         </div>
       </div>
     </Link>
+    </motion.div>
   )
 }

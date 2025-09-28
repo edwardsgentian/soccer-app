@@ -3,7 +3,9 @@ import { supabase } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('=== UPDATE ATTENDANCE API CALLED ===')
     const { gameId, seasonId, playerId, attendanceStatus } = await request.json()
+    console.log('Request data:', { gameId, seasonId, playerId, attendanceStatus })
 
     if (!gameId || !playerId || !attendanceStatus) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -85,6 +87,7 @@ export async function POST(request: NextRequest) {
 
     // Update attendance status
     if (isSeasonMember && seasonAttendeeId) {
+      console.log('Updating season game attendance:', { seasonAttendeeId, gameId, attendanceStatus })
       // Update season game attendance
       const { error } = await supabase
         .from('season_game_attendance')
@@ -100,6 +103,7 @@ export async function POST(request: NextRequest) {
         console.error('Error updating season game attendance:', error)
         return NextResponse.json({ error: 'Failed to update attendance' }, { status: 500 })
       }
+      console.log('Season game attendance updated successfully')
     } else {
       // Update individual game attendance
       const { error } = await supabase
@@ -120,6 +124,13 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error updating attendance:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
+    })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

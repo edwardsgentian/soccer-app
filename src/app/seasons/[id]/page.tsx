@@ -68,6 +68,14 @@ interface Game {
     player_id: string
     payment_status: string
   }[]
+  season_game_attendance?: {
+    attendance_status: 'attending' | 'not_attending'
+    season_attendees: {
+      id: string
+      player_id: string
+      payment_status: string
+    }
+  }[]
 }
 
 export default function SeasonDetailPage() {
@@ -146,6 +154,14 @@ export default function SeasonDetailPage() {
             player_id,
             payment_status,
             attendance_status
+          ),
+          season_game_attendance (
+            attendance_status,
+            season_attendees (
+              id,
+              player_id,
+              payment_status
+            )
           )
         `)
         .eq('season_id', seasonId)
@@ -546,6 +562,7 @@ export default function SeasonDetailPage() {
                                 isUserAttending={isUserAttending}
                                 hasPurchasedSeason={hasPurchasedSeason}
                                 gameAttendees={game.game_attendees}
+                                seasonGameAttendance={game.season_game_attendance}
                               />
                             )
                           })}
