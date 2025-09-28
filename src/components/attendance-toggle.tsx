@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Check, X, Users, AlertCircle } from 'lucide-react'
+import { Check, X, AlertCircle } from 'lucide-react'
 import { motion } from 'framer-motion'
 
 interface AttendanceToggleProps {

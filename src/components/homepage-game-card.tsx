@@ -150,26 +150,26 @@ export function HomepageGameCard({
   // Prioritize season attendance over individual attendance
   const allAttendees = [...individualAttendees, ...seasonAttendees]
   const uniqueAttendees = allAttendees.filter((attendee, index, self) => {
-    const attendeePlayerId = attendee.player_id || attendee.season_attendees?.player_id
+    const attendeePlayerId = 'player_id' in attendee ? attendee.player_id : attendee.season_attendees?.player_id
     
     // Find all attendees with the same player_id
     const duplicates = self.filter(a => {
-      const aPlayerId = a.player_id || a.season_attendees?.player_id
+      const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
       return aPlayerId === attendeePlayerId
     })
     
     // If there are duplicates, prioritize season attendance
     if (duplicates.length > 1) {
-      const hasSeasonAttendance = duplicates.some(d => d.season_attendees)
+      const hasSeasonAttendance = duplicates.some(d => 'season_attendees' in d)
       if (hasSeasonAttendance) {
         // Only keep the season attendance
-        return attendee.season_attendees !== undefined
+        return 'season_attendees' in attendee
       }
     }
     
     // If no duplicates or no season attendance, keep the first occurrence
     return index === self.findIndex(a => {
-      const aPlayerId = a.player_id || a.season_attendees?.player_id
+      const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
       return aPlayerId === attendeePlayerId
     })
   })
@@ -213,34 +213,34 @@ export function HomepageGameCard({
     console.log('--- UNIQUE ATTENDEES BREAKDOWN ---')
     uniqueAttendees.forEach((att, index) => {
       console.log(`Unique ${index + 1}:`, {
-        player_id: att.player_id || att.season_attendees?.player_id,
+        player_id: 'player_id' in att ? att.player_id : att.season_attendees?.player_id,
         attendance_status: att.attendance_status,
-        payment_status: att.payment_status || att.season_attendees?.payment_status,
-        type: att.player_id ? 'individual' : 'season',
-        raw_individual_player_id: att.player_id,
-        raw_season_player_id: att.season_attendees?.player_id
+        payment_status: 'payment_status' in att ? att.payment_status : att.season_attendees?.payment_status,
+        type: 'player_id' in att ? 'individual' : 'season',
+        raw_individual_player_id: 'player_id' in att ? att.player_id : undefined,
+        raw_season_player_id: 'season_attendees' in att ? att.season_attendees?.player_id : undefined
       })
     })
     
     console.log('--- DEDUPLICATION DEBUG ---')
     console.log('All attendees before deduplication:', allAttendees.map(att => ({
-      player_id: att.player_id || att.season_attendees?.player_id,
-      type: att.player_id ? 'individual' : 'season'
+      player_id: 'player_id' in att ? att.player_id : att.season_attendees?.player_id,
+      type: 'player_id' in att ? 'individual' : 'season'
     })))
     
     // Debug the deduplication logic step by step
     allAttendees.forEach((attendee, index) => {
-      const attendeePlayerId = attendee.player_id || attendee.season_attendees?.player_id
+      const attendeePlayerId = 'player_id' in attendee ? attendee.player_id : attendee.season_attendees?.player_id
       const duplicates = allAttendees.filter(a => {
-        const aPlayerId = a.player_id || a.season_attendees?.player_id
+        const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
         return aPlayerId === attendeePlayerId
       })
       console.log(`Attendee ${index + 1} (${attendeePlayerId}):`, {
-        type: attendee.player_id ? 'individual' : 'season',
+        type: 'player_id' in attendee ? 'individual' : 'season',
         duplicates_count: duplicates.length,
-        has_season_attendance: duplicates.some(d => d.season_attendees),
+        has_season_attendance: duplicates.some(d => 'season_attendees' in d),
         will_keep: duplicates.length > 1 ? 
-          (duplicates.some(d => d.season_attendees) ? attendee.season_attendees !== undefined : false) :
+          (duplicates.some(d => 'season_attendees' in d) ? 'season_attendees' in attendee : false) :
           true
       })
     })
