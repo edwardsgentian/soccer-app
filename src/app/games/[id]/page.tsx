@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
@@ -36,6 +36,40 @@ interface Attendee {
   id: string
   created_at: string
   attendance_status?: 'attending' | 'not_attending'
+  players: {
+    name: string
+    photo_url?: string
+  }
+}
+
+interface GameAttendee {
+  id: string
+  player_id: string
+  payment_status: string
+  attendance_status?: 'attending' | 'not_attending'
+  game_id?: string
+  players?: {
+    name: string
+    photo_url?: string
+  }[]
+}
+
+interface SeasonAttendee {
+  id: string
+  created_at: string
+  player_id: string
+  players?: {
+    name: string
+    photo_url?: string
+  }[]
+}
+
+interface ProcessedAttendee {
+  id: string
+  created_at: string
+  player_id: string
+  payment_status: string
+  attendance_status: string
   players: {
     name: string
     photo_url?: string
@@ -186,13 +220,13 @@ export default function GameDetailPage() {
       console.log('Nested game_attendees:', gameWithNestedAttendees?.game_attendees)
 
       // Filter the direct results
-      const attendeesData = directAttendees?.filter((att: any) => 
+      const attendeesData = directAttendees?.filter((att: GameAttendee) => 
         att.payment_status === 'completed' &&
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
 
       // Also try filtering the nested results
-      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: any) => 
+      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: GameAttendee) => 
         att.payment_status === 'completed' &&
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
@@ -201,7 +235,7 @@ export default function GameDetailPage() {
       console.log('Nested filtered attendees:', nestedAttendeesData)
 
       // Use the exact same processing logic as the homepage
-      let individualAttendees = gameData?.game_attendees?.filter((att: any) => 
+      let individualAttendees = gameData?.game_attendees?.filter((att: GameAttendee) => 
         att.payment_status === 'completed' && 
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
@@ -209,14 +243,14 @@ export default function GameDetailPage() {
       // If the nested query didn't return individual attendees, try the direct query like the homepage does
       if (individualAttendees.length === 0 && directAttendees && directAttendees.length > 0) {
         console.log('Nested query returned no individual attendees, using direct query results')
-        individualAttendees = directAttendees.filter((att: any) => 
+        individualAttendees = directAttendees.filter((att: GameAttendee) => 
           att.payment_status === 'completed' && 
           (att.attendance_status === 'attending' || !att.attendance_status)
         )
       }
       
       // Count season attendees who are attending this specific game
-      const seasonAttendees = gameData?.season_game_attendance?.filter((att: any) => 
+      const seasonAttendees = gameData?.season_game_attendance?.filter((att: { attendance_status: string; season_attendees: { payment_status: string } }) => 
         att.attendance_status === 'attending' && 
         att.season_attendees.payment_status === 'completed'
       ) || []
@@ -231,7 +265,7 @@ export default function GameDetailPage() {
       }
 
       // Also fetch season attendees for this game (same logic as homepage)
-      let seasonAttendeesData: any[] = []
+      let seasonAttendeesData: ProcessedAttendee[] = []
       if (gameData?.season_id) {
         console.log('Season game detected, fetching season attendees like homepage...')
         
@@ -263,15 +297,15 @@ export default function GameDetailPage() {
             console.log('Season game attendance fetched:', seasonGameAttendance)
 
             // Combine season attendees with their attendance status for this game
-            const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: any) => {
-              const gameAttendance = seasonGameAttendance?.find((ga: any) => ga.season_attendee_id === attendee.id)
+            const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: SeasonAttendee) => {
+              const gameAttendance = seasonGameAttendance?.find((ga: { season_attendee_id: string; attendance_status: string }) => ga.season_attendee_id === attendee.id)
               return {
                 id: attendee.id,
                 created_at: attendee.created_at,
                 player_id: attendee.player_id,
                 payment_status: 'completed',
                 attendance_status: gameAttendance?.attendance_status || 'attending',
-                players: attendee.players || { name: 'Unknown Player' }
+                players: attendee.players?.[0] || { name: 'Unknown Player' }
               }
             })
 

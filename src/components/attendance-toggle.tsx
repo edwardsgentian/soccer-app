@@ -75,45 +75,6 @@ export function AttendanceToggle({
     }
   }
 
-  const getButtonContent = () => {
-    if (!hasPaid) {
-      return (
-        <>
-          <Users className="w-4 h-4 mr-2" />
-          Not Paid
-        </>
-      )
-    }
-
-    if (currentStatus === 'attending') {
-      return (
-        <>
-          <Check className="w-4 h-4 mr-2" />
-          ✓ Attending
-        </>
-      )
-    } else {
-      return (
-        <>
-          <X className="w-4 h-4 mr-2" />
-          ○ Not Attending
-        </>
-      )
-    }
-  }
-
-  const getButtonVariant = () => {
-    if (!hasPaid) return 'outline'
-    if (currentStatus === 'attending') return 'default'
-    return 'outline'
-  }
-
-  const getButtonClassName = () => {
-    if (!hasPaid) return 'opacity-50 cursor-not-allowed'
-    if (currentStatus === 'attending') return 'bg-green-600 hover:bg-green-700 text-white border-green-600'
-    if (isGameFull && currentStatus === 'not_attending') return 'opacity-50 cursor-not-allowed'
-    return 'border-gray-300 hover:border-gray-400'
-  }
 
   const isDisabled = !hasPaid || loading || (isGameFull && currentStatus === 'not_attending')
 
