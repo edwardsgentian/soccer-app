@@ -296,7 +296,7 @@ export default function GroupDetailPage() {
       console.log('Game attendees error:', gameAttendeesError)
 
       if (!gameAttendeesError && gameAttendeesData) {
-        (gameAttendeesData as any[]).forEach((attendee: { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }) => {
+        (gameAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
           console.log('Processing game attendee:', attendee)
           console.log('Attendee players field:', attendee.players)
           
@@ -349,7 +349,7 @@ export default function GroupDetailPage() {
       console.log('Season attendees error:', seasonAttendeesError)
 
       if (!seasonAttendeesError && seasonAttendeesData) {
-        (seasonAttendeesData as any[]).forEach((attendee: { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }) => {
+        (seasonAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
           console.log('Processing season attendee:', attendee)
           console.log('Season attendee players field:', attendee.players)
           
