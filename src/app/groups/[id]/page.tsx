@@ -97,7 +97,7 @@ export default function GroupDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showCreateGameModal, setShowCreateGameModal] = useState(false)
-  const [activeTab, setActiveTab] = useState<'games' | 'seasons' | 'players'>('games')
+  const [activeTab, setActiveTab] = useState<'games' | 'seasons'>('games')
   const [players, setPlayers] = useState<Player[]>([])
   const [hasUserJoined, setHasUserJoined] = useState(false)
 
@@ -263,32 +263,44 @@ export default function GroupDetailPage() {
       console.log('Seasons data:', seasonsData)
       console.log('Game IDs:', gamesData?.map(game => game.id))
       console.log('Season IDs:', seasonsData?.map(season => season.id))
+      console.log('Number of games:', gamesData?.length || 0)
+      console.log('Number of seasons:', seasonsData?.length || 0)
 
-      // Fetch individual game attendees
-      const { data: gameAttendeesData, error: gameAttendeesError } = await supabase
-        .from('game_attendees')
-        .select(`
-          player_id,
-          players!inner (
-            id,
-            name,
-            email,
-            photo_url
-          )
-        `)
-        .eq('payment_status', 'completed')
-        .in('game_id', gamesData?.map(game => game.id) || [])
+      // Fetch individual game attendees (only if there are games)
+      let gameAttendeesData = null
+      let gameAttendeesError = null
+      
+      if (gamesData && gamesData.length > 0) {
+        const result = await supabase
+          .from('game_attendees')
+          .select(`
+            player_id,
+            players!inner (
+              id,
+              name,
+              email,
+              photo_url
+            )
+          `)
+          .eq('payment_status', 'completed')
+          .in('game_id', gamesData.map(game => game.id))
+        
+        gameAttendeesData = result.data
+        gameAttendeesError = result.error
+      } else {
+        console.log('No games found, skipping game attendees fetch')
+      }
 
       console.log('Game attendees query result:', gameAttendeesData)
       console.log('Game attendees error:', gameAttendeesError)
 
       if (!gameAttendeesError && gameAttendeesData) {
-        gameAttendeesData.forEach((attendee: { players: { id: string; name: string; email: string; photo_url?: string }[] }) => {
+        gameAttendeesData.forEach((attendee: any) => {
           console.log('Processing game attendee:', attendee)
           console.log('Attendee players field:', attendee.players)
           
-          if (attendee.players && attendee.players.length > 0 && attendee.players[0].id) {
-            const player = attendee.players[0]
+          if (attendee.players && attendee.players.id) {
+            const player = attendee.players
             console.log('Player object:', player)
             if (player && player.id) {
               console.log('Adding game attendee player:', player)
@@ -307,31 +319,41 @@ export default function GroupDetailPage() {
         })
       }
 
-      // Fetch season attendees
-      const { data: seasonAttendeesData, error: seasonAttendeesError } = await supabase
-        .from('season_attendees')
-        .select(`
-          player_id,
-          players!inner (
-            id,
-            name,
-            email,
-            photo_url
-          )
-        `)
-        .eq('payment_status', 'completed')
-        .in('season_id', seasonsData?.map(season => season.id) || [])
+      // Fetch season attendees (only if there are seasons)
+      let seasonAttendeesData = null
+      let seasonAttendeesError = null
+      
+      if (seasonsData && seasonsData.length > 0) {
+        const result = await supabase
+          .from('season_attendees')
+          .select(`
+            player_id,
+            players!inner (
+              id,
+              name,
+              email,
+              photo_url
+            )
+          `)
+          .eq('payment_status', 'completed')
+          .in('season_id', seasonsData.map(season => season.id))
+        
+        seasonAttendeesData = result.data
+        seasonAttendeesError = result.error
+      } else {
+        console.log('No seasons found, skipping season attendees fetch')
+      }
 
       console.log('Season attendees query result:', seasonAttendeesData)
       console.log('Season attendees error:', seasonAttendeesError)
 
       if (!seasonAttendeesError && seasonAttendeesData) {
-        seasonAttendeesData.forEach((attendee: { players: { id: string; name: string; email: string; photo_url?: string }[] }) => {
+        seasonAttendeesData.forEach((attendee: any) => {
           console.log('Processing season attendee:', attendee)
           console.log('Season attendee players field:', attendee.players)
           
-          if (attendee.players && attendee.players.length > 0 && attendee.players[0].id) {
-            const player = attendee.players[0]
+          if (attendee.players && attendee.players.id) {
+            const player = attendee.players
             console.log('Season player object:', player)
             if (player && player.id) {
               console.log('Adding season attendee player:', player)
@@ -352,7 +374,9 @@ export default function GroupDetailPage() {
 
       console.log('All players collected:', Array.from(allPlayers.values()))
       console.log('Total players count:', allPlayers.size)
-      setPlayers(Array.from(allPlayers.values()))
+      const playersArray = Array.from(allPlayers.values())
+      console.log('Setting players state with:', playersArray)
+      setPlayers(playersArray)
     } catch (err) {
       console.error('Error fetching group details:', err)
       setError('Failed to load group details')
@@ -414,11 +438,14 @@ export default function GroupDetailPage() {
     )
   }
 
+  // Debug log for players state
+  console.log('Group page render - players state:', players, 'length:', players.length)
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
+      <div className="container mx-auto px-4 py-16 max-w-7xl">
         {/* Back Button */}
         <Button
           variant="outline"
@@ -429,79 +456,86 @@ export default function GroupDetailPage() {
           Back to Groups
         </Button>
 
-        {/* Group Header - Profile Style */}
-        <div className="text-center mb-12">
-          {/* Group Icon */}
-          <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Component className="w-16 h-16 text-gray-600" />
+        {/* Main Content - Airbnb Style Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Group Information */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Group Header */}
+            <div>
+              {/* Group Icon */}
+              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                <Component className="w-12 h-12 text-gray-600" />
               </div>
 
-                {/* Group Name */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
-          
-          {/* Created Date */}
-          <p className="text-gray-600 mb-8">Created {formatDate(group.created_at)}</p>
+              {/* Group Name */}
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
+              
+              {/* Created Date */}
+              <p className="text-gray-600 mb-6">Created {formatDate(group.created_at)}</p>
 
-            {/* Group Stats */}
-            <div className="flex justify-center gap-8 mb-8">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{games.length}</div>
-                <div className="text-sm text-gray-600">Games</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{seasons.length}</div>
-                <div className="text-sm text-gray-600">Seasons</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">{players.length}</div>
-                <div className="text-sm text-gray-600">Players</div>
+              {/* Group Stats */}
+              <div className="flex gap-8 mb-8">
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{games.length}</div>
+                  <div className="text-sm text-gray-600">Games</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{seasons.length}</div>
+                  <div className="text-sm text-gray-600">Seasons</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-gray-900">{players.length}</div>
+                  <div className="text-sm text-gray-600">Players</div>
+                </div>
               </div>
             </div>
 
-          {/* About Section */}
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">About</h2>
-            <p className="text-gray-600 leading-relaxed mb-6">{group.description}</p>
+            <div className="border-t border-gray-200"></div>
 
-                {/* Tags */}
-                {group.tags && group.tags.length > 0 && (
-              <div className="mb-6 text-center">
-                <div className="flex flex-wrap gap-2 justify-center">
-                      {group.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+            {/* About Section */}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-6">About</h2>
+              <p className="text-gray-600 leading-relaxed mb-6">{group.description}</p>
+
+              {/* Tags */}
+              {group.tags && group.tags.length > 0 && (
+                <div className="mb-6">
+                  <div className="flex flex-wrap gap-2">
+                    {group.tags.map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                      >
+                        {tag}
+                      </span>
+                    ))}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Social Links */}
-            <div className="text-center">
-              <div className="flex flex-wrap justify-center gap-4">
-                {group.whatsapp_group && hasUserJoined && (
-                  <a
-                    href={group.whatsapp_group}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center text-green-600 hover:text-green-700 transition-colors"
-                  >
-                    <MessageCircle className="w-5 h-5 mr-2" />
-                    WhatsApp Group
-                  </a>
-                )}
-                  {group.instagram && (
+              {/* Social Links */}
+              <div>
+                <div className="flex flex-wrap gap-4">
+                  {group.whatsapp_group && hasUserJoined && (
                     <a
-                    href={group.instagram}
+                      href={group.whatsapp_group}
                       target="_blank"
                       rel="noopener noreferrer"
-                    className="flex items-center text-pink-600 hover:text-pink-700 transition-colors"
+                      className="flex items-center text-green-600 hover:text-green-700 transition-colors"
                     >
-                    <Instagram className="w-5 h-5 mr-2" />
-                    Instagram
+                      <MessageCircle className="w-5 h-5 mr-2" />
+                      WhatsApp Group
+                    </a>
+                  )}
+                  {group.instagram && (
+                    <a
+                      href={group.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-pink-600 hover:text-pink-700 transition-colors"
+                    >
+                      <Instagram className="w-5 h-5 mr-2" />
+                      Instagram
                     </a>
                   )}
                   {group.website && (
@@ -509,75 +543,61 @@ export default function GroupDetailPage() {
                       href={group.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                    className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
-                  >
-                    <Globe className="w-5 h-5 mr-2" />
-                    Website
+                      className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
+                    >
+                      <Globe className="w-5 h-5 mr-2" />
+                      Website
                     </a>
                   )}
                 </div>
               </div>
             </div>
-          </div>
 
-        {/* Tab Headers - Motion.dev Style */}
-        <motion.div 
-          className="px-6 pt-6 flex justify-center"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex bg-gray-100 p-1 rounded-lg">
-            {['games', 'seasons', 'players'].map((tab) => (
-              <motion.button
-                key={tab}
-                onClick={() => setActiveTab(tab as 'games' | 'seasons' | 'players')}
-                className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md text-center transition-colors ${
-                  activeTab === tab
-                    ? 'text-black bg-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {activeTab === tab && (
-                  <motion.div
-                    className="absolute inset-0 bg-white rounded-md shadow-sm"
-                    layoutId="activeTab"
-                    transition={{
-                      type: "spring",
-                      stiffness: 500,
-                      damping: 30
-                    }}
-                    style={{ zIndex: -1 }}
-                  />
-                )}
-                <span className="relative z-10">
-                  {tab === 'games' ? 'Games' : tab === 'seasons' ? 'Seasons' : 'Players'}
-                </span>
-              </motion.button>
-            ))}
+            <div className="border-t border-gray-200"></div>
+
+            {/* Tab Headers - Motion.dev Style */}
+            <motion.div 
+              className="flex justify-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div className="flex bg-gray-100 p-1 rounded-lg">
+                {['games', 'seasons'].map((tab) => (
+                  <motion.button
+                    key={tab}
+                    onClick={() => setActiveTab(tab as 'games' | 'seasons')}
+                    className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md text-center transition-colors ${
+                      activeTab === tab
+                        ? 'text-black bg-white shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {activeTab === tab && (
+                      <motion.div
+                        className="absolute inset-0 bg-white rounded-md shadow-sm"
+                        layoutId="activeTab"
+                        transition={{
+                          type: "spring",
+                          stiffness: 500,
+                          damping: 30
+                        }}
+                        style={{ zIndex: -1 }}
+                      />
+                    )}
+                    <span className="relative z-10">
+                      {tab === 'games' ? 'Games' : 'Seasons'}
+                    </span>
+                  </motion.button>
+                ))}
               </div>
-        </motion.div>
+            </motion.div>
 
-        {/* Add Game/Season Button */}
-        {player && (
-          <div className="px-6 pb-4 flex justify-center">
-              <Button
-                onClick={() => setShowCreateGameModal(true)}
-              className="bg-green-600 hover:bg-green-700 text-white"
-              >
-              Add Game/Season
-              </Button>
-            </div>
-        )}
-
-        {/* Tabbed Content */}
-        <div className="bg-white">
-
-          {/* Tab Content */}
-          <div className="p-6">
-            <AnimatePresence mode="wait">
+            {/* Tabbed Content */}
+            <div className="mt-8">
+              <AnimatePresence mode="wait">
               {activeTab === 'games' && (
                 <motion.div
                   key="games"
@@ -709,70 +729,77 @@ export default function GroupDetailPage() {
                 </motion.div>
               )}
 
-              {activeTab === 'players' && (
-                <motion.div
-                  key="players"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="space-y-6"
-                >
-                  {players.length > 0 ? (
-                    <div className="flex justify-center pt-8">
-                      <div className="flex flex-wrap gap-3 justify-center max-w-4xl">
-                        {players.map((player) => (
-                          <div 
-                            key={player.id} 
-                            className="relative group"
-                          >
-                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
-                              {player.photo_url ? (
-                                <Image
-                                  src={player.photo_url}
-                                  alt={player.name}
-                                  width={48}
-                                  height={48}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <span className="text-lg font-semibold text-gray-600">
-                                  {player.name.charAt(0).toUpperCase()}
-                                </span>
-                              )}
-                            </div>
-                            {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                              {player.name}
-                              {/* Tooltip arrow */}
-                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <div className="mb-4">
-                      <Image 
-                        src="/waiting.png" 
-                        alt="Waiting" 
-                        width={64} 
-                        height={64} 
-                        className="w-16 h-16 mx-auto rounded-full object-cover"
-                      />
-                    </div>
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      No players yet
-                    </h3>
-                    <p className="text-gray-600 mb-6">
-                      Players will appear here once they attend games in this group.
-                    </p>
-                </div>
-                )}
-                </motion.div>
-            )}
             </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Right Column - Players & Actions */}
+          <div className="lg:col-span-1">
+            <div className="lg:sticky lg:top-8">
+              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                {/* Add Game/Season Button */}
+                {player && (
+                  <div className="mb-6">
+                    <Button
+                      onClick={() => setShowCreateGameModal(true)}
+                      className="w-full bg-black hover:bg-gray-800 text-white"
+                      size="lg"
+                    >
+                      Add Game/Season
+                    </Button>
+                  </div>
+                )}
+
+                {/* Group Players */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="font-semibold text-gray-900 mb-4">
+                    Group Players ({players.length})
+                  </h3>
+                  {players.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {players.map((player) => (
+                        <div 
+                          key={player.id} 
+                          className="relative group"
+                        >
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
+                            {player.photo_url ? (
+                              <Image
+                                src={player.photo_url}
+                                alt={player.name}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-semibold text-gray-600">
+                                {player.name?.charAt(0).toUpperCase() || '?'}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                            {player.name || 'Unknown Player'}
+                            {/* Tooltip arrow */}
+                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-gray-500 text-sm">
+                        {games.length === 0 && seasons.length === 0 
+                          ? "No games or seasons yet - players will appear here once games/seasons are created and people sign up"
+                          : "No players have signed up for games or seasons yet"
+                        }
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
