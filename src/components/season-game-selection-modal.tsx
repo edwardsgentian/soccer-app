@@ -113,8 +113,8 @@ export function SeasonGameSelectionModal({
 
       onSuccess()
       onClose()
-      // Redirect to success page
-      router.push('/success')
+      // Redirect to profile page to show their games
+      router.push('/profile')
     } catch (err) {
       console.error('Error saving attendance:', err)
       setError(err instanceof Error ? err.message : 'Failed to save attendance')

@@ -51,7 +51,7 @@ interface GameAttendee {
   players?: {
     name: string
     photo_url?: string
-  }[]
+  }
 }
 
 interface SeasonAttendee {
@@ -61,7 +61,7 @@ interface SeasonAttendee {
   players?: {
     name: string
     photo_url?: string
-  }[]
+  }
 }
 
 interface ProcessedAttendee {
@@ -172,7 +172,7 @@ export default function GameDetailPage() {
           payment_status,
           attendance_status,
           game_id,
-          players (
+          players!inner (
             name,
             photo_url
           )
@@ -220,13 +220,13 @@ export default function GameDetailPage() {
       console.log('Nested game_attendees:', gameWithNestedAttendees?.game_attendees)
 
       // Filter the direct results
-      const attendeesData = directAttendees?.filter((att: GameAttendee) => 
+      const attendeesData = directAttendees?.filter((att: any) => 
         att.payment_status === 'completed' &&
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
 
       // Also try filtering the nested results
-      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: GameAttendee) => 
+      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: any) => 
         att.payment_status === 'completed' &&
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
@@ -235,7 +235,7 @@ export default function GameDetailPage() {
       console.log('Nested filtered attendees:', nestedAttendeesData)
 
       // Use the exact same processing logic as the homepage
-      let individualAttendees = gameData?.game_attendees?.filter((att: GameAttendee) => 
+      let individualAttendees = gameData?.game_attendees?.filter((att: any) => 
         att.payment_status === 'completed' && 
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
@@ -243,7 +243,7 @@ export default function GameDetailPage() {
       // If the nested query didn't return individual attendees, try the direct query like the homepage does
       if (individualAttendees.length === 0 && directAttendees && directAttendees.length > 0) {
         console.log('Nested query returned no individual attendees, using direct query results')
-        individualAttendees = directAttendees.filter((att: GameAttendee) => 
+        individualAttendees = directAttendees.filter((att: any) => 
           att.payment_status === 'completed' && 
           (att.attendance_status === 'attending' || !att.attendance_status)
         )
@@ -277,7 +277,7 @@ export default function GameDetailPage() {
               id,
               created_at,
               player_id,
-              players (
+              players!inner (
                 name,
                 photo_url
               )
@@ -297,7 +297,7 @@ export default function GameDetailPage() {
             console.log('Season game attendance fetched:', seasonGameAttendance)
 
             // Combine season attendees with their attendance status for this game
-            const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: SeasonAttendee) => {
+            const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: any) => {
               const gameAttendance = seasonGameAttendance?.find((ga: { season_attendee_id: string; attendance_status: string }) => ga.season_attendee_id === attendee.id)
               return {
                 id: attendee.id,
@@ -305,7 +305,7 @@ export default function GameDetailPage() {
                 player_id: attendee.player_id,
                 payment_status: 'completed',
                 attendance_status: gameAttendance?.attendance_status || 'attending',
-                players: attendee.players?.[0] || { name: 'Unknown Player' }
+                players: attendee.players || { name: 'Unknown Player' }
               }
             })
 
@@ -556,147 +556,166 @@ export default function GameDetailPage() {
           Back
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg border border-gray-200 p-8">
+        {/* Main Content - Airbnb Style Layout */}
+        <div className="max-w-7xl mx-auto pb-32 lg:pb-0">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column - Game Information */}
+            <div className="lg:col-span-2 space-y-8">
               {/* Game Header */}
-              <div className="flex flex-col space-y-6 mb-8">
-                {/* Game Icon */}
-                <div className={`w-24 h-24 bg-gradient-to-br ${getRandomGradient()} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                    <Image 
-                      src="/game.png" 
-                      alt="Game" 
-                      width={64} 
-                      height={64} 
-                      className="w-16 h-16 rounded-full object-cover"
-                    />
-                  </div>
-                </div>
-
-                {/* Game Info */}
-                <div className="flex-1 text-left w-full">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center text-gray-600">
-                      <Calendar className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{formatDate(game.game_date)}</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-600">
-                      <Clock className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{formatTime(game.game_time)}</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-600">
-                      <MapPin className="w-5 h-5 mr-3" />
-                      <span className="font-medium">{game.location}</span>
-                    </div>
-                    
-                    <div className="flex items-center text-gray-600">
-                      <DollarSign className="w-5 h-5 mr-3" />
-                      <span className="font-medium">${game.price} per player</span>
-                    </div>
-                  </div>
-                </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
+                <p className="text-lg text-gray-600 mb-4">{game.groups.name}</p>
+                
+                {game.description && (
+                  <p className="text-gray-700 text-base leading-relaxed">{game.description}</p>
+                )}
               </div>
 
-              {/* Description */}
-              {game.description && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">About This Game</h3>
-                  <p className="text-gray-600">{game.description}</p>
-                </div>
-              )}
-
-              {/* Attendees */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Players Attending ({totalAttendees}/{game.total_tickets})
-                </h3>
+              {/* Game Details */}
+              <div className="border-t border-gray-200 pt-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6">Game overview</h2>
                 
-                {attendingPlayers.length === 0 ? (
-                  <p className="text-gray-500">No players are attending yet.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {attendingPlayers.map((attendee) => (
-                      <div key={attendee.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                        <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <span className="text-green-600 font-semibold text-sm">
-                            {attendee.players.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-gray-900 font-medium">{attendee.players.name}</span>
-                      </div>
-                    ))}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="flex items-start">
+                    <Calendar className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900 mb-1">Date</div>
+                      <div className="text-gray-600">{formatDate(game.game_date)}</div>
+                    </div>
                   </div>
-                )}
+                  
+                  <div className="flex items-start">
+                    <Clock className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900 mb-1">Time</div>
+                      <div className="text-gray-600">{formatTime(game.game_time)}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <MapPin className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900 mb-1">Location</div>
+                      <div className="text-gray-600">{game.location}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <DollarSign className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div>
+                      <div className="font-semibold text-gray-900 mb-1">Price</div>
+                      <div className="text-gray-600">${game.price} per player</div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg border border-gray-200 p-6 sticky top-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                {hasPaid ? 'Your Attendance' : 'Join This Game'}
-              </h3>
-              
-              <div className="space-y-4 mb-6">
-                {!hasPaid && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600">Price per player:</span>
-                    <span className="font-semibold text-lg">${game.price}</span>
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">Available spots:</span>
-                  <span className={`font-semibold ${isFullyBooked ? 'text-red-600' : 'text-green-600'}`}>
-                    {isFullyBooked ? 'Fully booked' : `${spotsLeft} left`}
-                  </span>
+            {/* Right Column - Booking Card */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-8 lg:sticky lg:top-8 fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto lg:left-auto lg:right-auto z-50 lg:z-auto">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm lg:shadow-sm shadow-2xl lg:shadow-sm">
+                  {/* Price - Only show if user hasn't paid */}
+                  {!hasPaid && (
+                    <div className="mb-6">
+                      <div className="flex items-baseline mb-2">
+                        <span className="text-3xl font-bold text-gray-900">${game.price}</span>
+                        <span className="text-gray-600 ml-2">per player</span>
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {spotsLeft} of {game.total_tickets} spots available
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Availability info for paid users */}
+                  {hasPaid && (
+                    <div className="mb-6">
+                      <div className="text-sm text-gray-600">
+                        {spotsLeft} of {game.total_tickets} spots available
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Join Button or Attendance Toggle */}
+                  {hasPaid ? (
+                    <div className="space-y-4 mb-6">
+                      <AttendanceToggle
+                        gameId={gameId}
+                        seasonId={game.season_id}
+                        playerId={player?.id || user?.id || ''}
+                        currentStatus={userAttendanceStatus || 'not_attending'}
+                        hasPaid={hasPaid}
+                        isGameFull={isFullyBooked}
+                        onStatusChange={handleAttendanceStatusChange}
+                      />
+                    </div>
+                  ) : (
+                    <Button 
+                      className={`w-full mb-6 ${
+                        isFullyBooked 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : ''
+                      }`}
+                      disabled={isFullyBooked}
+                      size="lg"
+                      onClick={() => setShowJoinModal(true)}
+                    >
+                      {isFullyBooked ? 'Fully Booked' : 'Join Game'}
+                    </Button>
+                  )}
+
+                  {/* WhatsApp Group - Only visible to users who have joined */}
+                  {game.groups.whatsapp_group && hasPaid && (
+                    <Button
+                      variant="outline"
+                      className="w-full mb-6"
+                      onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
+                    >
+                      Join WhatsApp Group
+                    </Button>
+                  )}
+
+                  {/* Game Attendees */}
+                  {attendingPlayers.length > 0 && (
+                    <div className="border-t border-gray-200 pt-6">
+                      <h3 className="font-semibold text-gray-900 mb-4">
+                        Players Attending ({totalAttendees})
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {attendingPlayers.map((attendee) => (
+                          <div 
+                            key={attendee.id} 
+                            className="relative group"
+                          >
+                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
+                              {attendee.players.photo_url ? (
+                                <Image
+                                  src={attendee.players.photo_url}
+                                  alt={attendee.players.name}
+                                  width={40}
+                                  height={40}
+                                  className="w-10 h-10 rounded-full object-cover"
+                                />
+                              ) : (
+                                <span className="text-sm font-semibold text-gray-600">
+                                  {attendee.players.name.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                              {attendee.players.name}
+                              {/* Tooltip arrow */}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-
-              {hasPaid ? (
-                <div className="space-y-4">
-                  <AttendanceToggle
-                    gameId={gameId}
-                    seasonId={game.season_id}
-                    playerId={player?.id || user?.id || ''}
-                    currentStatus={userAttendanceStatus || 'not_attending'}
-                    hasPaid={hasPaid}
-                    isGameFull={isFullyBooked}
-                    onStatusChange={handleAttendanceStatusChange}
-                  />
-                </div>
-              ) : (
-                <Button 
-                  className={`w-full ${
-                    isFullyBooked 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : ''
-                  }`}
-                  disabled={isFullyBooked}
-                  size="lg"
-                  onClick={() => setShowJoinModal(true)}
-                >
-                  {isFullyBooked ? 'Fully Booked' : 'Join Game - $' + game.price}
-                </Button>
-              )}
-
-              {/* WhatsApp Group */}
-              {game.groups.whatsapp_group && (
-                <Button
-                  variant="outline"
-                  className="w-full mt-4"
-                  onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
-                >
-                  Join WhatsApp Group
-                </Button>
-              )}
             </div>
           </div>
         </div>

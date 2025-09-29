@@ -20,15 +20,6 @@ interface Player {
   photo_url?: string
 }
 
-interface PlayerData {
-  player_id: string
-  players: {
-    id: string
-    name: string
-    email: string
-    photo_url?: string
-  }[]
-}
 
 interface Group {
   id: string
@@ -108,6 +99,7 @@ export default function GroupDetailPage() {
   const [showCreateGameModal, setShowCreateGameModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'games' | 'seasons' | 'players'>('games')
   const [players, setPlayers] = useState<Player[]>([])
+  const [hasUserJoined, setHasUserJoined] = useState(false)
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -152,7 +144,6 @@ export default function GroupDetailPage() {
           )
         `)
         .eq('group_id', groupId)
-        .gte('game_date', new Date().toISOString().split('T')[0])
         .order('game_date', { ascending: true })
 
       if (gamesError) {
@@ -239,7 +230,6 @@ export default function GroupDetailPage() {
           )
         `)
         .eq('group_id', groupId)
-        .gte('first_game_date', new Date().toISOString().split('T')[0])
         .order('first_game_date', { ascending: true })
 
       if (seasonsError) {
@@ -248,8 +238,34 @@ export default function GroupDetailPage() {
         setSeasons(seasonsData || [])
       }
 
-      // Fetch players (people who have attended games in this group)
-      const { data: playersData, error: playersError } = await supabase
+      // Check if user has joined any games or seasons in this group
+      if (player) {
+        const hasJoinedGame = (gamesData || []).some((game: any) => 
+          game.game_attendees?.some((attendee: any) => 
+            attendee.player_id === player.id && attendee.payment_status === 'completed'
+          )
+        )
+        
+        const hasJoinedSeason = (seasonsData || []).some((season: any) => 
+          season.season_attendees?.some((attendee: any) => 
+            attendee.player_id === player.id && attendee.payment_status === 'completed'
+          )
+        )
+        
+        setHasUserJoined(hasJoinedGame || hasJoinedSeason)
+      }
+
+      // Fetch players from both individual game attendees and season attendees
+      const allPlayers = new Map<string, Player>()
+
+      console.log('=== DEBUGGING PLAYERS FETCH ===')
+      console.log('Games data:', gamesData)
+      console.log('Seasons data:', seasonsData)
+      console.log('Game IDs:', gamesData?.map(game => game.id))
+      console.log('Season IDs:', seasonsData?.map(season => season.id))
+
+      // Fetch individual game attendees
+      const { data: gameAttendeesData, error: gameAttendeesError } = await supabase
         .from('game_attendees')
         .select(`
           player_id,
@@ -263,37 +279,80 @@ export default function GroupDetailPage() {
         .eq('payment_status', 'completed')
         .in('game_id', gamesData?.map(game => game.id) || [])
 
-      if (playersError) {
-        console.error('Error fetching players:', playersError)
-      } else {
-        console.log('Players data received:', playersData)
-        // Remove duplicates and format players data
-        const uniquePlayers = playersData?.reduce((acc: Player[], playerData: PlayerData) => {
-          // Check if players array exists and has at least one element
-          if (!playerData.players || !Array.isArray(playerData.players) || playerData.players.length === 0) {
-            console.warn('Invalid player data structure:', playerData)
-            return acc
-          }
+      console.log('Game attendees query result:', gameAttendeesData)
+      console.log('Game attendees error:', gameAttendeesError)
+
+      if (!gameAttendeesError && gameAttendeesData) {
+        gameAttendeesData.forEach((attendee: any) => {
+          console.log('Processing game attendee:', attendee)
+          console.log('Attendee players field:', attendee.players)
           
-          const player = playerData.players[0] // Get the first (and only) player from the array
-          if (!player || !player.id) {
-            console.warn('Invalid player object:', player)
-            return acc
+          if (attendee.players && attendee.players.id) {
+            const player = attendee.players
+            console.log('Player object:', player)
+            if (player && player.id) {
+              console.log('Adding game attendee player:', player)
+              allPlayers.set(player.id, {
+                id: player.id,
+                name: player.name,
+                email: '', // Hide email
+                photo_url: player.photo_url
+              })
+            } else {
+              console.log('Player object missing id:', player)
+            }
+          } else {
+            console.log('No valid players found in attendee')
           }
-          
-          const existingPlayer = acc.find(p => p.id === player.id)
-          if (!existingPlayer) {
-            acc.push({
-              id: player.id,
-              name: player.name,
-              email: player.email,
-              photo_url: player.photo_url
-            })
-          }
-          return acc
-        }, []) || []
-        setPlayers(uniquePlayers)
+        })
       }
+
+      // Fetch season attendees
+      const { data: seasonAttendeesData, error: seasonAttendeesError } = await supabase
+        .from('season_attendees')
+        .select(`
+          player_id,
+          players!inner (
+            id,
+            name,
+            email,
+            photo_url
+          )
+        `)
+        .eq('payment_status', 'completed')
+        .in('season_id', seasonsData?.map(season => season.id) || [])
+
+      console.log('Season attendees query result:', seasonAttendeesData)
+      console.log('Season attendees error:', seasonAttendeesError)
+
+      if (!seasonAttendeesError && seasonAttendeesData) {
+        seasonAttendeesData.forEach((attendee: any) => {
+          console.log('Processing season attendee:', attendee)
+          console.log('Season attendee players field:', attendee.players)
+          
+          if (attendee.players && attendee.players.id) {
+            const player = attendee.players
+            console.log('Season player object:', player)
+            if (player && player.id) {
+              console.log('Adding season attendee player:', player)
+              allPlayers.set(player.id, {
+                id: player.id,
+                name: player.name,
+                email: '', // Hide email
+                photo_url: player.photo_url
+              })
+            } else {
+              console.log('Season player object missing id:', player)
+            }
+          } else {
+            console.log('No valid players found in season attendee')
+          }
+        })
+      }
+
+      console.log('All players collected:', Array.from(allPlayers.values()))
+      console.log('Total players count:', allPlayers.size)
+      setPlayers(Array.from(allPlayers.values()))
     } catch (err) {
       console.error('Error fetching group details:', err)
       setError('Failed to load group details')
@@ -423,7 +482,7 @@ export default function GroupDetailPage() {
                 {/* Social Links */}
             <div className="text-center">
               <div className="flex flex-wrap justify-center gap-4">
-                {group.whatsapp_group && (
+                {group.whatsapp_group && hasUserJoined && (
                   <a
                     href={group.whatsapp_group}
                     target="_blank"
@@ -514,7 +573,7 @@ export default function GroupDetailPage() {
         )}
 
         {/* Tabbed Content */}
-        <div className="bg-white overflow-hidden">
+        <div className="bg-white">
 
           {/* Tab Content */}
           <div className="p-6">
@@ -660,11 +719,14 @@ export default function GroupDetailPage() {
                   className="space-y-6"
                 >
                   {players.length > 0 ? (
-                    <div className="flex justify-center">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl">
+                    <div className="flex justify-center pt-8">
+                      <div className="flex flex-wrap gap-3 justify-center max-w-4xl">
                         {players.map((player) => (
-                          <div key={player.id} className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                          <div 
+                            key={player.id} 
+                            className="relative group"
+                          >
+                            <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
                               {player.photo_url ? (
                                 <Image
                                   src={player.photo_url}
@@ -679,13 +741,11 @@ export default function GroupDetailPage() {
                                 </span>
                               )}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 truncate">
-                                {player.name}
-                              </p>
-                              <p className="text-sm text-gray-500 truncate">
-                                {player.email}
-                              </p>
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                              {player.name}
+                              {/* Tooltip arrow */}
+                              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
                             </div>
                           </div>
                         ))}
@@ -694,7 +754,13 @@ export default function GroupDetailPage() {
                 ) : (
                   <div className="text-center py-12">
                     <div className="mb-4">
-                      <Users className="w-16 h-16 text-gray-400 mx-auto" />
+                      <Image 
+                        src="/waiting.png" 
+                        alt="Waiting" 
+                        width={64} 
+                        height={64} 
+                        className="w-16 h-16 mx-auto rounded-full object-cover"
+                      />
                     </div>
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       No players yet

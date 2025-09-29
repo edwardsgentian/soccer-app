@@ -236,14 +236,6 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
           </p>
         </div>
 
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-500">
-            Or{' '}
-            <button className="text-green-600 hover:text-green-700 font-medium">
-              continue as guest
-            </button>
-          </p>
-        </div>
       </div>
     </div>
   )
