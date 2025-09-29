@@ -541,33 +541,37 @@ export default function SeasonDetailPage() {
                     </div>
                   </div>
 
-                  {/* Join Button */}
-                  {!isUserAttending && seasonSpotsAvailable > 0 && (
-                    <Button 
-                      onClick={() => setShowJoinModal(true)}
-                      className="w-full mb-6"
-                      size="lg"
-                    >
-                      Join Season - ${season.season_price}
-                    </Button>
-                  )}
+                  {/* Join Button - Desktop Only */}
+                  <div className="hidden lg:block">
+                    {!isUserAttending && seasonSpotsAvailable > 0 && (
+                      <Button 
+                        onClick={() => setShowJoinModal(true)}
+                        className="w-full mb-6"
+                        size="lg"
+                      >
+                        Join Season - ${season.season_price}
+                      </Button>
+                    )}
+                  </div>
 
-                  {/* Attending Status */}
-                  {isUserAttending && (
-                    <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-6">
-                      <div className="flex items-center">
-                        <CalendarCheck className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="text-green-800 font-medium">You&apos;re attending this season</span>
+                  {/* Attending Status - Desktop Only */}
+                  <div className="hidden lg:block">
+                    {isUserAttending && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-6">
+                        <div className="flex items-center">
+                          <CalendarCheck className="w-5 h-5 text-green-600 mr-2" />
+                          <span className="text-green-800 font-medium">You&apos;re attending this season</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Season Full */}
-                  {!isUserAttending && seasonSpotsAvailable <= 0 && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6">
-                      <span className="text-gray-600 font-medium">Season is full</span>
-                    </div>
-                  )}
+                    {/* Season Full */}
+                    {!isUserAttending && seasonSpotsAvailable <= 0 && (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 mb-6">
+                        <span className="text-gray-600 font-medium">Season is full</span>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Season Members */}
                   {deduplicatedAttendees.length > 0 && (
@@ -611,6 +615,34 @@ export default function SeasonDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Join Button - Only visible on mobile */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl">
+        <div className="p-4">
+          {!isUserAttending && seasonSpotsAvailable > 0 ? (
+            <Button 
+              onClick={() => setShowJoinModal(true)}
+              className="w-full"
+              size="lg"
+            >
+              Join Season - ${season.season_price}
+            </Button>
+          ) : isUserAttending ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+              <div className="flex items-center justify-center">
+                <CalendarCheck className="w-5 h-5 text-green-600 mr-2" />
+                <span className="text-green-800 font-medium">You&apos;re attending this season</span>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+              <div className="text-center text-gray-600">
+                Season is full
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

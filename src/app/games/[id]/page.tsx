@@ -320,18 +320,32 @@ export default function GameDetailPage() {
       
       // Normalize the attendee data structure for display
       const normalizedAttendees = uniqueAttendees.map(attendee => {
-        // All attendees now have the same structure
+        // Handle different player data structures
+        let playerData = { name: 'Unknown Player' }
+        
+        if (attendee.players) {
+          // If players is an array (from nested query), take the first one
+          if (Array.isArray(attendee.players) && attendee.players.length > 0) {
+            playerData = attendee.players[0]
+          }
+          // If players is an object (from direct query with !inner join)
+          else if (typeof attendee.players === 'object' && attendee.players.name) {
+            playerData = attendee.players
+          }
+        }
+        
         return {
           id: attendee.id,
           created_at: attendee.created_at || new Date().toISOString(),
           player_id: attendee.player_id,
           attendance_status: attendee.attendance_status,
           payment_status: attendee.payment_status,
-          players: attendee.players || { name: 'Unknown Player' }
+          players: playerData
         }
       })
 
       console.log('All attendees:', uniqueAttendees)
+      console.log('Sample attendee players structure:', uniqueAttendees[0]?.players)
       console.log('Normalized attendees:', normalizedAttendees)
       setAttendees(normalizedAttendees as Attendee[])
 
@@ -573,12 +587,25 @@ export default function GameDetailPage() {
                   </div>
                 </div>
               </div>
+
+              {/* WhatsApp Group - Only visible to users who have joined - Mobile Only */}
+              {game.groups.whatsapp_group && hasPaid && (
+                <div className="lg:hidden border-t border-gray-200 pt-8">
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
+                  >
+                    Join WhatsApp Group
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Right Column - Booking Card */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8 lg:sticky lg:top-8 fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto lg:left-auto lg:right-auto z-50 lg:z-auto">
-                <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-6 shadow-2xl lg:shadow-sm">
+              <div className="lg:sticky lg:top-8">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-6 shadow-sm">
                   {/* Price - Only show if user hasn't paid */}
                   {!hasPaid && (
                     <div className="mb-6">
@@ -601,44 +628,46 @@ export default function GameDetailPage() {
                     </div>
                   )}
 
-                  {/* Join Button or Attendance Toggle */}
-                  {hasPaid ? (
-                    <div className="space-y-4 mb-6">
-                      <AttendanceToggle
-                        gameId={gameId}
-                        seasonId={game.season_id}
-                        playerId={player?.id || user?.id || ''}
-                        currentStatus={userAttendanceStatus || 'not_attending'}
-                        hasPaid={hasPaid}
-                        isGameFull={isFullyBooked}
-                        onStatusChange={handleAttendanceStatusChange}
-                      />
-                    </div>
-                  ) : (
-                    <Button 
-                      className={`w-full mb-6 ${
-                        isFullyBooked 
-                          ? 'bg-gray-400 cursor-not-allowed' 
-                          : ''
-                      }`}
-                      disabled={isFullyBooked}
-                      size="lg"
-                      onClick={() => setShowJoinModal(true)}
-                    >
-                      {isFullyBooked ? 'Fully Booked' : 'Join Game'}
-                    </Button>
-                  )}
+                  {/* Join Button or Attendance Toggle - Desktop Only */}
+                  <div className="hidden lg:block">
+                    {hasPaid ? (
+                      <div className="space-y-4 mb-6">
+                        <AttendanceToggle
+                          gameId={gameId}
+                          seasonId={game.season_id}
+                          playerId={player?.id || user?.id || ''}
+                          currentStatus={userAttendanceStatus || 'not_attending'}
+                          hasPaid={hasPaid}
+                          isGameFull={isFullyBooked}
+                          onStatusChange={handleAttendanceStatusChange}
+                        />
+                      </div>
+                    ) : (
+                      <Button 
+                        className={`w-full mb-6 ${
+                          isFullyBooked 
+                            ? 'bg-gray-400 cursor-not-allowed' 
+                            : ''
+                        }`}
+                        disabled={isFullyBooked}
+                        size="lg"
+                        onClick={() => setShowJoinModal(true)}
+                      >
+                        {isFullyBooked ? 'Fully Booked' : 'Join Game'}
+                      </Button>
+                    )}
 
-                  {/* WhatsApp Group - Only visible to users who have joined */}
-                  {game.groups.whatsapp_group && hasPaid && (
-                    <Button
-                      variant="outline"
-                      className="w-full mb-6"
-                      onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
-                    >
-                      Join WhatsApp Group
-                    </Button>
-                  )}
+                    {/* WhatsApp Group - Only visible to users who have joined */}
+                    {game.groups.whatsapp_group && hasPaid && (
+                      <Button
+                        variant="outline"
+                        className="w-full mb-6"
+                        onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
+                      >
+                        Join WhatsApp Group
+                      </Button>
+                    )}
+                  </div>
 
                   {/* Game Attendees */}
                   {attendingPlayers.length > 0 && (
@@ -682,6 +711,36 @@ export default function GameDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Mobile Sticky Join/Attendance - Only visible on mobile */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl">
+        <div className="p-4">
+          {hasPaid ? (
+            <AttendanceToggle
+              gameId={gameId}
+              seasonId={game.season_id}
+              playerId={player?.id || user?.id || ''}
+              currentStatus={userAttendanceStatus || 'not_attending'}
+              hasPaid={hasPaid}
+              isGameFull={isFullyBooked}
+              onStatusChange={handleAttendanceStatusChange}
+            />
+          ) : (
+            <Button 
+              className={`w-full ${
+                isFullyBooked 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : ''
+              }`}
+              disabled={isFullyBooked}
+              size="lg"
+              onClick={() => setShowJoinModal(true)}
+            >
+              {isFullyBooked ? 'Fully Booked' : 'Join Game'}
+            </Button>
+          )}
         </div>
       </div>
 
