@@ -20,6 +20,26 @@ interface Player {
   photo_url?: string
 }
 
+interface GameAttendee {
+  player_id: string
+  players: {
+    id: string
+    name: string
+    email: string
+    photo_url?: string
+  }[]
+}
+
+interface SeasonAttendee {
+  player_id: string
+  players: {
+    id: string
+    name: string
+    email: string
+    photo_url?: string
+  }[]
+}
+
 
 interface Group {
   id: string
@@ -295,12 +315,12 @@ export default function GroupDetailPage() {
       console.log('Game attendees error:', gameAttendeesError)
 
       if (!gameAttendeesError && gameAttendeesData) {
-        gameAttendeesData.forEach((attendee: any) => {
+        gameAttendeesData.forEach((attendee: GameAttendee) => {
           console.log('Processing game attendee:', attendee)
           console.log('Attendee players field:', attendee.players)
           
-          if (attendee.players && attendee.players.id) {
-            const player = attendee.players
+          if (attendee.players && attendee.players.length > 0 && attendee.players[0].id) {
+            const player = attendee.players[0]
             console.log('Player object:', player)
             if (player && player.id) {
               console.log('Adding game attendee player:', player)
@@ -348,12 +368,12 @@ export default function GroupDetailPage() {
       console.log('Season attendees error:', seasonAttendeesError)
 
       if (!seasonAttendeesError && seasonAttendeesData) {
-        seasonAttendeesData.forEach((attendee: any) => {
+        seasonAttendeesData.forEach((attendee: SeasonAttendee) => {
           console.log('Processing season attendee:', attendee)
           console.log('Season attendee players field:', attendee.players)
           
-          if (attendee.players && attendee.players.id) {
-            const player = attendee.players
+          if (attendee.players && attendee.players.length > 0 && attendee.players[0].id) {
+            const player = attendee.players[0]
             console.log('Season player object:', player)
             if (player && player.id) {
               console.log('Adding season attendee player:', player)
