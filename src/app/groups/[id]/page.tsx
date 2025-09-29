@@ -20,25 +20,6 @@ interface Player {
   photo_url?: string
 }
 
-interface GameAttendee {
-  player_id: string
-  players: {
-    id: string
-    name: string
-    email: string
-    photo_url?: string
-  }
-}
-
-interface SeasonAttendee {
-  player_id: string
-  players: {
-    id: string
-    name: string
-    email: string
-    photo_url?: string
-  }
-}
 
 
 interface Group {
@@ -315,7 +296,7 @@ export default function GroupDetailPage() {
       console.log('Game attendees error:', gameAttendeesError)
 
       if (!gameAttendeesError && gameAttendeesData) {
-        gameAttendeesData.forEach((attendee: any) => {
+        (gameAttendeesData as any[]).forEach((attendee: { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }) => {
           console.log('Processing game attendee:', attendee)
           console.log('Attendee players field:', attendee.players)
           
@@ -368,7 +349,7 @@ export default function GroupDetailPage() {
       console.log('Season attendees error:', seasonAttendeesError)
 
       if (!seasonAttendeesError && seasonAttendeesData) {
-        seasonAttendeesData.forEach((attendee: any) => {
+        (seasonAttendeesData as any[]).forEach((attendee: { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }) => {
           console.log('Processing season attendee:', attendee)
           console.log('Season attendee players field:', attendee.players)
           
