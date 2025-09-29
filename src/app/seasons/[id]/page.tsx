@@ -557,7 +557,7 @@ export default function SeasonDetailPage() {
                     <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 mb-6">
                       <div className="flex items-center">
                         <CalendarCheck className="w-5 h-5 text-green-600 mr-2" />
-                        <span className="text-green-800 font-medium">You're attending this season</span>
+                        <span className="text-green-800 font-medium">You&apos;re attending this season</span>
                       </div>
                     </div>
                   )}
