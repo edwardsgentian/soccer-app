@@ -578,7 +578,7 @@ export default function GameDetailPage() {
             {/* Right Column - Booking Card */}
             <div className="lg:col-span-1">
               <div className="sticky top-8 lg:sticky lg:top-8 fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto lg:left-auto lg:right-auto z-50 lg:z-auto">
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm lg:shadow-sm shadow-2xl lg:shadow-sm">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-6 shadow-2xl lg:shadow-sm">
                   {/* Price - Only show if user hasn't paid */}
                   {!hasPaid && (
                     <div className="mb-6">

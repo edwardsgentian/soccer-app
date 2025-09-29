@@ -358,7 +358,7 @@ export default function SeasonDetailPage() {
         </div>
 
         {/* Main Content - Airbnb Style Layout */}
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto pb-32 lg:pb-0">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left Column - Season Information & Games */}
             <div className="lg:col-span-2 space-y-8">
@@ -528,8 +528,8 @@ export default function SeasonDetailPage() {
 
             {/* Right Column - Booking Card */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8">
-                <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <div className="sticky top-8 lg:sticky lg:top-8 fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto lg:left-auto lg:right-auto z-50 lg:z-auto">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-6 shadow-2xl lg:shadow-sm">
                   {/* Price */}
                   <div className="mb-6">
                     <div className="flex items-baseline mb-2">
