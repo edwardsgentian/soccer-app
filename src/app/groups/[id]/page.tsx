@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { ArrowLeft, Instagram, Globe, MessageCircle, Component, Users } from 'lucide-react'
+import { ArrowLeft, Instagram, Globe, MessageCircle, Component } from 'lucide-react'
 import { GameManagementModal } from '@/components/games/game-management-modal'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
@@ -240,14 +240,14 @@ export default function GroupDetailPage() {
 
       // Check if user has joined any games or seasons in this group
       if (player) {
-        const hasJoinedGame = (gamesData || []).some((game: any) => 
-          game.game_attendees?.some((attendee: any) => 
+        const hasJoinedGame = (gamesData || []).some((game: { game_attendees?: { player_id: string; payment_status: string }[] }) => 
+          game.game_attendees?.some((attendee: { player_id: string; payment_status: string }) => 
             attendee.player_id === player.id && attendee.payment_status === 'completed'
           )
         )
         
-        const hasJoinedSeason = (seasonsData || []).some((season: any) => 
-          season.season_attendees?.some((attendee: any) => 
+        const hasJoinedSeason = (seasonsData || []).some((season: { season_attendees?: { player_id: string; payment_status: string }[] }) => 
+          season.season_attendees?.some((attendee: { player_id: string; payment_status: string }) => 
             attendee.player_id === player.id && attendee.payment_status === 'completed'
           )
         )
@@ -283,12 +283,12 @@ export default function GroupDetailPage() {
       console.log('Game attendees error:', gameAttendeesError)
 
       if (!gameAttendeesError && gameAttendeesData) {
-        gameAttendeesData.forEach((attendee: any) => {
+        gameAttendeesData.forEach((attendee: { players: { id: string; name: string; email: string; photo_url?: string }[] }) => {
           console.log('Processing game attendee:', attendee)
           console.log('Attendee players field:', attendee.players)
           
-          if (attendee.players && attendee.players.id) {
-            const player = attendee.players
+          if (attendee.players && attendee.players.length > 0 && attendee.players[0].id) {
+            const player = attendee.players[0]
             console.log('Player object:', player)
             if (player && player.id) {
               console.log('Adding game attendee player:', player)
@@ -326,12 +326,12 @@ export default function GroupDetailPage() {
       console.log('Season attendees error:', seasonAttendeesError)
 
       if (!seasonAttendeesError && seasonAttendeesData) {
-        seasonAttendeesData.forEach((attendee: any) => {
+        seasonAttendeesData.forEach((attendee: { players: { id: string; name: string; email: string; photo_url?: string }[] }) => {
           console.log('Processing season attendee:', attendee)
           console.log('Season attendee players field:', attendee.players)
           
-          if (attendee.players && attendee.players.id) {
-            const player = attendee.players
+          if (attendee.players && attendee.players.length > 0 && attendee.players[0].id) {
+            const player = attendee.players[0]
             console.log('Season player object:', player)
             if (player && player.id) {
               console.log('Adding season attendee player:', player)
@@ -359,7 +359,7 @@ export default function GroupDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [groupId])
+  }, [groupId, player])
 
   useEffect(() => {
     if (groupId) {

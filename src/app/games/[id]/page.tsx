@@ -42,27 +42,7 @@ interface Attendee {
   }
 }
 
-interface GameAttendee {
-  id: string
-  player_id: string
-  payment_status: string
-  attendance_status?: 'attending' | 'not_attending'
-  game_id?: string
-  players?: {
-    name: string
-    photo_url?: string
-  }
-}
-
-interface SeasonAttendee {
-  id: string
-  created_at: string
-  player_id: string
-  players?: {
-    name: string
-    photo_url?: string
-  }
-}
+// Removed unused interfaces
 
 interface ProcessedAttendee {
   id: string
@@ -219,14 +199,14 @@ export default function GameDetailPage() {
       console.log('Nested query error:', nestedError)
       console.log('Nested game_attendees:', gameWithNestedAttendees?.game_attendees)
 
-      // Filter the direct results
-      const attendeesData = directAttendees?.filter((att: any) => 
-        att.payment_status === 'completed' &&
-        (att.attendance_status === 'attending' || !att.attendance_status)
-      ) || []
+        // Filter the direct results
+        const attendeesData = directAttendees?.filter((att: { payment_status: string; attendance_status?: string }) => 
+          att.payment_status === 'completed' &&
+          (att.attendance_status === 'attending' || !att.attendance_status)
+        ) || []
 
       // Also try filtering the nested results
-      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: any) => 
+      const nestedAttendeesData = gameWithNestedAttendees?.game_attendees?.filter((att: { payment_status: string; attendance_status?: string }) => 
         att.payment_status === 'completed' &&
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
@@ -235,16 +215,16 @@ export default function GameDetailPage() {
       console.log('Nested filtered attendees:', nestedAttendeesData)
 
       // Use the exact same processing logic as the homepage
-      let individualAttendees = gameData?.game_attendees?.filter((att: any) => 
-        att.payment_status === 'completed' && 
+      let individualAttendees = gameData?.game_attendees?.filter((att: { payment_status: string; attendance_status?: string }) => 
+        att.payment_status === 'completed' &&
         (att.attendance_status === 'attending' || !att.attendance_status)
       ) || []
       
       // If the nested query didn't return individual attendees, try the direct query like the homepage does
       if (individualAttendees.length === 0 && directAttendees && directAttendees.length > 0) {
         console.log('Nested query returned no individual attendees, using direct query results')
-        individualAttendees = directAttendees.filter((att: any) => 
-          att.payment_status === 'completed' && 
+        individualAttendees = directAttendees.filter((att: { payment_status: string; attendance_status?: string }) => 
+          att.payment_status === 'completed' &&
           (att.attendance_status === 'attending' || !att.attendance_status)
         )
       }
@@ -296,18 +276,18 @@ export default function GameDetailPage() {
 
             console.log('Season game attendance fetched:', seasonGameAttendance)
 
-            // Combine season attendees with their attendance status for this game
-            const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: any) => {
-              const gameAttendance = seasonGameAttendance?.find((ga: { season_attendee_id: string; attendance_status: string }) => ga.season_attendee_id === attendee.id)
-              return {
-                id: attendee.id,
-                created_at: attendee.created_at,
-                player_id: attendee.player_id,
-                payment_status: 'completed',
-                attendance_status: gameAttendance?.attendance_status || 'attending',
-                players: attendee.players || { name: 'Unknown Player' }
-              }
-            })
+        // Combine season attendees with their attendance status for this game
+        const seasonAttendeesWithStatus = seasonAttendeesRaw.map((attendee: { id: string; created_at: string; player_id: string; players: { name: string; photo_url?: string }[] }) => {
+          const gameAttendance = seasonGameAttendance?.find((ga: { season_attendee_id: string; attendance_status: string }) => ga.season_attendee_id === attendee.id)
+          return {
+            id: attendee.id,
+            created_at: attendee.created_at,
+            player_id: attendee.player_id,
+            payment_status: 'completed',
+            attendance_status: gameAttendance?.attendance_status || 'attending',
+            players: attendee.players?.[0] || { name: 'Unknown Player' }
+          }
+        })
 
             seasonAttendeesData = seasonAttendeesWithStatus
             console.log('Season attendees with status:', seasonAttendeesData)
@@ -472,23 +452,7 @@ export default function GameDetailPage() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
-  const getRandomGradient = () => {
-    const gradients = [
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100'
-    ]
-    
-    // Use gameId to consistently select the same gradient
-    const hash = gameId.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0)
-      return a & a
-    }, 0)
-    
-    return gradients[Math.abs(hash) % gradients.length]
-  }
+// Removed unused getRandomGradient function
 
   if (loading) {
     return (
