@@ -255,7 +255,7 @@ export default function GamesPage() {
       <div className="container mx-auto px-4 py-16">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">
             Upcoming Games
           </h1>
           <p className="text-gray-600">

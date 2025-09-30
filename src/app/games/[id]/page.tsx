@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
@@ -22,6 +23,7 @@ interface Game {
   total_tickets: number
   season_id?: string
   groups: {
+    id: string
     name: string
     whatsapp_group?: string
   }
@@ -100,6 +102,7 @@ export default function GameDetailPage() {
         .select(`
           *,
           groups (
+            id,
             name,
             whatsapp_group
           ),
@@ -458,6 +461,14 @@ export default function GameDetailPage() {
     })
   }
 
+  // Check if the game has ended
+  const isGameEnded = () => {
+    if (!game) return false
+    const gameDateTime = new Date(`${game.game_date}T${game.game_time}`)
+    const now = new Date()
+    return gameDateTime < now
+  }
+
   const formatTime = (timeString: string) => {
     const [hours, minutes] = timeString.split(':')
     const hour = parseInt(hours)
@@ -541,8 +552,10 @@ export default function GameDetailPage() {
             <div className="lg:col-span-2 space-y-8">
               {/* Game Header */}
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{game.name}</h1>
-                <p className="text-lg text-gray-600 mb-4">{game.groups.name}</p>
+                <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{game.name}</h1>
+                <Link href={`/groups/${game.groups.id}`} className="text-lg text-gray-600 mb-4 hover:text-blue-600 transition-colors">
+                  {game.groups.name}
+                </Link>
                 
                 {game.description && (
                   <p className="text-gray-700 text-base leading-relaxed">{game.description}</p>
@@ -630,7 +643,11 @@ export default function GameDetailPage() {
 
                   {/* Join Button or Attendance Toggle - Desktop Only */}
                   <div className="hidden lg:block">
-                    {hasPaid ? (
+                    {isGameEnded() ? (
+                      <div className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg text-center font-medium mb-6">
+                        Closed
+                      </div>
+                    ) : hasPaid ? (
                       <div className="space-y-4 mb-6">
                         <AttendanceToggle
                           gameId={gameId}
@@ -717,7 +734,11 @@ export default function GameDetailPage() {
       {/* Mobile Sticky Join/Attendance - Only visible on mobile */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl">
         <div className="p-4">
-          {hasPaid ? (
+          {isGameEnded() ? (
+            <div className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg text-center font-medium">
+              Closed
+            </div>
+          ) : hasPaid ? (
             <AttendanceToggle
               gameId={gameId}
               seasonId={game.season_id}

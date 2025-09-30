@@ -8,6 +8,7 @@ import { SeasonCard } from "@/components/season-card";
 import { Header } from "@/components/header";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
+import { GroupManagementModal } from '@/components/groups/group-management-modal'
 
 interface Game {
   id: string
@@ -87,6 +88,7 @@ export default function Home() {
   const [games, setGames] = useState<Game[]>([])
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
     console.log('Homepage useEffect called')
@@ -269,21 +271,116 @@ export default function Home() {
       </div>
       
       <div className="container mx-auto px-4 pt-8 py-16">
-        {/* Hero Section - Mobile Optimized */}
-        <div className="text-center mb-8">
-          <h1 className="homepage-h1 font-light text-gray-900 mb-8 leading-tight">
-            Community soccer<br />
-            <span className="bg-gradient-to-r from-black to-black bg-clip-text text-transparent" style={{WebkitBackgroundClip: 'text', backgroundClip: 'text'}}>
-              games start here
-            </span>
-          </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Create a game or find social, soccer groups near you
-          </p>
+        {/* Hero Section */}
+        <div className="relative mb-16">
+          {/* Desktop Layout */}
+          <div className="hidden lg:block">
+            <div className="relative max-w-6xl mx-auto">
+              {/* Central Circle with Video */}
+              <div className="relative w-96 h-96 mx-auto mb-8">
+                <div className="w-full h-full rounded-full overflow-hidden">
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  >
+                    <source src="/clouds_sports.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </div>
+
+              {/* Positioned Text Elements */}
+              {/* Community - Top Left, locked with logo */}
+              <div className="absolute" style={{ top: '50px', left: '0px' }}>
+                <h1 className="hero-h1 text-6xl font-serif text-gray-900 leading-none">
+                  Community
+                </h1>
+              </div>
+
+              {/* Sports - Bottom Left, locked with circle */}
+              <div className="absolute" style={{ top: '130px', left: '210px' }}>
+                <h1 className="hero-h1 text-6xl font-serif text-gray-900 leading-none">
+                  sports
+                </h1>
+              </div>
+
+              {/* Games - Top Right, locked with circle */}
+              <div className="absolute" style={{ top: '130px', right: '210px' }}>
+                <h1 className="hero-h1 text-6xl font-serif text-gray-900 leading-none">
+                  games
+                </h1>
+              </div>
+
+              {/* Starts Here - Bottom Right, locked with circle */}
+              <div className="absolute" style={{ top: '210px', right: '50px' }}>
+                <h1 className="hero-h1 text-6xl font-serif font-medium bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent leading-none">
+                  starts here
+                </h1>
+              </div>
+
+              {/* Subtext and Button - Below Circle */}
+              <div className="text-center mt-12">
+                <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                  Create a group or find games near you
+                </p>
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                >
+                  Create a group
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile Layout */}
+          <div className="lg:hidden">
+            <div className="text-center">
+              {/* Mobile Text Layout */}
+              <div className="space-y-2 mb-8">
+                <h1 className="hero-h1 text-6xl font-serif text-gray-900">
+                  Community
+                </h1>
+                <h1 className="hero-h1 text-6xl font-serif text-gray-900">
+                  sports games
+                </h1>
+                <h1 className="hero-h1 text-6xl font-serif font-medium bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
+                  starts here
+                </h1>
+              </div>
+
+              {/* Mobile Subtext and Button */}
+              <p className="text-lg text-gray-600 mb-6 px-4">
+                Create a group or find games near you
+              </p>
+              <Button
+                onClick={() => setShowCreateModal(true)}
+                className="mb-8"
+              >
+                Create a group
+              </Button>
+
+              {/* Mobile Video Circle */}
+              <div className="w-96 h-96 mx-auto mt-12">
+                <div className="w-full h-full rounded-full overflow-hidden">
+                  <video
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  >
+                    <source src="/clouds_sports.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Upcoming Games Section */}
-        <div className="mb-12">
+        <div className="mb-12" style={{ marginTop: '-50px' }}>
           
           {/* Game Cards Grid */}
           {loading ? (
@@ -515,6 +612,15 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <GroupManagementModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onGroupCreated={() => {
+          // Optionally refresh data or redirect after group creation
+          setShowCreateModal(false)
+        }}
+      />
     </div>
   );
 }

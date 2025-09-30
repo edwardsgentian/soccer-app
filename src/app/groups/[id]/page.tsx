@@ -30,6 +30,7 @@ interface Group {
   instagram?: string
   website?: string
   whatsapp_group?: string
+  created_by?: string
   created_at: string
 }
 
@@ -469,7 +470,7 @@ export default function GroupDetailPage() {
               </div>
 
               {/* Group Name */}
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{group.name}</h1>
+              <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{group.name}</h1>
               
               {/* Created Date */}
               <p className="text-gray-600 mb-6">Created {formatDate(group.created_at)}</p>
@@ -739,7 +740,7 @@ export default function GroupDetailPage() {
             <div className="lg:sticky lg:top-8">
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
                 {/* Add Game/Season Button */}
-                {player && (
+                {player && group && player.id === group.created_by && (
                   <div className="mb-6">
                     <Button
                       onClick={() => setShowCreateGameModal(true)}

@@ -74,7 +74,7 @@ function ResetPasswordForm() {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-6" />
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">Password Reset Successful!</h1>
+            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-4">Password Reset Successful!</h1>
             <p className="text-gray-600 mb-8">
               Your password has been updated. You can now sign in with your new password.
             </p>
@@ -93,7 +93,7 @@ function ResetPasswordForm() {
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-md mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Reset Your Password</h1>
+            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">Reset Your Password</h1>
             <p className="text-gray-600">Enter your new password below</p>
           </div>
 

@@ -71,6 +71,9 @@ body {
 
 h1 {
   font-family: var(--font-instrument-serif), serif;
+}
+
+h1:not(.hero-h1) {
   font-size: 5em;
   line-height: 1.1;
   font-weight: 500;

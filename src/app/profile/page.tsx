@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, Edit, Trophy, Users } from 'lucide-react'
+import { Calendar, Edit, Trophy, Users, Component, Instagram, Globe } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
@@ -74,6 +75,13 @@ interface CreatedGroup {
   description: string
   created_at: string
   created_by?: string
+  tags?: string[]
+  instagram?: string
+  website?: string
+  games?: Array<{
+    id: string
+    game_date: string
+  }>
 }
 
 interface SeasonHistory {
@@ -235,7 +243,15 @@ export default function ProfilePage() {
           id,
           name,
           description,
-          created_at
+          created_at,
+          created_by,
+          tags,
+          instagram,
+          website,
+          games!inner (
+            id,
+            game_date
+          )
         `)
         .eq('created_by', user.id)
         .order('created_at', { ascending: false })
@@ -265,7 +281,14 @@ export default function ProfilePage() {
               name,
               description,
               created_at,
-              created_by
+              created_by,
+              tags,
+              instagram,
+              website,
+              games!inner (
+                id,
+                game_date
+              )
             )
           )
         `)
@@ -551,6 +574,79 @@ export default function ProfilePage() {
     })
   }
 
+  // GroupCard component for profile page
+  const GroupCard = ({ group }: { group: CreatedGroup }) => {
+    return (
+      <Link href={`/groups/${group.id}`} className="block">
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer">
+          {/* Group Header */}
+          <div className="h-32 bg-gray-50 flex items-center justify-center">
+            <Component className="w-8 h-8 text-gray-400" />
+          </div>
+
+          <div className="p-6">
+            {/* Group Name */}
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
+            
+            {/* Tags */}
+            {group.tags && group.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {group.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Upcoming Games Count */}
+            <div className="flex items-center text-gray-600 text-sm mb-4">
+              <Calendar className="w-4 h-4 mr-2" />
+              <span>{group.games?.length || 0} upcoming games</span>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex items-center gap-4 mb-4">
+              {group.instagram && (
+                <a
+                  href={`https://instagram.com/${group.instagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-600 hover:text-pink-600 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Instagram className="w-4 h-4 mr-1" />
+                  <span className="text-sm">{group.instagram}</span>
+                </a>
+              )}
+              {group.website && (
+                <a
+                  href={group.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Globe className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Website</span>
+                </a>
+              )}
+            </div>
+
+            {/* Created Date */}
+            <div className="flex items-center text-gray-500 text-sm">
+              <Calendar className="w-4 h-4 mr-1" />
+              <span>Created {formatDate(group.created_at)}</span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    )
+  }
+
 
   const calculateTotalHoursPlayed = () => {
     return gameHistory.reduce((total, history) => {
@@ -633,7 +729,7 @@ export default function ProfilePage() {
         <Header />
         <div className="container mx-auto px-4 py-16">
           <div className="text-center mb-8">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">
               Complete Your Profile
             </h1>
             <p className="text-gray-600">
@@ -674,7 +770,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Name */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{player.name}</h1>
+          <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{player.name}</h1>
           
           {/* Joined Date */}
           <p className="text-gray-600 mb-8">Joined {formatDate(player.member_since)}</p>
@@ -882,18 +978,9 @@ export default function ProfilePage() {
                     <p className="text-gray-600">No groups joined yet.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {memberGroups.map((group) => (
-                      <div key={group.id} className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-semibold text-gray-900">{group.name}</h3>
-                          <span className="text-sm text-gray-500">
-                            {group.created_by === user?.id ? 'Organizer' : 'Member'}
-                          </span>
-                        </div>
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{group.description}</p>
-                        <p className="text-gray-400 text-xs">{formatDate(group.created_at)}</p>
-                      </div>
+                      <GroupCard key={group.id} group={group} />
                     ))}
                   </div>
                 )}
@@ -973,10 +1060,10 @@ export default function ProfilePage() {
                               return acc
                             }, {} as Record<string, typeof upcomingGames>)
 
-                            return Object.entries(gamesByDate).map(([date, dateGames]) => (
-                              <div key={date}>
+                            return Object.entries(gamesByDate).map(([date, dateGames], index) => (
+                              <div key={date} className={index > 0 ? "mt-8" : ""}>
                                 {/* Date Label */}
-                                <div className="text-center mb-4">
+                                <div className="text-center mb-6">
                                   <h3 className="text-sm text-gray-600">
                                     {date}
                                   </h3>

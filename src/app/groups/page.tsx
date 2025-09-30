@@ -81,7 +81,7 @@ export default function GroupsPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">
               Soccer Groups
             </h1>
             <p className="text-gray-600">
@@ -144,84 +144,73 @@ function GroupCard({ group }: { group: Group }) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300">
-      {/* Group Header */}
-      <div className="h-32 bg-gray-50 flex items-center justify-center">
-        <Component className="w-8 h-8 text-gray-400" />
-      </div>
+    <Link href={`/groups/${group.id}`} className="block">
+      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer">
+        {/* Group Header */}
+        <div className="h-32 bg-gray-50 flex items-center justify-center">
+          <Component className="w-8 h-8 text-gray-400" />
+        </div>
 
-      <div className="p-6">
-        {/* Group Name */}
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
-        
+        <div className="p-6">
+          {/* Group Name */}
+          <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
+          
 
-        {/* Tags */}
-        {group.tags && group.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {group.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-              >
-                {tag}
-              </span>
-            ))}
+          {/* Tags */}
+          {group.tags && group.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {group.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Upcoming Games Count */}
+          <div className="flex items-center text-gray-600 text-sm mb-4">
+            <Calendar className="w-4 h-4 mr-2" />
+            <span>{group.games?.length || 0} upcoming games</span>
           </div>
-        )}
 
-        {/* Upcoming Games Count */}
-        <div className="flex items-center text-gray-600 text-sm mb-4">
-          <Calendar className="w-4 h-4 mr-2" />
-          <span>{group.games?.length || 0} upcoming games</span>
-        </div>
+          {/* Social Links */}
+          <div className="flex items-center gap-4 mb-4">
+            {group.instagram && (
+              <a
+                href={`https://instagram.com/${group.instagram.replace('@', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-gray-600 hover:text-pink-600 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Instagram className="w-4 h-4 mr-1" />
+                <span className="text-sm">{group.instagram}</span>
+              </a>
+            )}
+            {group.website && (
+              <a
+                href={group.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Globe className="w-4 h-4 mr-1" />
+                <span className="text-sm">Website</span>
+              </a>
+            )}
+          </div>
 
-        {/* Social Links */}
-        <div className="flex items-center gap-4 mb-4">
-          {group.instagram && (
-            <a
-              href={`https://instagram.com/${group.instagram.replace('@', '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-gray-600 hover:text-pink-600 transition-colors"
-            >
-              <Instagram className="w-4 h-4 mr-1" />
-              <span className="text-sm">{group.instagram}</span>
-            </a>
-          )}
-          {group.website && (
-            <a
-              href={group.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-            >
-              <Globe className="w-4 h-4 mr-1" />
-              <span className="text-sm">Website</span>
-            </a>
-          )}
-        </div>
-
-        {/* Created Date */}
-        <div className="flex items-center text-gray-500 text-sm mb-4">
-          <Calendar className="w-4 h-4 mr-1" />
-          <span>Created {formatDate(group.created_at)}</span>
-        </div>
-
-
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          <Button 
-            asChild
-            variant="outline" 
-            className="w-full" 
-            size="sm"
-          >
-            <Link href={`/groups/${group.id}`}>
-              View Group
-            </Link>
-          </Button>
+          {/* Created Date */}
+          <div className="flex items-center text-gray-500 text-sm">
+            <Calendar className="w-4 h-4 mr-1" />
+            <span>Created {formatDate(group.created_at)}</span>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }

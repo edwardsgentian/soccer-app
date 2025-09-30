@@ -100,7 +100,7 @@ function SuccessPageContent() {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center">
             <div className="text-6xl mb-4">❌</div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Payment Error</h1>
+            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">Payment Error</h1>
             <p className="text-gray-600 mb-6">{error}</p>
             <Link href="/games">
               <Button>
@@ -128,7 +128,7 @@ function SuccessPageContent() {
               className="w-30 h-30 mx-auto rounded-lg object-cover"
             />
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">You&apos;re in!</h1>
+          <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-4">You&apos;re in!</h1>
           <p className="text-gray-600 mb-8">
             You&apos;re all set! You&apos;ll receive a confirmation email shortly.
           </p>

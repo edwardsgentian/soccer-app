@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
@@ -30,6 +31,7 @@ interface Season {
   location: string
   created_at: string
   groups: {
+    id: string
     name: string
     whatsapp_group?: string
   }
@@ -55,6 +57,7 @@ interface Game {
   season_id?: string
   season_signup_deadline?: string
   groups: {
+    id: string
     name: string
     whatsapp_group?: string
   }
@@ -102,6 +105,7 @@ export default function SeasonDetailPage() {
         .select(`
           *,
           groups (
+            id,
             name,
             whatsapp_group
           ),
@@ -141,6 +145,7 @@ export default function SeasonDetailPage() {
         .select(`
           *,
           groups (
+            id,
             name,
             whatsapp_group
           ),
@@ -253,6 +258,22 @@ export default function SeasonDetailPage() {
     })
   }
 
+  // Check if the season has ended (all games have passed)
+  const isSeasonEnded = () => {
+    if (!games || games.length === 0) return false
+    
+    // Find the last game date
+    const lastGame = games.reduce((latest, game) => {
+      const gameDate = new Date(game.game_date)
+      const latestDate = new Date(latest.game_date)
+      return gameDate > latestDate ? game : latest
+    })
+    
+    const lastGameDateTime = new Date(`${lastGame.game_date}T${lastGame.game_time}`)
+    const now = new Date()
+    return lastGameDateTime < now
+  }
+
   const formatTime = (timeString: string) => {
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
       hour: 'numeric',
@@ -297,7 +318,7 @@ export default function SeasonDetailPage() {
                 className="w-16 h-16 mx-auto rounded-full object-cover"
               />
             </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Season Not Found</h1>
+            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">Season Not Found</h1>
             <p className="text-gray-600 mb-6">{error || 'The season you are looking for does not exist.'}</p>
             <Button onClick={() => window.history.back()}>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -364,8 +385,10 @@ export default function SeasonDetailPage() {
             <div className="lg:col-span-2 space-y-8">
               {/* Season Header */}
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">{season.name}</h1>
-                <p className="text-lg text-gray-600 mb-4">{season.groups.name}</p>
+                <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{season.name}</h1>
+                <Link href={`/groups/${season.groups.id}`} className="text-lg text-gray-600 mb-4 hover:text-blue-600 transition-colors">
+                  {season.groups.name}
+                </Link>
                 
                 {season.description && (
                   <p className="text-gray-700 text-base leading-relaxed">{season.description}</p>
@@ -543,7 +566,11 @@ export default function SeasonDetailPage() {
 
                   {/* Join Button - Desktop Only */}
                   <div className="hidden lg:block">
-                    {!isUserAttending && seasonSpotsAvailable > 0 && (
+                    {isSeasonEnded() ? (
+                      <div className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg text-center font-medium mb-6">
+                        Closed
+                      </div>
+                    ) : !isUserAttending && seasonSpotsAvailable > 0 ? (
                       <Button 
                         onClick={() => setShowJoinModal(true)}
                         className="w-full mb-6"
@@ -551,7 +578,7 @@ export default function SeasonDetailPage() {
                       >
                         Join Season - ${season.season_price}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Attending Status - Desktop Only */}
@@ -621,7 +648,11 @@ export default function SeasonDetailPage() {
       {/* Mobile Sticky Join Button - Only visible on mobile */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-2xl">
         <div className="p-4">
-          {!isUserAttending && seasonSpotsAvailable > 0 ? (
+          {isSeasonEnded() ? (
+            <div className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg text-center font-medium">
+              Closed
+            </div>
+          ) : !isUserAttending && seasonSpotsAvailable > 0 ? (
             <Button 
               onClick={() => setShowJoinModal(true)}
               className="w-full"
