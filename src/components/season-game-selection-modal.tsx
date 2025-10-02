@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Check, XCircle, X, Calendar, Clock, MapPin } from 'lucide-react'
+import { Check, XCircle, X, Calendar, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -180,7 +180,7 @@ export function SeasonGameSelectionModal({
                 Add Attendance
               </h2>
               <p className="text-sm text-gray-600 text-center">
-                Attendance can be changed at anytime. Adding attendance upfront guarantees you're counted for each game
+                Attendance can be changed at anytime. Adding attendance upfront guarantees you&apos;re counted for each game
               </p>
             </div>
             

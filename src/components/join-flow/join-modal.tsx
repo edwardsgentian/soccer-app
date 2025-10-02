@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { X, User, Mail, Phone, Lock, Eye, EyeOff, Calendar, MapPin } from 'lucide-react'
+import { X, Eye, EyeOff, Calendar, MapPin } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { ForgotPasswordModal } from '@/components/auth/forgot-password-modal'
 import Image from 'next/image'
@@ -41,7 +41,6 @@ export function JoinModal({
   totalSpots,
   discountCode,
   discountedPrice,
-  type,
   groupName
 }: JoinModalProps) {
   const { player, login, signup } = useAuth()
@@ -112,7 +111,7 @@ export function JoinModal({
         setPromoDiscount(0)
         setError('Invalid promo code')
       }
-    } catch (err) {
+    } catch {
       setPromoDiscount(0)
       setError('Error validating promo code')
     }
