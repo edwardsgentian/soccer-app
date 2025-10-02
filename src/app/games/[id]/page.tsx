@@ -783,7 +783,7 @@ export default function GameDetailPage() {
         gameDate={game.game_date}
         gameTime={game.game_time}
         location={game.location}
-        availableSpots={game.available_tickets}
+        availableSpots={game.total_tickets - attendees.length}
         totalSpots={game.total_tickets}
         type="game"
         groupName={game.groups.name}
