@@ -7,7 +7,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Clock, MapPin, Calendar, DollarSign, ArrowLeft } from 'lucide-react'
+import { Clock, MapPin, Calendar, BadgeDollarSign, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { JoinModal } from '@/components/join-flow/join-modal'
 import { AttendanceToggle } from '@/components/attendance-toggle'
@@ -553,7 +553,7 @@ export default function GameDetailPage() {
               {/* Game Header */}
               <div>
                 <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{game.name}</h1>
-                <Link href={`/groups/${game.groups.id}`} className="text-lg text-gray-600 mb-4 hover:text-blue-600 transition-colors">
+                <Link href={`/groups/${game.groups.id}`} className="text-lg font-semibold text-gray-600 mb-4 hover:text-black transition-colors">
                   {game.groups.name}
                 </Link>
                 
@@ -568,7 +568,9 @@ export default function GameDetailPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-start">
-                    <Calendar className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Calendar className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Date</div>
                       <div className="text-gray-600">{formatDate(game.game_date)}</div>
@@ -576,7 +578,9 @@ export default function GameDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <Clock className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Clock className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Time</div>
                       <div className="text-gray-600">{formatTime(game.game_time)}</div>
@@ -584,7 +588,9 @@ export default function GameDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <MapPin className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <MapPin className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Location</div>
                       <div className="text-gray-600">{game.location}</div>
@@ -592,7 +598,9 @@ export default function GameDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <DollarSign className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <BadgeDollarSign className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Price</div>
                       <div className="text-gray-600">${game.price} per player</div>
@@ -772,6 +780,13 @@ export default function GameDetailPage() {
         gameId={gameId}
         gameName={game.name}
         price={game.price}
+        gameDate={game.game_date}
+        gameTime={game.game_time}
+        location={game.location}
+        availableSpots={game.available_tickets}
+        totalSpots={game.total_tickets}
+        type="game"
+        groupName={game.groups.name}
       />
     </div>
   )

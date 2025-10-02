@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Check, XCircle } from 'lucide-react'
+import { Check, XCircle, X, Calendar, Clock, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
+import Image from 'next/image'
 
 interface Game {
   id: string
@@ -143,32 +144,49 @@ export function SeasonGameSelectionModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className="fixed inset-0 bg-white z-50 flex flex-col"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 50 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-8"
+          style={{ backgroundColor: '#EEC996' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           transition={{ duration: 0.3, ease: "easeInOut" }}
         >
-          {/* Header - Mobile Full Screen */}
-          <motion.div 
-            className="flex items-center justify-center p-6 border-b bg-white"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
-          >
-            <h2 className="text-xl font-semibold text-gray-900">
-              Add Attendance
-            </h2>
-          </motion.div>
+          {/* Logo */}
+          <div className="absolute top-4 left-4 z-10">
+            <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg">
+              <Image src="/face.png" alt="Logo" width={32} height={32} className="w-8 h-8" />
+            </div>
+          </div>
 
-          {/* Content - Scrollable */}
-          <motion.div 
-            className="flex-1 overflow-y-auto p-6 pb-24"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors z-10"
           >
-            {loading ? (
+            <X className="w-5 h-5 text-gray-600" />
+          </button>
+
+          {/* Main Card */}
+          <motion.div 
+            className="bg-white rounded-lg w-full max-w-[420px] max-h-[80vh] shadow-lg my-8 flex flex-col"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            {/* Header */}
+            <div className="p-6 flex-shrink-0">
+              <h2 className="text-2xl font-medium text-gray-900 font-serif text-center mb-2">
+                Add Attendance
+              </h2>
+              <p className="text-sm text-gray-600 text-center">
+                Attendance can be changed at anytime. Adding attendance upfront guarantees you're counted for each game
+              </p>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto px-6">
+              {loading ? (
               <motion.div 
                 className="text-center py-8"
                 initial={{ opacity: 0 }}
@@ -181,7 +199,7 @@ export function SeasonGameSelectionModal({
             ) : (
               <>
                 <motion.div 
-                  className="mb-6"
+                  className="mb-2"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.3 }}
@@ -201,9 +219,13 @@ export function SeasonGameSelectionModal({
                       key={game.id}
                       className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                         gameAttendance[game.id] === 'attending'
-                          ? 'border-green-500 bg-green-50'
+                          ? ''
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
+                      style={{
+                        borderColor: gameAttendance[game.id] === 'attending' ? '#4FA481' : undefined,
+                        backgroundColor: gameAttendance[game.id] === 'attending' ? '#E0F7EE' : undefined
+                      }}
                       onClick={() => handleGameToggle(game.id)}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -213,10 +235,16 @@ export function SeasonGameSelectionModal({
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-medium text-gray-900">{game.name}</h3>
-                          <div className="text-sm text-gray-600 mt-1">
-                            <p>{formatDate(game.game_date)} at {formatTime(game.game_time)}</p>
-                            <p>{game.location}</p>
+                          <h3 className="font-bold text-gray-900">{game.name}</h3>
+                          <div className="text-sm text-gray-600 mt-2 space-y-1">
+                            <div className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              <span>{formatDate(game.game_date)} at {formatTime(game.game_time)}</span>
+                            </div>
+                            <div className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-2" />
+                              <span>{game.location}</span>
+                            </div>
                           </div>
                         </div>
                         <motion.div 
@@ -228,7 +256,7 @@ export function SeasonGameSelectionModal({
                           transition={{ duration: 0.3 }}
                         >
                           {gameAttendance[game.id] === 'attending' ? (
-                            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: '#4FA481' }}>
                               <Check className="w-5 h-5 text-white" />
                             </div>
                           ) : (
@@ -257,34 +285,10 @@ export function SeasonGameSelectionModal({
                 </AnimatePresence>
               </>
             )}
-          </motion.div>
+            </div>
 
-          {/* Sticky Bottom Buttons */}
-          <motion.div 
-            className="fixed bottom-0 left-0 right-0 bg-white border-t p-4 flex items-center justify-end gap-3"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.3 }}
-          >
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1"
-            >
-              <Button
-                variant="outline"
-                onClick={onClose}
-                disabled={saving}
-                className="w-full"
-              >
-                Cancel
-              </Button>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="flex-1"
-            >
+            {/* Bottom Button */}
+            <div className="p-6 flex-shrink-0">
               <Button
                 onClick={handleSave}
                 disabled={saving || loading}
@@ -292,7 +296,7 @@ export function SeasonGameSelectionModal({
               >
                 {saving ? 'Saving...' : 'Add Attendance'}
               </Button>
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
       )}

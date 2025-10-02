@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button";
 import { HomepageGameCard } from "@/components/homepage-game-card";
 import { SeasonCard } from "@/components/season-card";
@@ -81,6 +82,31 @@ interface Season {
       payment_status: string
     }
   }[]
+}
+
+// SplitText component for word-by-word animation
+const SplitText = ({ children, className = "" }: { children: string; className?: string }) => {
+  const words = children.split(" ")
+
+  return (
+    <span className={className}>
+      {words.map((word, index) => (
+        <motion.span
+          key={index}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: 0.5,
+            delay: index * 0.1,
+            ease: "easeOut"
+          }}
+          className="inline-block mr-2"
+        >
+          {word}
+        </motion.span>
+      ))}
+    </span>
+  )
 }
 
 export default function Home() {
@@ -277,7 +303,12 @@ export default function Home() {
           <div className="hidden lg:block">
             <div className="relative max-w-6xl mx-auto">
               {/* Central Circle with Video */}
-              <div className="relative w-96 h-96 mx-auto mb-8">
+              <motion.div 
+                className="relative w-96 h-96 mx-auto mb-8"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              >
                 <div className="w-full h-full rounded-full overflow-hidden">
                   <video
                     autoPlay
@@ -289,39 +320,44 @@ export default function Home() {
                     <source src="/clouds_sports.mp4" type="video/mp4" />
                   </video>
                 </div>
-              </div>
+              </motion.div>
 
               {/* Positioned Text Elements */}
               {/* Community - Top Left, locked with logo */}
               <div className="absolute" style={{ top: '50px', left: '0px' }}>
                 <h1 className="hero-h1 text-6xl font-serif text-gray-900 leading-none">
-                  Community
+                  <SplitText>Community</SplitText>
                 </h1>
               </div>
 
               {/* Sports - Bottom Left, locked with circle */}
               <div className="absolute" style={{ top: '130px', left: '210px' }}>
                 <h1 className="hero-h1 text-6xl font-serif text-gray-900 leading-none">
-                  sports
+                  <SplitText>sports</SplitText>
                 </h1>
               </div>
 
               {/* Games - Top Right, locked with circle */}
               <div className="absolute" style={{ top: '130px', right: '210px' }}>
                 <h1 className="hero-h1 text-6xl font-serif text-gray-900 leading-none">
-                  games
+                  <SplitText>games</SplitText>
                 </h1>
               </div>
 
               {/* Starts Here - Bottom Right, locked with circle */}
               <div className="absolute" style={{ top: '210px', right: '50px' }}>
                 <h1 className="hero-h1 text-6xl font-serif font-medium bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent leading-none">
-                  starts here
+                  <SplitText>starts here</SplitText>
                 </h1>
               </div>
 
               {/* Subtext and Button - Below Circle */}
-              <div className="text-center mt-12">
+              <motion.div 
+                className="text-center mt-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
+              >
                 <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
                   Create a group or find games near you
                 </p>
@@ -330,7 +366,7 @@ export default function Home() {
                 >
                   Create a group
                 </Button>
-              </div>
+              </motion.div>
             </div>
           </div>
 
@@ -340,29 +376,40 @@ export default function Home() {
               {/* Mobile Text Layout */}
               <div className="space-y-2 mb-8">
                 <h1 className="hero-h1 text-6xl font-serif text-gray-900">
-                  Community
+                  <SplitText>Community</SplitText>
                 </h1>
                 <h1 className="hero-h1 text-6xl font-serif text-gray-900">
-                  sports games
+                  <SplitText>sports games</SplitText>
                 </h1>
                 <h1 className="hero-h1 text-6xl font-serif font-medium bg-gradient-to-r from-teal-400 to-blue-500 bg-clip-text text-transparent">
-                  starts here
+                  <SplitText>starts here</SplitText>
                 </h1>
               </div>
 
               {/* Mobile Subtext and Button */}
-              <p className="text-lg text-gray-600 mb-6 px-4">
-                Create a group or find games near you
-              </p>
-              <Button
-                onClick={() => setShowCreateModal(true)}
-                className="mb-8"
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
               >
-                Create a group
-              </Button>
+                <p className="text-lg text-gray-600 mb-6 px-4">
+                  Create a group or find games near you
+                </p>
+                <Button
+                  onClick={() => setShowCreateModal(true)}
+                  className="mb-8"
+                >
+                  Create a group
+                </Button>
+              </motion.div>
 
               {/* Mobile Video Circle */}
-              <div className="w-96 h-96 mx-auto mt-12">
+              <motion.div 
+                className="w-96 h-96 mx-auto mt-12"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+              >
                 <div className="w-full h-full rounded-full overflow-hidden">
                   <video
                     autoPlay
@@ -374,7 +421,7 @@ export default function Home() {
                     <source src="/clouds_sports.mp4" type="video/mp4" />
                   </video>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
         </div>

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { HomepageGameCard } from '@/components/homepage-game-card'
-import { CalendarCheck, Clock, MapPin, Calendar, Users, DollarSign, ArrowLeft } from 'lucide-react'
+import { CalendarCheck, Clock, MapPin, Calendar, Shirt, BadgeDollarSign, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import { JoinModal } from '@/components/join-flow/join-modal'
 
@@ -386,7 +386,7 @@ export default function SeasonDetailPage() {
               {/* Season Header */}
               <div>
                 <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{season.name}</h1>
-                <Link href={`/groups/${season.groups.id}`} className="text-lg text-gray-600 mb-4 hover:text-blue-600 transition-colors">
+                <Link href={`/groups/${season.groups.id}`} className="text-lg font-semibold text-gray-600 mb-4 hover:text-black transition-colors">
                   {season.groups.name}
                 </Link>
                 
@@ -401,7 +401,9 @@ export default function SeasonDetailPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="flex items-start">
-                    <Clock className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Clock className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Starts</div>
                       <div className="text-gray-600">{formatDate(season.first_game_date)}</div>
@@ -410,7 +412,9 @@ export default function SeasonDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <MapPin className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <MapPin className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Location</div>
                       <div className="text-gray-600">{season.location}</div>
@@ -418,7 +422,9 @@ export default function SeasonDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <Calendar className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Calendar className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Schedule</div>
                       <div className="text-gray-600">{getRepeatDisplay(season.repeat_type, season.repeat_interval)}</div>
@@ -426,7 +432,9 @@ export default function SeasonDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <Users className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Shirt className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Season Spots</div>
                       <div className="text-gray-600">{seasonSpotsAvailable} of {season.season_spots} available</div>
@@ -434,7 +442,9 @@ export default function SeasonDetailPage() {
                   </div>
                   
                   <div className="flex items-start">
-                    <DollarSign className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <BadgeDollarSign className="w-5 h-5 text-gray-600" />
+                    </div>
                     <div>
                       <div className="font-semibold text-gray-900 mb-1">Pricing</div>
                       <div className="text-gray-600">${season.season_price} season pass</div>
@@ -444,7 +454,9 @@ export default function SeasonDetailPage() {
                   
                   {season.season_signup_deadline && (
                     <div className="flex items-start">
-                      <CalendarCheck className="w-6 h-6 mr-4 text-gray-500 mt-1" />
+                      <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                        <CalendarCheck className="w-5 h-5 text-gray-600" />
+                      </div>
                       <div>
                         <div className="font-semibold text-gray-900 mb-1">Signup Deadline</div>
                         <div className="text-gray-600">{formatDate(season.season_signup_deadline)}</div>
@@ -684,6 +696,13 @@ export default function SeasonDetailPage() {
         seasonId={seasonId}
         price={season?.season_price || 0}
         seasonName={season?.name}
+        gameDate={season?.first_game_date}
+        gameTime={season?.first_game_time}
+        location={season?.location}
+        availableSpots={seasonSpotsAvailable}
+        totalSpots={season?.season_spots}
+        type="season"
+        groupName={season?.groups.name}
       />
     </div>
   )

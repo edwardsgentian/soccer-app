@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
       playerEmail, 
       playerPhone,
       playerId,
-      discountCode
+      discountCode,
+      groupName
     } = body
 
     console.log('Creating checkout session for:', { gameId, seasonId, price, playerId, playerEmail, discountCode })
@@ -50,9 +51,9 @@ export async function POST(request: NextRequest) {
             currency: 'usd',
             product_data: {
               name: gameId ? 'Soccer Game' : 'Soccer Season',
-              description: gameId 
-                ? `Join the soccer game` 
-                : `Join the soccer season`,
+              description: groupName 
+                ? `Payment to ${groupName}` 
+                : (gameId ? `Join the soccer game` : `Join the soccer season`),
             },
             unit_amount: Math.round(price * 100), // Convert to cents
           },
@@ -69,6 +70,7 @@ export async function POST(request: NextRequest) {
         playerName: playerName || '',
         playerPhone: playerPhone || '',
         discountCode: discountCode || '',
+        groupName: groupName || '',
       },
     }
 
