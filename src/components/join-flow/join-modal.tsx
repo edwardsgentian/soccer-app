@@ -238,7 +238,7 @@ export function JoinModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4" style={{ backgroundColor: '#EEC996' }}>
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black">
       {/* Logo - Top Left */}
       <div className="absolute top-4 left-4 z-10">
         <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg">
