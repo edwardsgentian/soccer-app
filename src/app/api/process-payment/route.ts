@@ -169,6 +169,13 @@ export async function POST(request: NextRequest) {
       
       let emailData = null
       
+      // Helper to normalize Supabase `groups` which can be an object or array
+      type Group = { name: string }
+      type HasGroups = { groups?: Group | Group[] }
+      const extractGroupName = (maybeGroups: Group | Group[] | undefined): string | undefined => {
+        return Array.isArray(maybeGroups) ? maybeGroups[0]?.name : maybeGroups?.name
+      }
+
       if (gameId && gameId.trim() !== '') {
         // Fetch game details for email
         const { data: gameData } = await supabase
@@ -192,9 +199,7 @@ export async function POST(request: NextRequest) {
             .eq('game_id', gameId)
             .eq('payment_status', 'completed')
 
-          const gameGroupName = Array.isArray((gameData as any).groups)
-            ? (gameData as any).groups[0]?.name
-            : (gameData as any).groups?.name
+          const gameGroupName = extractGroupName((gameData as HasGroups).groups)
 
           emailData = {
             to: playerEmail,
@@ -238,9 +243,7 @@ export async function POST(request: NextRequest) {
             .eq('season_id', seasonId)
             .eq('payment_status', 'completed')
 
-          const seasonGroupName = Array.isArray((seasonData as any).groups)
-            ? (seasonData as any).groups[0]?.name
-            : (seasonData as any).groups?.name
+          const seasonGroupName = extractGroupName((seasonData as HasGroups).groups)
 
           emailData = {
             to: playerEmail,
