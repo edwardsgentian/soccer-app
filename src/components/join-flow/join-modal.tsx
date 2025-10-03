@@ -95,21 +95,28 @@ export function JoinModal({
     }
 
     try {
-      // Simulate promo code validation - in real app, this would call an API
-      const validPromoCodes: { [key: string]: number } = {
-        'SAVE10': 10,
-        'WELCOME': 15,
-        'EARLYBIRD': 20,
-        'STUDENT': 25
-      }
+      // Call the proper API to validate promo code for this specific game/season
+      const response = await fetch('/api/discount-codes/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: promoCode,
+          gameId: gameId || null,
+          seasonId: seasonId || null,
+          originalPrice: price
+        }),
+      })
 
-      const discount = validPromoCodes[promoCode.toUpperCase()]
-      if (discount) {
-        setPromoDiscount(discount)
+      const result = await response.json()
+
+      if (result.success) {
+        setPromoDiscount(result.discount.amount)
         setError(null)
       } else {
         setPromoDiscount(0)
-        setError('Invalid promo code')
+        setError(result.error || 'Invalid promo code')
       }
     } catch {
       setPromoDiscount(0)
@@ -238,10 +245,10 @@ export function JoinModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-black">
+    <div className="fixed inset-0 flex items-center justify-center z-50 p-4 bg-white">
       {/* Logo - Top Left */}
       <div className="absolute top-4 left-4 z-10">
-        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center shadow-lg">
+        <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
           <Image 
             src="/face.png" 
             alt="Logo" 
@@ -255,14 +262,14 @@ export function JoinModal({
       {/* Close Button - Top Right */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gray-50 transition-colors z-10"
+        className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center hover:bg-gray-50 transition-colors z-10"
       >
         <X className="w-5 h-5 text-gray-600" />
       </button>
 
       <div className="flex flex-col lg:flex-row gap-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto mt-16 lg:mt-0">
         {/* Right Column - Order Summary (Mobile: First, Desktop: Second) */}
-        <div className="w-full lg:w-96 bg-white rounded-lg p-6 lg:p-8 shadow-lg h-fit order-1 lg:order-2">
+        <div className="w-full lg:w-96 bg-white rounded-lg p-6 lg:p-8 h-fit order-1 lg:order-2">
           <div>
             {/* Event Details */}
             <div className="mb-6">
@@ -360,7 +367,7 @@ export function JoinModal({
         </div>
 
         {/* Left Column - Your Info & Payment (Mobile: Second, Desktop: First) */}
-        <div className="flex-1 bg-white rounded-lg p-6 lg:p-8 shadow-lg order-2 lg:order-1">
+        <div className="flex-1 bg-white rounded-lg p-6 lg:p-8 order-2 lg:order-1">
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-2xl font-medium text-gray-900 font-serif">
@@ -448,19 +455,22 @@ export function JoinModal({
               </Button>
 
               <div className="text-center">
-                <button
-                  type="button"
-                  className="text-sm text-black hover:text-gray-600"
-                  onClick={() => setStep('signup')}
-                >
-                  Don&apos;t have an account? Sign up
-                </button>
+                <p className="text-sm text-gray-600">
+                  Don&apos;t have an account?{' '}
+                  <button
+                    type="button"
+                    className="text-black hover:text-gray-700 font-bold"
+                    onClick={() => setStep('signup')}
+                  >
+                    Sign up
+                  </button>
+                </p>
               </div>
 
               <div className="text-center">
                 <button
                   type="button"
-                  className="text-sm text-gray-600 hover:text-gray-700"
+                  className="text-sm text-black hover:text-gray-700 font-bold"
                   onClick={() => setShowForgotPassword(true)}
                 >
                   Forgot your password?
@@ -760,13 +770,16 @@ export function JoinModal({
               </Button>
 
               <div className="text-center">
-                <button
-                  type="button"
-                  className="text-sm text-black hover:text-gray-600"
-                  onClick={() => setStep('login')}
-                >
-                  Already have an account? Sign in
-                </button>
+                <p className="text-sm text-gray-600">
+                  Already have an account?{' '}
+                  <button
+                    type="button"
+                    className="text-black hover:text-gray-700 font-bold"
+                    onClick={() => setStep('login')}
+                  >
+                    Sign in
+                  </button>
+                </p>
               </div>
             </form>
           )}

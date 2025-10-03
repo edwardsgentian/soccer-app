@@ -36,7 +36,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <h2 className="text-2xl text-gray-900 mb-6 text-center font-serif">
           Sign In
         </h2>
 
@@ -91,7 +91,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
             Don&apos;t have an account?{' '}
             <button
               onClick={onSwitchToSignUp}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-black hover:text-gray-700 font-bold"
             >
               Sign up
             </button>
@@ -101,7 +101,7 @@ export function SignInForm({ onSuccess, onSwitchToSignUp }: SignInFormProps) {
         <div className="mt-4 text-center">
           <button
             onClick={() => setShowForgotPassword(true)}
-            className="text-sm text-green-600 hover:text-green-700 font-medium"
+            className="text-sm text-black hover:text-gray-700 font-bold"
           >
             Forgot your password?
           </button>

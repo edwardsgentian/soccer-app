@@ -160,40 +160,138 @@ export async function POST(request: NextRequest) {
     }
 
     // Send confirmation email
+    let emailSent = false
     try {
+      console.log('📧 EMAIL PROCESSING STARTED')
       console.log('Sending confirmation email to:', playerEmail)
+      console.log('Game ID:', gameId)
+      console.log('Season ID:', seasonId)
       
-      // For now, we'll just log the email details
-      // In production, you would integrate with an email service like SendGrid, Resend, or Nodemailer
-      const emailData = {
-        to: playerEmail,
-        subject: "You're in! Payment Confirmed",
-        gameId: gameId || null,
-        seasonId: seasonId || null,
-        playerName: playerName || 'Player',
-        amount: session.amount_total ? session.amount_total / 100 : 0
+      let emailData = null
+      
+      if (gameId && gameId.trim() !== '') {
+        // Fetch game details for email
+        const { data: gameData } = await supabase
+          .from('games')
+          .select(`
+            name,
+            game_date,
+            game_time,
+            location,
+            total_tickets,
+            groups!inner(name)
+          `)
+          .eq('id', gameId)
+          .single()
+
+        if (gameData) {
+          // Get current attendee count for spots available
+          const { count: attendeeCount } = await supabase
+            .from('game_attendees')
+            .select('*', { count: 'exact', head: true })
+            .eq('game_id', gameId)
+            .eq('payment_status', 'completed')
+
+          emailData = {
+            to: playerEmail,
+            playerName: playerName || 'Player',
+            type: 'game' as const,
+            eventName: gameData.name,
+            groupName: gameData.groups.name,
+            date: new Date(gameData.game_date).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            time: gameData.game_time,
+            location: gameData.location,
+            price: session.amount_total ? session.amount_total / 100 : 0,
+            spotsAvailable: gameData.total_tickets - (attendeeCount || 0),
+            totalSpots: gameData.total_tickets
+          }
+        }
+      } else if (seasonId && seasonId.trim() !== '') {
+        // Fetch season details for email
+        const { data: seasonData } = await supabase
+          .from('seasons')
+          .select(`
+            name,
+            first_game_date,
+            first_game_time,
+            location,
+            season_spots,
+            groups!inner(name)
+          `)
+          .eq('id', seasonId)
+          .single()
+
+        if (seasonData) {
+          // Get current attendee count for spots available
+          const { count: attendeeCount } = await supabase
+            .from('season_attendees')
+            .select('*', { count: 'exact', head: true })
+            .eq('season_id', seasonId)
+            .eq('payment_status', 'completed')
+
+          emailData = {
+            to: playerEmail,
+            playerName: playerName || 'Player',
+            type: 'season' as const,
+            eventName: seasonData.name,
+            groupName: seasonData.groups.name,
+            date: new Date(seasonData.first_game_date).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            }),
+            time: seasonData.first_game_time,
+            location: seasonData.location,
+            price: session.amount_total ? session.amount_total / 100 : 0,
+            spotsAvailable: seasonData.season_spots - (attendeeCount || 0),
+            totalSpots: seasonData.season_spots
+          }
+        }
+      }
+
+      if (emailData) {
+        console.log('📧 EMAIL DATA PREPARED:', emailData)
+        // Call our email API
+        console.log('📧 CALLING EMAIL API...')
+        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-confirmation-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        })
+
+        console.log('📧 EMAIL API RESPONSE STATUS:', emailResponse.status)
+        const emailResponseText = await emailResponse.text()
+        console.log('📧 EMAIL API RESPONSE:', emailResponseText)
+
+        if (emailResponse.ok) {
+          console.log('✅ Confirmation email sent successfully')
+          emailSent = true
+        } else {
+          console.error('❌ Failed to send confirmation email:', emailResponseText)
+        }
+      } else {
+        console.log('❌ NO EMAIL DATA - cannot send email')
       }
       
-      console.log('Email data:', emailData)
-      
-      // TODO: Implement actual email sending here
-      // Example with a service like Resend:
-      // await resend.emails.send({
-      //   from: 'noreply@yoursite.com',
-      //   to: playerEmail,
-      //   subject: "You're in! Payment Confirmed",
-      //   html: `<h1>You're in!</h1><p>Your payment has been confirmed...</p>`
-      // })
-      
     } catch (emailError) {
-      console.error('Error sending confirmation email:', emailError)
+      console.error('❌ Error sending confirmation email:', emailError)
       // Don't fail the payment processing if email fails
+      emailSent = false
     }
 
     return NextResponse.json({ 
       success: true, 
       message: 'Payment processed successfully',
-      seasonId: seasonId || null
+      seasonId: seasonId || null,
+      emailSent: emailSent
     })
   } catch (error) {
     console.error('Error processing payment:', error)

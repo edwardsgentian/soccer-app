@@ -96,6 +96,75 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to update attendance' }, { status: 500 })
     }
 
+    // Send confirmation email for season attendance
+    try {
+      // Get player and season details for email
+      const { data: playerData } = await supabase
+        .from('players')
+        .select('name, email')
+        .eq('id', playerId)
+        .single()
+
+      const { data: seasonData } = await supabase
+        .from('seasons')
+        .select(`
+          name,
+          first_game_date,
+          first_game_time,
+          location,
+          season_spots,
+          groups!inner(name)
+        `)
+        .eq('id', seasonId)
+        .single()
+
+      if (playerData && seasonData) {
+        // Get current attendee count for spots available
+        const { count: attendeeCount } = await supabase
+          .from('season_attendees')
+          .select('*', { count: 'exact', head: true })
+          .eq('season_id', seasonId)
+          .eq('payment_status', 'completed')
+
+        const emailData = {
+          to: playerData.email,
+          playerName: playerData.name,
+          type: 'season' as const,
+          eventName: seasonData.name,
+          groupName: seasonData.groups.name,
+          date: new Date(seasonData.first_game_date).toLocaleDateString('en-US', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          }),
+          time: seasonData.first_game_time,
+          location: seasonData.location,
+          price: 0, // Season already paid for
+          spotsAvailable: seasonData.season_spots - (attendeeCount || 0),
+          totalSpots: seasonData.season_spots
+        }
+
+        // Call our email API
+        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/send-confirmation-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emailData),
+        })
+
+        if (emailResponse.ok) {
+          console.log('Season attendance confirmation email sent successfully')
+        } else {
+          console.error('Failed to send season attendance confirmation email:', await emailResponse.text())
+        }
+      }
+    } catch (emailError) {
+      console.error('Error sending season attendance confirmation email:', emailError)
+      // Don't fail the attendance update if email fails
+    }
+
     return NextResponse.json({ 
       success: true, 
       message: 'Season attendance updated successfully' 

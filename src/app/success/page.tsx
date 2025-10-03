@@ -39,7 +39,7 @@ function SuccessPageContent() {
       setPaymentProcessed(true)
       processPayment(sessionId)
     } else if (!sessionId) {
-      setError('No session ID found')
+      // No session ID means we came from attendance confirmation - show success directly
       setLoading(false)
     }
   }, [sessionId, paymentProcessed])
@@ -60,6 +60,13 @@ function SuccessPageContent() {
       
       const data = await response.json()
       console.log('Payment API response data:', JSON.stringify(data, null, 2))
+      
+      // Check if email was sent
+      if (data.emailSent) {
+        console.log('✅ Email was sent successfully')
+      } else {
+        console.log('❌ No email sent - check server logs')
+      }
 
       if (data.success) {
         // Check if this was a season purchase
@@ -93,7 +100,7 @@ function SuccessPageContent() {
     )
   }
 
-  if (error) {
+  if (error && sessionId) {
     return (
       <div className="min-h-screen bg-white">
         <Header />

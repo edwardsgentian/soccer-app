@@ -68,6 +68,7 @@ export async function POST(request: NextRequest) {
         seasonId: seasonId || '',
         playerId: playerId || '',
         playerName: playerName || '',
+        playerEmail: playerEmail || '',
         playerPhone: playerPhone || '',
         discountCode: discountCode || '',
         groupName: groupName || '',

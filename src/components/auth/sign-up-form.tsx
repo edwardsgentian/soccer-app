@@ -124,7 +124,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+        <h2 className="text-2xl text-gray-900 mb-6 text-center font-serif">
           Create Account
         </h2>
 
@@ -229,7 +229,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
             Already have an account?{' '}
             <button
               onClick={onSwitchToSignIn}
-              className="text-green-600 hover:text-green-700 font-medium"
+              className="text-black hover:text-gray-700 font-bold"
             >
               Sign in
             </button>

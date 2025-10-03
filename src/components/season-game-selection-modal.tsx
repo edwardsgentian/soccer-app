@@ -114,8 +114,8 @@ export function SeasonGameSelectionModal({
 
       onSuccess()
       onClose()
-      // Redirect to profile page to show their games
-      router.push('/profile')
+      // Redirect to success page to show confirmation
+      router.push('/success')
     } catch (err) {
       console.error('Error saving attendance:', err)
       setError(err instanceof Error ? err.message : 'Failed to save attendance')
@@ -144,8 +144,7 @@ export function SeasonGameSelectionModal({
     <AnimatePresence>
       {isOpen && (
         <motion.div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-8"
-          style={{ backgroundColor: '#EEC996' }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-8 bg-gradient-to-b from-blue-500 to-teal-400"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
