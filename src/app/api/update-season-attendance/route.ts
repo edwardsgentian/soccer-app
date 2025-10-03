@@ -126,12 +126,17 @@ export async function POST(request: NextRequest) {
           .eq('season_id', seasonId)
           .eq('payment_status', 'completed')
 
+        type Group = { name: string }
+        const seasonGroupName = Array.isArray((seasonData as unknown as { groups?: Group | Group[] }).groups)
+          ? ((seasonData as unknown as { groups?: Group | Group[] }).groups as Group[])[0]?.name
+          : ((seasonData as unknown as { groups?: Group | Group[] }).groups as Group | undefined)?.name
+
         const emailData = {
           to: playerData.email,
           playerName: playerData.name,
           type: 'season' as const,
           eventName: seasonData.name,
-          groupName: seasonData.groups.name,
+          groupName: seasonGroupName || 'Group',
           date: new Date(seasonData.first_game_date).toLocaleDateString('en-US', { 
             weekday: 'long', 
             year: 'numeric', 
