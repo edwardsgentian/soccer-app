@@ -192,12 +192,16 @@ export async function POST(request: NextRequest) {
             .eq('game_id', gameId)
             .eq('payment_status', 'completed')
 
+          const gameGroupName = Array.isArray((gameData as any).groups)
+            ? (gameData as any).groups[0]?.name
+            : (gameData as any).groups?.name
+
           emailData = {
             to: playerEmail,
             playerName: playerName || 'Player',
             type: 'game' as const,
             eventName: gameData.name,
-            groupName: gameData.groups.name,
+            groupName: gameGroupName || 'Group',
             date: new Date(gameData.game_date).toLocaleDateString('en-US', { 
               weekday: 'long', 
               year: 'numeric', 
@@ -234,12 +238,16 @@ export async function POST(request: NextRequest) {
             .eq('season_id', seasonId)
             .eq('payment_status', 'completed')
 
+          const seasonGroupName = Array.isArray((seasonData as any).groups)
+            ? (seasonData as any).groups[0]?.name
+            : (seasonData as any).groups?.name
+
           emailData = {
             to: playerEmail,
             playerName: playerName || 'Player',
             type: 'season' as const,
             eventName: seasonData.name,
-            groupName: seasonData.groups.name,
+            groupName: seasonGroupName || 'Group',
             date: new Date(seasonData.first_game_date).toLocaleDateString('en-US', { 
               weekday: 'long', 
               year: 'numeric', 
