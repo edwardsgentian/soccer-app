@@ -753,7 +753,7 @@ export default function GroupDetailPage() {
                 )}
 
                 {/* Group Players */}
-                <div className="border-t border-gray-200 pt-6">
+                <div className="pt-6">
                   <h3 className="font-semibold text-gray-900 mb-4">
                     Group Players ({players.length})
                   </h3>
