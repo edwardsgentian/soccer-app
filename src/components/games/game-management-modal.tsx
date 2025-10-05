@@ -89,7 +89,7 @@ export function GameManagementModal({
     setErrorType(null)
   }
 
-  const handleWizardComplete = async (wizardData: any) => {
+  const handleWizardComplete = async (wizardData: Record<string, unknown>) => {
     setLoading(true)
     clearError()
     
@@ -109,7 +109,7 @@ export function GameManagementModal({
         throw new Error('Supabase client not initialized')
       }
 
-      if (!wizardData.adminPassword || wizardData.adminPassword.trim() === '') {
+      if (!wizardData.adminPassword || (typeof wizardData.adminPassword === 'string' && wizardData.adminPassword.trim() === '')) {
         throw new Error('Admin password is required')
       }
       
@@ -126,7 +126,7 @@ export function GameManagementModal({
       }
 
       // Simple password verification (in production, use proper hashing)
-      const hashedPassword = btoa(wizardData.adminPassword)
+      const hashedPassword = btoa(wizardData.adminPassword as string)
       
       if (groupData.admin_password !== hashedPassword) {
         throw new Error('Invalid admin password')
@@ -150,7 +150,7 @@ export function GameManagementModal({
     }
   }
 
-  const createOneOffGame = async (data: any) => {
+  const createOneOffGame = async (data: Record<string, unknown>) => {
     try {
       const { data: game, error } = await supabase
         .from('games')
@@ -204,7 +204,7 @@ export function GameManagementModal({
     }
   }
 
-  const createSeason = async (data: any) => {
+  const createSeason = async (data: Record<string, unknown>) => {
     try {
       console.log('Creating season...')
       
@@ -312,7 +312,7 @@ export function GameManagementModal({
     }
   }
 
-  const createDiscountCode = async (data: any, seasonId: string | null) => {
+  const createDiscountCode = async (data: Record<string, unknown>, seasonId: string | null) => {
     const { error } = await supabase
       .from('discount_codes')
       .insert({
@@ -327,10 +327,10 @@ export function GameManagementModal({
     if (error) throw error
   }
 
-  const generateGameDates = (data: any) => {
+  const generateGameDates = (data: Record<string, unknown>) => {
     // If custom dates are provided, use them directly
     if (data.repeatType === 'custom' && data.customGameDates && data.customGameDates.length > 0) {
-      return data.customGameDates.map((game: any) => ({
+      return (data.customGameDates as Array<{date: string, time: string}>).map((game) => ({
         date: game.date,
         time: game.time
       }))

@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Ticket, MapPin, Image as ImageIcon, Clock8, List, BadgePlus, ClipboardCheck } from 'lucide-react'
+import { Ticket, MapPin, Clock8, List, BadgePlus, ClipboardCheck } from 'lucide-react'
+import Image from 'next/image'
 
 type StepId = 'about' | 'location' | 'schedule' | 'pricing' | 'options' | 'review'
 
@@ -13,7 +14,7 @@ interface WizardProps {
 }
 
 export function CreateGameWizard({ onCancel, onComplete, loading = false }: WizardProps) {
-  const steps: { id: StepId; label: string; sub?: string; icon: any }[] = useMemo(
+  const steps: { id: StepId; label: string; sub?: string; icon: React.ComponentType<{ className?: string }> }[] = useMemo(
     () => [
       { id: 'about', label: 'Your Game', sub: undefined, icon: Ticket },
       { id: 'location', label: 'Location', icon: MapPin },
@@ -63,7 +64,6 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   const [description, setDescription] = useState('')
   const [durationHours, setDurationHours] = useState('2.0')
   const [repeatType, setRepeatType] = useState('weekly')
-  const [repeatInterval, setRepeatInterval] = useState('1')
   const [seasonSignupDeadline, setSeasonSignupDeadline] = useState('')
   const [includeOrganizerInCount, setIncludeOrganizerInCount] = useState(false)
   
@@ -215,7 +215,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
       {/* Sidebar (desktop) */}
       <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white p-4 items-center">
         <div className="mb-24">
-          <img src="/face.png" alt="Logo" className="w-10 h-10" />
+          <Image src="/face.png" alt="Logo" width={40} height={40} />
         </div>
         <nav className="flex-1 flex flex-col items-center space-y-4">
           {steps.map((s, i) => {
@@ -279,7 +279,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
                   <div className="flex flex-col items-center text-center">
                     <div className="w-12 h-12 sm:w-24 sm:h-24 bg-gradient-to-br from-stone-200 to-yellow-100 rounded-lg mb-3 flex items-center justify-center relative flex-shrink-0">
                       <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                        <img src="/game.png" alt="Game" className="w-8 h-8 sm:w-16 sm:h-16 rounded-full object-cover" />
+                        <Image src="/game.png" alt="Game" width={64} height={64} className="w-8 h-8 sm:w-16 sm:h-16 rounded-full object-cover" />
                       </div>
                     </div>
                     <div>
@@ -292,7 +292,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
                   <div className="flex flex-col items-center text-center">
                     <div className="w-12 h-12 sm:w-24 sm:h-24 bg-gradient-to-br from-stone-200 to-yellow-100 rounded-lg mb-3 flex items-center justify-center relative flex-shrink-0">
                       <div className="w-8 h-8 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center shadow-sm overflow-hidden">
-                        <img src="/calendar.png" alt="Calendar" className="w-8 h-8 sm:w-16 sm:h-16 rounded-full object-cover" />
+                        <Image src="/calendar.png" alt="Calendar" width={64} height={64} className="w-8 h-8 sm:w-16 sm:h-16 rounded-full object-cover" />
                       </div>
                     </div>
                     <div>
