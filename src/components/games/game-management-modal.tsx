@@ -338,10 +338,10 @@ export function GameManagementModal({
 
     // Otherwise, generate dates based on repeat pattern
     const dates = []
-    const startDate = new Date(data.firstDate)
-    const startTime = data.firstTime
+    const startDate = new Date(data.firstDate as string)
+    const startTime = data.firstTime as string
     const totalGames = parseInt(data.totalGames as string)
-    const repeatType = data.repeatType
+    const repeatType = data.repeatType as string
 
     for (let i = 0; i < totalGames; i++) {
       const gameDate = new Date(startDate)
