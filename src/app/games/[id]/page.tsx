@@ -529,6 +529,7 @@ export default function GameDetailPage() {
   const totalAttendees = attendingPlayers.length
   const spotsLeft = game.total_tickets - totalAttendees
   const isFullyBooked = spotsLeft <= 0
+  
 
   return (
     <div className="min-h-screen bg-white">

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { supabase } from '@/lib/supabase'
@@ -144,8 +143,10 @@ function GroupCard({ group }: { group: Group }) {
   }
 
   return (
-    <Link href={`/groups/${group.id}`} className="block">
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer">
+    <div 
+      className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer"
+      onClick={() => window.location.href = `/groups/${group.id}`}
+    >
         {/* Group Header */}
         <div className="h-32 bg-gray-50 flex items-center justify-center">
           <Component className="w-8 h-8 text-gray-400" />
@@ -210,7 +211,6 @@ function GroupCard({ group }: { group: Group }) {
             <span>Created {formatDate(group.created_at)}</span>
           </div>
         </div>
-      </div>
-    </Link>
+    </div>
   )
 }

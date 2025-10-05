@@ -4,7 +4,10 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { CreateGameForm } from './create-game-form'
 import { CreateGameOrSeasonForm } from './create-game-or-season-form'
+import { CreateGameWizard } from './create-game-wizard'
 import { X } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/contexts/auth-context'
 
 interface GameManagementModalProps {
   isOpen: boolean
@@ -19,17 +22,390 @@ export function GameManagementModal({
   onGameCreated,
   groupId 
 }: GameManagementModalProps) {
+  const { player } = useAuth()
   const [showCreateForm, setShowCreateForm] = useState(true)
   const [useNewForm, setUseNewForm] = useState(true)
+  const [useWizard, setUseWizard] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [errorType, setErrorType] = useState<'validation' | 'auth' | 'network' | 'database' | 'unknown' | null>(null)
 
   if (!isOpen) return null
 
   const handleGameCreated = () => {
     setShowCreateForm(false)
+    setError(null)
+    setErrorType(null)
     onGameCreated?.()
     onClose()
   }
 
+  const handleError = (error: any, context: string = '') => {
+    console.error(`Error in ${context}:`, error)
+    
+    let errorMessage = 'An unexpected error occurred'
+    let errorType: 'validation' | 'auth' | 'network' | 'database' | 'unknown' = 'unknown'
+    
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase()
+      
+      // Authentication errors
+      if (message.includes('invalid admin password') || message.includes('permission denied') || message.includes('unauthorized')) {
+        errorMessage = 'Invalid admin password. Please check your password and try again.'
+        errorType = 'auth'
+      }
+      // Validation errors
+      else if (message.includes('required') || message.includes('invalid') || message.includes('missing')) {
+        errorMessage = 'Please fill in all required fields correctly.'
+        errorType = 'validation'
+      }
+      // Network errors
+      else if (message.includes('network') || message.includes('timeout') || message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.'
+        errorType = 'network'
+      }
+      // Database errors
+      else if (message.includes('database') || message.includes('sql') || message.includes('constraint') || message.includes('duplicate')) {
+        errorMessage = 'Database error. Please try again or contact support if the problem persists.'
+        errorType = 'database'
+      }
+      // RLS policy errors
+      else if (message.includes('row-level security') || message.includes('rls')) {
+        errorMessage = 'Permission error. Please contact support to fix database permissions.'
+        errorType = 'database'
+      }
+      // Use the original error message if it's user-friendly
+      else if (error.message.length < 100 && !message.includes('supabase') && !message.includes('internal')) {
+        errorMessage = error.message
+      }
+    }
+    
+    setError(errorMessage)
+    setErrorType(errorType)
+  }
+
+  const clearError = () => {
+    setError(null)
+    setErrorType(null)
+  }
+
+  const handleWizardComplete = async (wizardData: any) => {
+    setLoading(true)
+    clearError()
+    
+    try {
+      console.log('Wizard data received:', wizardData)
+      
+      // Validation checks
+      if (!groupId) {
+        throw new Error('Group ID is required to create games')
+      }
+      
+      if (!player?.id) {
+        throw new Error('You must be signed in to create games or seasons')
+      }
+      
+      if (!supabase) {
+        throw new Error('Supabase client not initialized')
+      }
+
+      if (!wizardData.adminPassword || wizardData.adminPassword.trim() === '') {
+        throw new Error('Admin password is required')
+      }
+      
+      // Verify admin password
+      const { data: groupData, error: groupError } = await supabase
+        .from('groups')
+        .select('admin_password')
+        .eq('id', groupId)
+        .single()
+
+      if (groupError) {
+        console.error('Group lookup error:', groupError)
+        throw new Error('Group not found')
+      }
+
+      // Simple password verification (in production, use proper hashing)
+      const hashedPassword = btoa(wizardData.adminPassword)
+      
+      if (groupData.admin_password !== hashedPassword) {
+        throw new Error('Invalid admin password')
+      }
+
+      console.log('Password verified, creating...')
+
+      // Create based on type
+      if (wizardData.type === 'one-off') {
+        await createOneOffGame(wizardData)
+      } else {
+        await createSeason(wizardData)
+      }
+      
+      console.log('Creation successful!')
+      handleGameCreated()
+    } catch (err) {
+      handleError(err, 'wizard creation')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const createOneOffGame = async (data: any) => {
+    try {
+      const { data: game, error } = await supabase
+        .from('games')
+        .insert({
+          group_id: groupId,
+          name: data.name,
+          description: data.description,
+          game_date: data.date,
+          game_time: data.time,
+          location: data.location,
+          price: parseFloat(data.price),
+          total_tickets: parseInt(data.spots),
+          available_tickets: parseInt(data.spots),
+          duration_hours: parseFloat(data.durationHours),
+          created_by: player?.id,
+          is_individual_sale_allowed: true
+        })
+        .select()
+        .single()
+
+      if (error) throw error
+
+      // Add organizer as attendee if include_organizer_in_count is true
+      if (data.includeOrganizerInCount && player?.id) {
+        console.log('Adding organizer as attendee for one-off game')
+        const { error: attendeeError } = await supabase
+          .from('game_attendees')
+          .insert({
+            game_id: game.id,
+            player_id: player.id,
+            payment_status: 'completed',
+            amount_paid: 0, // Organizer doesn't pay
+            attendance_status: 'attending'
+          })
+
+        if (attendeeError) {
+          console.error('Error adding organizer as attendee:', attendeeError)
+          // Don't fail the entire operation, just log the error
+        } else {
+          console.log('Organizer added as attendee successfully')
+        }
+      }
+
+      // Create discount code if requested
+      if (data.createDiscount) {
+        await createDiscountCode(data, null)
+      }
+    } catch (error) {
+      handleError(error, 'one-off game creation')
+      throw error // Re-throw to stop the process
+    }
+  }
+
+  const createSeason = async (data: any) => {
+    try {
+      console.log('Creating season...')
+      
+      // Create season
+      const { data: season, error: seasonError } = await supabase
+        .from('seasons')
+        .insert({
+          group_id: groupId,
+          name: data.name,
+          description: data.description,
+          season_price: parseFloat(data.seasonPrice),
+          individual_game_price: parseFloat(data.gamePrice),
+          total_games: parseInt(data.totalGames),
+          season_spots: parseInt(data.seasonSpots),
+          game_spots: parseInt(data.gameSpots),
+          first_game_date: data.firstDate,
+          first_game_time: data.firstTime,
+          repeat_type: data.repeatType,
+          allow_individual_sales: data.allowIndividual,
+          season_signup_deadline: data.seasonSignupDeadline,
+          include_organizer_in_count: data.includeOrganizerInCount,
+          location: data.location,
+          created_by: player?.id
+        })
+        .select()
+        .single()
+
+      if (seasonError) {
+        console.error('Season creation error:', seasonError)
+        if (seasonError.message.includes('row-level security policy')) {
+          throw new Error('Permission denied: Please run the RLS policy fix in Supabase first. See fix-rls-policy.sql file.')
+        }
+        throw new Error(`Failed to create season: ${seasonError.message}`)
+      }
+
+      console.log('Season created successfully:', season.id)
+
+      // Create individual games
+      const gameDates = generateGameDates(data)
+      console.log(`Creating ${gameDates.length} games...`)
+      
+      const gamesToInsert = gameDates.map((gameDate, index) => ({
+        group_id: groupId,
+        season_id: season.id,
+        game_number: index + 1,
+        name: `${data.name} - Game ${index + 1}`,
+        description: data.description,
+        game_date: gameDate.date,
+        game_time: gameDate.time,
+        location: data.location,
+        price: parseFloat(data.gamePrice),
+        total_tickets: parseInt(data.gameSpots),
+        available_tickets: parseInt(data.gameSpots),
+        duration_hours: 2.0,
+        created_by: player?.id,
+        is_individual_sale_allowed: data.allowIndividual
+      }))
+
+      const { data: createdGames, error: gamesError } = await supabase
+        .from('games')
+        .insert(gamesToInsert)
+        .select()
+
+      if (gamesError) {
+        console.error('Games creation error:', gamesError)
+        throw new Error(`Failed to create games: ${gamesError.message}`)
+      }
+
+      console.log('Games created successfully')
+
+      // Add organizer as attendee to all games if include_organizer_in_count is true
+      if (data.includeOrganizerInCount && player?.id && createdGames) {
+        console.log('Adding organizer as attendee to all season games')
+        
+        const organizerAttendees = createdGames.map(game => ({
+          game_id: game.id,
+          player_id: player.id,
+          payment_status: 'completed',
+          amount_paid: 0, // Organizer doesn't pay
+          attendance_status: 'attending'
+        }))
+
+        const { error: attendeeError } = await supabase
+          .from('game_attendees')
+          .insert(organizerAttendees)
+
+        if (attendeeError) {
+          console.error('Error adding organizer as attendee to season games:', attendeeError)
+          // Don't fail the entire operation, just log the error
+        } else {
+          console.log('Organizer added as attendee to all season games successfully')
+        }
+      }
+
+      // Create discount code if requested
+      if (data.createDiscount) {
+        console.log('Creating discount code...')
+        await createDiscountCode(data, season.id)
+      }
+      
+      console.log('Season creation completed successfully')
+    } catch (error) {
+      handleError(error, 'season creation')
+      throw error // Re-throw to stop the process
+    }
+  }
+
+  const createDiscountCode = async (data: any, seasonId: string | null) => {
+    const { error } = await supabase
+      .from('discount_codes')
+      .insert({
+        code: data.discountCode,
+        description: data.discountDescription,
+        discount_type: data.discountType,
+        discount_value: parseFloat(data.discountValue),
+        season_id: seasonId,
+        created_by: player?.id
+      })
+
+    if (error) throw error
+  }
+
+  const generateGameDates = (data: any) => {
+    // If custom dates are provided, use them directly
+    if (data.repeatType === 'custom' && data.customGameDates && data.customGameDates.length > 0) {
+      return data.customGameDates.map((game: any) => ({
+        date: game.date,
+        time: game.time
+      }))
+    }
+
+    // Otherwise, generate dates based on repeat pattern
+    const dates = []
+    const startDate = new Date(data.firstDate)
+    const startTime = data.firstTime
+    const totalGames = parseInt(data.totalGames)
+    const repeatType = data.repeatType
+
+    for (let i = 0; i < totalGames; i++) {
+      const gameDate = new Date(startDate)
+      
+      if (repeatType === 'weekly') {
+        gameDate.setDate(startDate.getDate() + (i * 7))
+      } else if (repeatType === 'bi-weekly') {
+        gameDate.setDate(startDate.getDate() + (i * 14))
+      }
+      
+      dates.push({
+        date: gameDate.toISOString().split('T')[0],
+        time: startTime
+      })
+    }
+    
+    return dates
+  }
+
+
+  // If wizard selected, replace modal with full-screen takeover
+  if (useWizard) {
+    return (
+      <div className="relative">
+        {error && (
+          <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-4 rounded-lg shadow-lg max-w-md ${
+            errorType === 'auth' 
+              ? 'bg-red-100 border border-red-400 text-red-700' 
+              : errorType === 'validation'
+              ? 'bg-yellow-100 border border-yellow-400 text-yellow-700'
+              : errorType === 'network'
+              ? 'bg-blue-100 border border-blue-400 text-blue-700'
+              : errorType === 'database'
+              ? 'bg-orange-100 border border-orange-400 text-orange-700'
+              : 'bg-red-100 border border-red-400 text-red-700'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-medium">
+                  {errorType === 'auth' && 'Authentication Error'}
+                  {errorType === 'validation' && 'Validation Error'}
+                  {errorType === 'network' && 'Network Error'}
+                  {errorType === 'database' && 'Database Error'}
+                  {errorType === 'unknown' && 'Error'}
+                </div>
+                <div className="text-sm mt-1">{error}</div>
+              </div>
+              <button 
+                onClick={clearError}
+                className="ml-4 text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+        <CreateGameWizard
+          onCancel={onClose}
+          onComplete={handleWizardComplete}
+          loading={loading}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -53,9 +429,19 @@ export function GameManagementModal({
                   <div className="flex items-center space-x-2">
                     <span className="text-sm text-gray-600">Form:</span>
                     <button
-                      onClick={() => setUseNewForm(true)}
+                      onClick={() => setUseWizard(true)}
                       className={`px-3 py-1 text-sm rounded ${
-                        useNewForm 
+                        useWizard 
+                          ? 'bg-black text-white' 
+                          : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      }`}
+                    >
+                      Wizard
+                    </button>
+                    <button
+                      onClick={() => { setUseWizard(false); setUseNewForm(true) }}
+                      className={`px-3 py-1 text-sm rounded ${
+                        !useWizard && useNewForm 
                           ? 'bg-blue-500 text-white' 
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
@@ -63,9 +449,9 @@ export function GameManagementModal({
                       New (Season/Game)
                     </button>
                     <button
-                      onClick={() => setUseNewForm(false)}
+                      onClick={() => { setUseWizard(false); setUseNewForm(false) }}
                       className={`px-3 py-1 text-sm rounded ${
-                        !useNewForm 
+                        !useWizard && !useNewForm 
                           ? 'bg-blue-500 text-white' 
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                       }`}
@@ -76,7 +462,12 @@ export function GameManagementModal({
                 </div>
               </div>
 
-              {useNewForm ? (
+              {useWizard ? (
+                <CreateGameWizard
+                  onCancel={onClose}
+                  onComplete={() => handleGameCreated()}
+                />
+              ) : useNewForm ? (
                 <CreateGameOrSeasonForm
                   groupId={groupId || ''}
                   onSuccess={handleGameCreated}
