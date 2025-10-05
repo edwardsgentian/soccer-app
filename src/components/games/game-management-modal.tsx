@@ -161,10 +161,10 @@ export function GameManagementModal({
           game_date: data.date,
           game_time: data.time,
           location: data.location,
-          price: parseFloat(data.price),
-          total_tickets: parseInt(data.spots),
-          available_tickets: parseInt(data.spots),
-          duration_hours: parseFloat(data.durationHours),
+          price: parseFloat(data.price as string),
+          total_tickets: parseInt(data.spots as string),
+          available_tickets: parseInt(data.spots as string),
+          duration_hours: parseFloat(data.durationHours as string),
           created_by: player?.id,
           is_individual_sale_allowed: true
         })
@@ -215,11 +215,11 @@ export function GameManagementModal({
           group_id: groupId,
           name: data.name,
           description: data.description,
-          season_price: parseFloat(data.seasonPrice),
-          individual_game_price: parseFloat(data.gamePrice),
-          total_games: parseInt(data.totalGames),
-          season_spots: parseInt(data.seasonSpots),
-          game_spots: parseInt(data.gameSpots),
+          season_price: parseFloat(data.seasonPrice as string),
+          individual_game_price: parseFloat(data.gamePrice as string),
+          total_games: parseInt(data.totalGames as string),
+          season_spots: parseInt(data.seasonSpots as string),
+          game_spots: parseInt(data.gameSpots as string),
           first_game_date: data.firstDate,
           first_game_time: data.firstTime,
           repeat_type: data.repeatType,
@@ -255,9 +255,9 @@ export function GameManagementModal({
         game_date: gameDate.date,
         game_time: gameDate.time,
         location: data.location,
-        price: parseFloat(data.gamePrice),
-        total_tickets: parseInt(data.gameSpots),
-        available_tickets: parseInt(data.gameSpots),
+        price: parseFloat(data.gamePrice as string),
+        total_tickets: parseInt(data.gameSpots as string),
+        available_tickets: parseInt(data.gameSpots as string),
         duration_hours: 2.0,
         created_by: player?.id,
         is_individual_sale_allowed: data.allowIndividual
@@ -319,7 +319,7 @@ export function GameManagementModal({
         code: data.discountCode,
         description: data.discountDescription,
         discount_type: data.discountType,
-        discount_value: parseFloat(data.discountValue),
+        discount_value: parseFloat(data.discountValue as string),
         season_id: seasonId,
         created_by: player?.id
       })
@@ -340,7 +340,7 @@ export function GameManagementModal({
     const dates = []
     const startDate = new Date(data.firstDate)
     const startTime = data.firstTime
-    const totalGames = parseInt(data.totalGames)
+    const totalGames = parseInt(data.totalGames as string)
     const repeatType = data.repeatType
 
     for (let i = 0; i < totalGames; i++) {
