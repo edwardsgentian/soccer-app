@@ -101,7 +101,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   useEffect(() => {
     const loadGoogleMapsAPI = () => {
       // Check if already loaded
-      if (window.google && window.google.maps && window.google.maps.places) {
+      if ((window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
         setIsGoogleMapsLoaded(true)
         return
       }
@@ -151,8 +151,8 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
 
     try {
       // Check if Google Places API is available
-      if (isGoogleMapsLoaded && typeof window !== 'undefined' && window.google && window.google.maps && window.google.maps.places) {
-        const service = new window.google.maps.places.AutocompleteService()
+      if (isGoogleMapsLoaded && typeof window !== 'undefined' && (window as any).google && (window as any).google.maps && (window as any).google.maps.places) {
+        const service = new (window as any).google.maps.places.AutocompleteService()
         
         service.getPlacePredictions(
           {
@@ -161,7 +161,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
             componentRestrictions: { country: 'us' } // Restrict to US for now
           },
           (predictions, status) => {
-            if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            if (status === (window as any).google.maps.places.PlacesServiceStatus.OK && predictions) {
               const suggestions = predictions.slice(0, 5).map(prediction => prediction.description)
               setLocationSuggestions(suggestions)
               setShowSuggestions(true)
