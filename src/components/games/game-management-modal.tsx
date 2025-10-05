@@ -40,7 +40,7 @@ export function GameManagementModal({
     onClose()
   }
 
-  const handleError = (error: any, context: string = '') => {
+  const handleError = (error: unknown, context: string = '') => {
     console.error(`Error in ${context}:`, error)
     
     let errorMessage = 'An unexpected error occurred'
