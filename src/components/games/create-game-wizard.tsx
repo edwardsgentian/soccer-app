@@ -591,7 +591,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
                     <>
                       <div>First game: {firstDate || '-'} {firstTime || ''}</div>
                       <div>Total games: {totalGames}</div>
-                      <div>Repeat: {repeatType} (every {repeatInterval} week{repeatInterval !== '1' ? 's' : ''})</div>
+                      <div>Repeat: {repeatType}</div>
                       {seasonSignupDeadline && <div>Signup deadline: {seasonSignupDeadline}</div>}
                     </>
                   )}
