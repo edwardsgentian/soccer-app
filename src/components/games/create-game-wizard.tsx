@@ -183,7 +183,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
             componentRestrictions: { country: 'us' } // Restrict to US for now
           },
           (predictions, status) => {
-            if (status === googleWindow.google.maps.places.PlacesServiceStatus.OK && predictions) {
+            if (googleWindow.google && status === googleWindow.google.maps.places.PlacesServiceStatus.OK && predictions) {
               const suggestions = predictions.slice(0, 5).map(prediction => prediction.description)
               setLocationSuggestions(suggestions)
               setShowSuggestions(true)
