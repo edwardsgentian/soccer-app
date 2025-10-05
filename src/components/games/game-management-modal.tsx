@@ -329,7 +329,7 @@ export function GameManagementModal({
 
   const generateGameDates = (data: Record<string, unknown>) => {
     // If custom dates are provided, use them directly
-    if (data.repeatType === 'custom' && data.customGameDates && data.customGameDates.length > 0) {
+    if (data.repeatType === 'custom' && data.customGameDates && Array.isArray(data.customGameDates) && data.customGameDates.length > 0) {
       return (data.customGameDates as Array<{date: string, time: string}>).map((game) => ({
         date: game.date,
         time: game.time
