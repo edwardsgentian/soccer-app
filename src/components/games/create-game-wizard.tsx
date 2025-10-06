@@ -233,7 +233,10 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed inset-0 h-[100svh] bg-gradient-to-b from-blue-500 to-teal-400 flex z-50">
+    <div className="fixed inset-0 min-h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex z-50 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+      {/* Safe-area overlays to prevent iOS status/home bar bleed-through */}
+      <div className="fixed top-0 left-0 right-0 h-[env(safe-area-inset-top)] bg-gradient-to-b from-blue-500 to-teal-400 z-[51]" aria-hidden="true" />
+      <div className="fixed bottom-0 left-0 right-0 h-[env(safe-area-inset-bottom)] bg-gradient-to-t from-teal-400 to-blue-500 z-[51]" aria-hidden="true" />
       {/* Sidebar (desktop) */}
       <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white p-4 items-center">
         <div className="mb-24">
@@ -270,7 +273,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
         </div>
 
         {/* Step Header (always at top) */}
-        <div className="text-center mb-10 px-8 pt-[calc(env(safe-area-inset-top)+24px)]">
+        <div className="text-center mb-10 px-8 pt-6 sm:pt-8">
           <div className="text-sm">
             <span className="text-black">{step.label}</span>
             <span className="text-gray-500 ml-2">Step {stepIdx + 1} of {steps.length}</span>
