@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { CreateGameForm } from './create-game-form'
 import { CreateGameOrSeasonForm } from './create-game-or-season-form'
@@ -25,10 +25,28 @@ export function GameManagementModal({
   const { player } = useAuth()
   const [showCreateForm, setShowCreateForm] = useState(true)
   const [useNewForm, setUseNewForm] = useState(true)
-  const [useWizard, setUseWizard] = useState(true)
+  const [useWizard, setUseWizard] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [errorType, setErrorType] = useState<'validation' | 'auth' | 'network' | 'database' | 'unknown' | null>(null)
+
+  // Lock/unlock background scroll when wizard is active (must be a top-level hook)
+  useEffect(() => {
+    if (typeof document === 'undefined') return
+    const { body, documentElement } = document
+    if (isOpen && useWizard) {
+      // Lock scroll using overflow; avoid overscrollBehavior to prevent sticky state on iOS
+      const prevBodyOverflow = body.style.overflow
+      const prevHtmlOverflow = documentElement.style.overflow
+      body.style.overflow = 'hidden'
+      documentElement.style.overflow = 'hidden'
+      return () => {
+        body.style.overflow = prevBodyOverflow
+        documentElement.style.overflow = prevHtmlOverflow
+      }
+    }
+    return
+  }, [isOpen, useWizard])
 
   if (!isOpen) return null
 

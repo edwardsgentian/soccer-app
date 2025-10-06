@@ -233,7 +233,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed inset-0 h-screen bg-gradient-to-b from-blue-500 to-teal-400 flex z-50">
+    <div className="fixed inset-0 h-[100svh] bg-gradient-to-b from-blue-500 to-teal-400 flex z-50">
       {/* Sidebar (desktop) */}
       <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white p-4 items-center">
         <div className="mb-24">
@@ -263,14 +263,14 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
       </aside>
 
       {/* Content */}
-      <main className="flex-1 bg-white rounded-lg m-4 flex flex-col relative">
+      <main className="flex-1 bg-white rounded-lg m-4 flex flex-col relative overflow-hidden">
         {/* Discard */}
         <div className="absolute top-4 right-4">
           <Button variant="outline" onClick={onCancel}>Discard</Button>
         </div>
 
         {/* Step Header (always at top) */}
-        <div className="text-center mb-10 px-8 pt-8">
+        <div className="text-center mb-10 px-8 pt-[calc(env(safe-area-inset-top)+24px)]">
           <div className="text-sm">
             <span className="text-black">{step.label}</span>
             <span className="text-gray-500 ml-2">Step {stepIdx + 1} of {steps.length}</span>
@@ -283,7 +283,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
         </div>
 
         {/* Content that needs to be vertically centered */}
-        <div className="flex-1 flex flex-col items-center justify-center w-full px-8">
+        <div className="flex-1 flex flex-col items-center justify-start w-full px-8 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+24px)]">
           <h1 className="hero-h1 text-5xl font-medium mb-8 text-center">
             {step.id === 'about' && 'What do you want to create?'}
             {step.id === 'location' && 'Where will it take place?'}
