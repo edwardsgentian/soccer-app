@@ -438,8 +438,8 @@ export function GameManagementModal({
         <div className="p-6">
           {showCreateForm ? (
             <div>
-              {/* Form Selection */}
-              <div className="mb-6">
+              {/* Form Selection - hidden on mobile; always wizard */}
+              <div className="mb-6 hidden sm:block">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900">
                     Create Game or Season
@@ -480,7 +480,7 @@ export function GameManagementModal({
                 </div>
               </div>
 
-              {useWizard ? (
+              {useWizard || typeof window !== 'undefined' && window.innerWidth < 640 ? (
                 <CreateGameWizard
                   onCancel={onClose}
                   onComplete={() => handleGameCreated()}
