@@ -233,10 +233,16 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed inset-0 h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex overflow-hidden z-[9999]">
-      {/* Safe-area overlays to prevent iOS status/home bar bleed-through */}
-      <div className="fixed top-0 left-0 right-0 h-[env(safe-area-inset-top)] bg-gradient-to-b from-blue-500 to-teal-400 z-[10001] pointer-events-none" aria-hidden="true" />
-      <div className="fixed bottom-0 left-0 right-0 h-[env(safe-area-inset-bottom)] bg-gradient-to-t from-teal-400 to-blue-500 z-[10001] pointer-events-none" aria-hidden="true" />
+    <div className="fixed top-0 left-0 right-0 bottom-0 w-full h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex overflow-hidden z-[9999]"
+         style={{
+           position: 'fixed',
+           top: 0,
+           left: 0,
+           right: 0,
+           bottom: 0,
+           margin: 0,
+           padding: 0
+         }}>
       {/* Sidebar (desktop) */}
       <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white p-4 items-center">
         <div className="mb-24">
@@ -266,18 +272,16 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
       </aside>
 
       {/* Content */}
-      <main className="flex-1 bg-white rounded-lg m-4 flex flex-col relative overflow-hidden"
-            style={{ 
-              marginTop: `max(1rem, env(safe-area-inset-top))`,
-              marginBottom: `max(1rem, env(safe-area-inset-bottom))`
-            }}>
+      <main className="flex-1 bg-white flex flex-col relative overflow-hidden rounded-none m-0 lg:rounded-lg lg:m-4">
         {/* Discard */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute right-4 z-10"
+             style={{ top: `max(1rem, calc(1rem + env(safe-area-inset-top)))` }}>
           <Button variant="outline" onClick={onCancel}>Discard</Button>
         </div>
 
         {/* Step Header (always at top) */}
-        <div className="text-center mb-10 px-8 pt-6 sm:pt-8 flex-shrink-0">
+        <div className="text-center mb-10 px-8 flex-shrink-0"
+             style={{ paddingTop: `max(1.5rem, calc(1.5rem + env(safe-area-inset-top)))` }}>
           <div className="text-sm">
             <span className="text-black">{step.label}</span>
             <span className="text-gray-500 ml-2">Step {stepIdx + 1} of {steps.length}</span>
