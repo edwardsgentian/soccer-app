@@ -233,10 +233,10 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed inset-0 min-h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] z-[9999]">
+    <div className="fixed inset-0 h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex overflow-hidden z-[9999]">
       {/* Safe-area overlays to prevent iOS status/home bar bleed-through */}
-      <div className="fixed top-0 left-0 right-0 h-[env(safe-area-inset-top)] bg-gradient-to-b from-blue-500 to-teal-400 z-[51]" aria-hidden="true" />
-      <div className="fixed bottom-0 left-0 right-0 h-[env(safe-area-inset-bottom)] bg-gradient-to-t from-teal-400 to-blue-500 z-[51]" aria-hidden="true" />
+      <div className="fixed top-0 left-0 right-0 h-[env(safe-area-inset-top)] bg-gradient-to-b from-blue-500 to-teal-400 z-[10001] pointer-events-none" aria-hidden="true" />
+      <div className="fixed bottom-0 left-0 right-0 h-[env(safe-area-inset-bottom)] bg-gradient-to-t from-teal-400 to-blue-500 z-[10001] pointer-events-none" aria-hidden="true" />
       {/* Sidebar (desktop) */}
       <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white p-4 items-center">
         <div className="mb-24">
@@ -266,14 +266,18 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
       </aside>
 
       {/* Content */}
-      <main className="flex-1 bg-white rounded-lg m-4 flex flex-col relative overflow-hidden">
+      <main className="flex-1 bg-white rounded-lg m-4 flex flex-col relative overflow-hidden"
+            style={{ 
+              marginTop: `max(1rem, env(safe-area-inset-top))`,
+              marginBottom: `max(1rem, env(safe-area-inset-bottom))`
+            }}>
         {/* Discard */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <Button variant="outline" onClick={onCancel}>Discard</Button>
         </div>
 
         {/* Step Header (always at top) */}
-        <div className="text-center mb-10 px-8 pt-6 sm:pt-8">
+        <div className="text-center mb-10 px-8 pt-6 sm:pt-8 flex-shrink-0">
           <div className="text-sm">
             <span className="text-black">{step.label}</span>
             <span className="text-gray-500 ml-2">Step {stepIdx + 1} of {steps.length}</span>
@@ -285,8 +289,8 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
           )}
         </div>
 
-        {/* Content that needs to be vertically centered */}
-        <div className="flex-1 flex flex-col items-center justify-start w-full px-8 overflow-y-auto pb-[calc(env(safe-area-inset-bottom)+24px)]">
+        {/* Content that scrolls */}
+        <div className="flex-1 flex flex-col items-center justify-start w-full px-4 sm:px-8 overflow-y-auto overscroll-contain">
           <h1 className="hero-h1 text-5xl font-medium mb-8 text-center">
             {step.id === 'about' && 'What do you want to create?'}
             {step.id === 'location' && 'Where will it take place?'}
@@ -617,8 +621,10 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
           </div>
         </div>
 
-        <div className="mt-auto border-t border-gray-200 w-full">
-          <div className="flex items-center justify-between pt-6 px-8 pb-8">
+        {/* Footer Navigation - Fixed to bottom with safe area */}
+        <div className="mt-auto border-t border-gray-200 w-full flex-shrink-0 bg-white"
+             style={{ paddingBottom: `max(2rem, calc(2rem + env(safe-area-inset-bottom)))` }}>
+          <div className="flex items-center justify-between pt-6 px-8">
             {stepIdx === 0 ? <div /> : (
               <Button variant="outline" onClick={back}>
                 Back

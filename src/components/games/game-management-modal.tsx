@@ -33,16 +33,14 @@ export function GameManagementModal({
   // Lock/unlock background scroll when wizard is active (must be a top-level hook)
   useEffect(() => {
     if (typeof document === 'undefined') return
-    const { body, documentElement } = document
+    const { body } = document
+    
     if (isOpen && useWizard) {
-      // Lock scroll using overflow; avoid overscrollBehavior to prevent sticky state on iOS
-      const prevBodyOverflow = body.style.overflow
-      const prevHtmlOverflow = documentElement.style.overflow
-      body.style.overflow = 'hidden'
-      documentElement.style.overflow = 'hidden'
+      // Add modal-open class for iOS handling
+      body.classList.add('modal-open')
+      
       return () => {
-        body.style.overflow = prevBodyOverflow
-        documentElement.style.overflow = prevHtmlOverflow
+        body.classList.remove('modal-open')
       }
     }
     return

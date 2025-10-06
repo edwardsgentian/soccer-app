@@ -118,3 +118,44 @@ button[class*="bg-primary"]:hover,
   color: #ffffff !important;
 }
 
+/* iOS Safari viewport and safe area fixes */
+@supports (height: 100dvh) {
+  html, body {
+    height: 100dvh;
+  }
+}
+
+/* Prevent iOS Safari from bouncing/overscrolling the body when modals are open */
+body.modal-open {
+  position: fixed;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS safe area handling for fixed elements */
+@supports (padding: max(0px)) {
+  .safe-top {
+    padding-top: max(1rem, env(safe-area-inset-top));
+  }
+  
+  .safe-bottom {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+  
+  .safe-left {
+    padding-left: max(1rem, env(safe-area-inset-left));
+  }
+  
+  .safe-right {
+    padding-right: max(1rem, env(safe-area-inset-right));
+  }
+}
+
+/* Prevent content from appearing under iOS status bar/home indicator */
+.ios-modal-container {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
