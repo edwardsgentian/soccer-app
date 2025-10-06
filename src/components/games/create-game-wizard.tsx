@@ -295,7 +295,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
 
           <div className="w-full">
           {step.id === 'about' && (
-            <div className="max-w-2xl mx-auto space-y-6">
+            <div className="max-w-2xl mx-auto space-y-6 px-4 sm:px-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className={`p-4 border-2 rounded-xl ${type==='one-off'?'border-black':'border-gray-200'} cursor-pointer`} onClick={()=>setType('one-off')}>
                   <div className="flex flex-col items-center text-center">
@@ -338,7 +338,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
           )}
 
           {step.id === 'location' && (
-            <div className="max-w-xl mx-auto space-y-6">
+            <div className="max-w-xl mx-auto space-y-6 px-4 sm:px-0">
               <div>
                 <label className="block text-sm text-gray-700 mb-1">Location</label>
                 <div className="relative">
@@ -347,7 +347,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
                     onChange={handleLocationChange}
                     onFocus={() => locationSuggestions.length > 0 && setShowSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none" 
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-black focus:border-black focus:ring-1 focus:ring-black focus:outline-none caret-black align-middle leading-[1.25rem]" 
                     placeholder={isGoogleMapsLoaded ? "Search for a location..." : "Loading location search..."} 
                     autoComplete="off"
                     disabled={!isGoogleMapsLoaded}
@@ -390,7 +390,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
           )}
 
           {step.id === 'schedule' && (
-            <div className="max-w-2xl mx-auto">
+            <div className="max-w-2xl mx-auto px-4 sm:px-0">
               {type==='one-off' ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -480,7 +480,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
           )}
 
           {step.id === 'pricing' && (
-            <div className="max-w-xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="max-w-xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 px-4 sm:px-0">
               {type==='one-off' ? (
                 <>
                   <div>
