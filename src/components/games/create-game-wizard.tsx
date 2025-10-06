@@ -233,7 +233,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed inset-0 min-h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex z-50 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed inset-0 min-h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex z-[50] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
       {/* Safe-area overlays to prevent iOS status/home bar bleed-through */}
       <div className="fixed top-0 left-0 right-0 h-[env(safe-area-inset-top)] bg-gradient-to-b from-blue-500 to-teal-400 z-[51]" aria-hidden="true" />
       <div className="fixed bottom-0 left-0 right-0 h-[env(safe-area-inset-bottom)] bg-gradient-to-t from-teal-400 to-blue-500 z-[51]" aria-hidden="true" />

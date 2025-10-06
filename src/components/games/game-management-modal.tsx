@@ -384,6 +384,8 @@ export function GameManagementModal({
   if (useWizard) {
     return (
       <div className="relative">
+        {/* Full-screen backdrop to completely cover page content behind the wizard */}
+        <div className="fixed inset-0 bg-black/70 z-[49]" aria-hidden="true" />
         {error && (
           <div className={`fixed top-4 left-1/2 transform -translate-x-1/2 z-[100] px-6 py-4 rounded-lg shadow-lg max-w-md ${
             errorType === 'auth' 
