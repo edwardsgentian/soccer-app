@@ -233,68 +233,58 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 bottom-0 w-full h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 flex overflow-hidden z-[9999]"
-         style={{
-           position: 'fixed',
-           top: 0,
-           left: 0,
-           right: 0,
-           bottom: 0,
-           margin: 0,
-           padding: 0
-         }}>
-      {/* Sidebar (desktop) */}
-      <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white p-4 items-center">
-        <div className="mb-24">
-          <Image src="/face.png" alt="Logo" width={40} height={40} />
-        </div>
-        <nav className="flex-1 flex flex-col items-center space-y-4">
-          {steps.map((s, i) => {
-            const Icon = s.icon
-            return (
-              <div
-                key={s.id}
-                className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                  i === stepIdx ? 'bg-white text-black' : 'bg-white/10 text-white/80'
-                }`}
-                title={s.label}
-              >
-                <Icon className="h-5 w-5" />
-              </div>
-            )
-          })}
-        </nav>
-        <button onClick={onCancel} className="text-white/80 hover:text-white mb-4">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-      </aside>
-
-      {/* Content */}
-      <main className="flex-1 bg-white flex flex-col relative overflow-hidden rounded-none m-0 lg:rounded-lg lg:m-4">
-        {/* Discard */}
-        <div className="absolute right-4 z-10"
-             style={{ top: `max(1rem, calc(1rem + env(safe-area-inset-top)))` }}>
-          <Button variant="outline" onClick={onCancel}>Discard</Button>
-        </div>
-
-        {/* Step Header (always at top) */}
-        <div className="text-center mb-10 px-8 flex-shrink-0"
-             style={{ paddingTop: `max(1.5rem, calc(1.5rem + env(safe-area-inset-top)))` }}>
-          <div className="text-sm">
-            <span className="text-black">{step.label}</span>
-            <span className="text-gray-500 ml-2">Step {stepIdx + 1} of {steps.length}</span>
+    <div className="fixed inset-0 z-[9999] flex flex-col min-h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 overflow-hidden">
+      {/* Desktop Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white items-center py-4">
+          <div className="mb-24">
+            <Image src="/face.png" alt="Logo" width={40} height={40} />
           </div>
-          {step.sub && (
-            <div className="text-sm text-black mt-1">
-              {step.sub}
-            </div>
-          )}
-        </div>
+          <nav className="flex-1 flex flex-col items-center space-y-4">
+            {steps.map((s, i) => {
+              const Icon = s.icon
+              return (
+                <div
+                  key={s.id}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
+                    i === stepIdx ? 'bg-white text-black' : 'bg-white/10 text-white/80'
+                  }`}
+                  title={s.label}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+              )
+            })}
+          </nav>
+          <button onClick={onCancel} className="text-white/80 hover:text-white mb-4">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+        </aside>
 
-        {/* Content that scrolls */}
-        <div className="flex-1 flex flex-col items-center justify-start w-full px-4 sm:px-8 overflow-y-auto overscroll-contain">
+        {/* Main Content */}
+        <main className="flex-1 bg-white flex flex-col relative overflow-hidden lg:m-4 lg:rounded-lg pt-[env(safe-area-inset-top)]">
+          {/* Discard */}
+          <div className="absolute top-4 right-4 z-10">
+            <Button variant="outline" onClick={onCancel}>Discard</Button>
+          </div>
+
+          {/* Step Header */}
+          <div className="text-center mb-10 px-8 pt-6 sm:pt-8 flex-shrink-0">
+            <div className="text-sm">
+              <span className="text-black">{step.label}</span>
+              <span className="text-gray-500 ml-2">Step {stepIdx + 1} of {steps.length}</span>
+            </div>
+            {step.sub && (
+              <div className="text-sm text-black mt-1">
+                {step.sub}
+              </div>
+            )}
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 flex flex-col items-center justify-start w-full px-4 sm:px-8 overflow-y-auto">
           <h1 className="hero-h1 text-5xl font-medium mb-8 text-center">
             {step.id === 'about' && 'What do you want to create?'}
             {step.id === 'location' && 'Where will it take place?'}
@@ -625,56 +615,56 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
           </div>
         </div>
 
-        {/* Footer Navigation - Fixed to bottom with safe area */}
-        <div className="mt-auto border-t border-gray-200 w-full flex-shrink-0 bg-white"
-             style={{ paddingBottom: `max(2rem, calc(2rem + env(safe-area-inset-bottom)))` }}>
-          <div className="flex items-center justify-between pt-6 px-8">
-            {stepIdx === 0 ? <div /> : (
-              <Button variant="outline" onClick={back}>
-                Back
-              </Button>
-            )}
-            {step.id !== 'review' ? (
-              <Button onClick={next} disabled={loading}>Next</Button>
-            ) : (
-              <Button 
-                onClick={() => onComplete({
-                  type,
-                  name,
-                  description,
-                  location,
-                  date,
-                  time,
-                  firstDate,
-                  firstTime,
-                  totalGames,
-                  price,
-                  spots,
-                  seasonPrice,
-                  gamePrice,
-                  gameSpots,
-                  seasonSpots,
-                  allowIndividual,
-                  durationHours,
-                  repeatType,
-                  seasonSignupDeadline,
-                  includeOrganizerInCount,
-                  adminPassword,
-                  createDiscount,
-                  discountCode,
-                  discountDescription,
-                  discountType,
-                  discountValue,
-                  customGameDates
-                })}
-                disabled={loading}
-              >
-                {loading ? 'Creating...' : 'Create'}
-              </Button>
-            )}
+          {/* Footer Navigation */}
+          <div className="mt-auto border-t border-gray-200 w-full flex-shrink-0 bg-white pb-[env(safe-area-inset-bottom)]">
+            <div className="flex items-center justify-between pt-6 px-8 pb-8">
+              {stepIdx === 0 ? <div /> : (
+                <Button variant="outline" onClick={back}>
+                  Back
+                </Button>
+              )}
+              {step.id !== 'review' ? (
+                <Button onClick={next} disabled={loading}>Next</Button>
+              ) : (
+                <Button 
+                  onClick={() => onComplete({
+                    type,
+                    name,
+                    description,
+                    location,
+                    date,
+                    time,
+                    firstDate,
+                    firstTime,
+                    totalGames,
+                    price,
+                    spots,
+                    seasonPrice,
+                    gamePrice,
+                    gameSpots,
+                    seasonSpots,
+                    allowIndividual,
+                    durationHours,
+                    repeatType,
+                    seasonSignupDeadline,
+                    includeOrganizerInCount,
+                    adminPassword,
+                    createDiscount,
+                    discountCode,
+                    discountDescription,
+                    discountType,
+                    discountValue,
+                    customGameDates
+                  })}
+                  disabled={loading}
+                >
+                  {loading ? 'Creating...' : 'Create'}
+                </Button>
+              )}
+            </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }
