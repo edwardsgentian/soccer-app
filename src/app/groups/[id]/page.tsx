@@ -1,13 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { ArrowLeft, Instagram, Globe, MessageCircle, Component } from 'lucide-react'
-import { GameManagementModal } from '@/components/games/game-management-modal'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
@@ -90,6 +89,7 @@ interface Season {
 
 export default function GroupDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const groupId = params.id as string
   const { player } = useAuth()
   
@@ -98,7 +98,6 @@ export default function GroupDetailPage() {
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showCreateGameModal, setShowCreateGameModal] = useState(false)
   const [activeTab, setActiveTab] = useState<'games' | 'seasons'>('games')
   const [players, setPlayers] = useState<Player[]>([])
   const [hasUserJoined, setHasUserJoined] = useState(false)
@@ -662,7 +661,7 @@ export default function GroupDetailPage() {
                 </p>
                     {player && (
                 <Button
-                  onClick={() => setShowCreateGameModal(true)}
+                  onClick={() => router.push(`/create-game?groupId=${groupId}`)}
                 >
                         Create Game
                 </Button>
@@ -721,7 +720,7 @@ export default function GroupDetailPage() {
                     </p>
                     {player && (
                       <Button
-                        onClick={() => setShowCreateGameModal(true)}
+                        onClick={() => router.push(`/create-game?groupId=${groupId}`)}
                       >
                         Create First Season
                       </Button>
@@ -743,7 +742,7 @@ export default function GroupDetailPage() {
                 {player && group && player.id === group.created_by && (
                   <div className="mb-6">
                     <Button
-                      onClick={() => setShowCreateGameModal(true)}
+                      onClick={() => router.push(`/create-game?groupId=${groupId}`)}
                       className="w-full bg-black hover:bg-gray-800 text-white"
                       size="lg"
                     >
@@ -806,16 +805,6 @@ export default function GroupDetailPage() {
         </div>
       </div>
 
-      {/* Create Game Modal */}
-      <GameManagementModal
-        isOpen={showCreateGameModal}
-        onClose={() => setShowCreateGameModal(false)}
-        onGameCreated={() => {
-          setShowCreateGameModal(false)
-          fetchGroupDetails() // Refresh the group details
-        }}
-        groupId={groupId}
-      />
     </div>
   )
 }

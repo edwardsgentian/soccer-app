@@ -233,20 +233,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="z-[9999] flex flex-col bg-gradient-to-b from-blue-500 to-teal-400"
-         style={{
-           position: 'fixed',
-           top: 0,
-           left: 0,
-           right: 0,
-           bottom: 0,
-           width: '100%',
-           height: '100%',
-           minHeight: '100dvh',
-           margin: 0,
-           padding: 0,
-           overflow: 'hidden'
-         }}>
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-500 to-teal-400">
       {/* Desktop Sidebar */}
       <div className="flex flex-1 overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white items-center py-4">
