@@ -233,24 +233,14 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed z-[9999] flex flex-col bg-gradient-to-b from-blue-500 to-teal-400 overflow-hidden"
+    <div className="fixed inset-0 z-[9999] flex flex-col min-h-screen bg-gradient-to-b from-blue-500 to-teal-400"
          style={{
-           top: 'calc(-1 * env(safe-area-inset-top, 0px))',
-           left: 'calc(-1 * env(safe-area-inset-left, 0px))',
-           right: 'calc(-1 * env(safe-area-inset-right, 0px))',
-           bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
-           width: 'calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px))',
-           height: 'calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))',
-           minHeight: 'calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))'
+           width: '100vw',
+           height: '100vh',
+           minHeight: '100vh'
          }}>
       {/* Desktop Sidebar */}
-      <div className="flex flex-1 overflow-hidden"
-           style={{
-             paddingTop: 'env(safe-area-inset-top, 0px)',
-             paddingLeft: 'env(safe-area-inset-left, 0px)',
-             paddingRight: 'env(safe-area-inset-right, 0px)',
-             paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-           }}>
+      <div className="flex flex-1 overflow-hidden pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
         <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white items-center py-4">
           <div className="mb-24">
             <Image src="/face.png" alt="Logo" width={40} height={40} />
