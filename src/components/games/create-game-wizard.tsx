@@ -233,9 +233,24 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col min-h-[100dvh] bg-gradient-to-b from-blue-500 to-teal-400 overflow-hidden">
+    <div className="fixed z-[9999] flex flex-col bg-gradient-to-b from-blue-500 to-teal-400 overflow-hidden"
+         style={{
+           top: 'calc(-1 * env(safe-area-inset-top, 0px))',
+           left: 'calc(-1 * env(safe-area-inset-left, 0px))',
+           right: 'calc(-1 * env(safe-area-inset-right, 0px))',
+           bottom: 'calc(-1 * env(safe-area-inset-bottom, 0px))',
+           width: 'calc(100vw + env(safe-area-inset-left, 0px) + env(safe-area-inset-right, 0px))',
+           height: 'calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))',
+           minHeight: 'calc(100dvh + env(safe-area-inset-top, 0px) + env(safe-area-inset-bottom, 0px))'
+         }}>
       {/* Desktop Sidebar */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden"
+           style={{
+             paddingTop: 'env(safe-area-inset-top, 0px)',
+             paddingLeft: 'env(safe-area-inset-left, 0px)',
+             paddingRight: 'env(safe-area-inset-right, 0px)',
+             paddingBottom: 'env(safe-area-inset-bottom, 0px)'
+           }}>
         <aside className="hidden lg:flex w-20 shrink-0 flex-col bg-gradient-to-b from-blue-500 to-teal-400 text-white items-center py-4">
           <div className="mb-24">
             <Image src="/face.png" alt="Logo" width={40} height={40} />
@@ -264,7 +279,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
         </aside>
 
         {/* Main Content */}
-        <main className="flex-1 bg-white flex flex-col relative overflow-hidden lg:m-4 lg:rounded-lg pt-[env(safe-area-inset-top)]">
+        <main className="flex-1 bg-white flex flex-col relative overflow-hidden lg:m-4 lg:rounded-lg">
           {/* Discard */}
           <div className="absolute top-4 right-4 z-10">
             <Button variant="outline" onClick={onCancel}>Discard</Button>
@@ -616,7 +631,7 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
         </div>
 
           {/* Footer Navigation */}
-          <div className="mt-auto border-t border-gray-200 w-full flex-shrink-0 bg-white pb-[env(safe-area-inset-bottom)]">
+          <div className="mt-auto border-t border-gray-200 w-full flex-shrink-0 bg-white">
             <div className="flex items-center justify-between pt-6 px-8 pb-8">
               {stepIdx === 0 ? <div /> : (
                 <Button variant="outline" onClick={back}>
