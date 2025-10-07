@@ -4,9 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { CreateGameWizard } from '@/components/games/create-game-wizard'
 import { useAuth } from '@/contexts/auth-context'
 import { supabase } from '@/lib/supabase'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 
-export default function CreateGamePage() {
+function CreateGameContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const groupId = searchParams.get('groupId')
@@ -243,5 +243,17 @@ export default function CreateGamePage() {
       onComplete={handleComplete}
       loading={loading}
     />
+  )
+}
+
+export default function CreateGamePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-500 to-teal-400">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    }>
+      <CreateGameContent />
+    </Suspense>
   )
 }
