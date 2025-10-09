@@ -291,7 +291,7 @@ export function GroupEditForm({ groupId, onSuccess, onCancel }: GroupEditFormPro
                   {formData.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                      className="inline-flex items-center px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded"
                     >
                       {tag}
                       <button

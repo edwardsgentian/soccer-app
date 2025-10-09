@@ -10,6 +10,8 @@ import { Header } from "@/components/header";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
+import { GameCardSkeleton, SeasonCardSkeleton } from '@/components/ui/skeleton-loader'
+import { fetchHomepageData, getCachedData, setCachedData } from '@/lib/optimized-queries'
 
 interface Game {
   id: string
@@ -36,6 +38,11 @@ interface Game {
     id: string
     player_id: string
     payment_status: string
+    attendance_status?: 'attending' | 'not_attending'
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
   season_attendees?: {
     id: string
@@ -48,6 +55,10 @@ interface Game {
       id: string
       player_id: string
       payment_status: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
     }
   }[]
 }
@@ -73,6 +84,10 @@ interface Season {
     id: string
     player_id: string
     payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
   season_game_attendance?: {
     attendance_status: 'attending' | 'not_attending'
@@ -80,6 +95,10 @@ interface Season {
       id: string
       player_id: string
       payment_status: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
     }
   }[]
 }
@@ -115,160 +134,106 @@ export default function Home() {
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  
+  // Simple cache to avoid re-fetching data
+  const [dataFetched, setDataFetched] = useState(false)
 
   useEffect(() => {
-    fetchUpcomingGames()
-    fetchUpcomingSeasons()
-  }, [])
-
-  const fetchUpcomingGames = async () => {
-    if (!supabase) {
-      setLoading(false)
-      return
+    if (!dataFetched) {
+      loadHomepageData()
     }
+  }, [dataFetched])
 
+  const loadHomepageData = async () => {
     try {
-      // First, get all upcoming games
-      const { data: allGames, error: gamesError } = await supabase
+      // Check cache first
+      const cacheKey = 'homepage-data'
+      const cachedData = getCachedData(cacheKey)
+      
+      if (cachedData) {
+        setGames(cachedData.games)
+        setSeasons(cachedData.seasons)
+        setDataFetched(true)
+        setLoading(false)
+        return
+      }
+
+      // Try optimized fetch first, fallback to original if it fails
+      try {
+        const { games, seasons, errors } = await fetchHomepageData()
+        
+        if (games.length > 0 || seasons.length > 0) {
+          setGames(games as unknown as Game[])
+          setSeasons(seasons as unknown as Season[])
+          
+          // Cache the data
+          setCachedData(cacheKey, { games, seasons })
+        } else {
+          await loadHomepageDataFallback()
+        }
+        
+        // Log any errors
+        if (errors.games) console.error('Error fetching games:', errors.games)
+        if (errors.seasons) console.error('Error fetching seasons:', errors.seasons)
+        
+      } catch (optimizedError) {
+        console.error('Optimized query failed, using fallback:', optimizedError)
+        await loadHomepageDataFallback()
+      }
+      
+      setDataFetched(true)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error loading homepage data:', error)
+      setLoading(false)
+    }
+  }
+
+  const loadHomepageDataFallback = async () => {
+    try {
+      // Simple fallback query
+      const { data: games, error: gamesError } = await supabase
         .from('games')
         .select(`
           *,
-          groups (
+          groups!inner (
             name,
             whatsapp_group
           ),
           seasons (
             id,
             season_signup_deadline
-          ),
-          game_attendees (
-            id,
-            player_id,
-            payment_status,
-            attendance_status
-          ),
-          season_game_attendance (
-            attendance_status,
-            season_attendees (
-              id,
-              player_id,
-              payment_status
-            )
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
         .order('game_date', { ascending: true })
+        .limit(6)
 
-      if (gamesError) {
-        console.error('Error fetching games:', gamesError)
-        setGames([]) // Set empty array on error
-      } else {
-        // For each game, if it's part of a season, fetch season attendees
-        const gamesWithSeasonAttendees = await Promise.all(
-          (allGames || []).map(async (game) => {
-            if (game.season_id) {
-              try {
-                // Fetch season attendees for this game's season
-                const { data: seasonAttendees, error: seasonError } = await supabase
-                  .from('season_attendees')
-                  .select(`
-                    id,
-                    created_at,
-                    player_id,
-                    players (
-                      name,
-                      photo_url
-                    )
-                  `)
-                  .eq('season_id', game.season_id)
-                  .eq('payment_status', 'completed')
-
-                if (!seasonError && seasonAttendees) {
-                  // Fetch season game attendance for this specific game
-                  const { data: seasonGameAttendance } = await supabase
-                    .from('season_game_attendance')
-                    .select('season_attendee_id, attendance_status')
-                    .eq('game_id', game.id)
-
-                  // Combine season attendees with their attendance status for this game
-                  const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
-                    const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-                    return {
-                      id: attendee.id,
-                      player_id: attendee.player_id, // Use actual player_id
-                      payment_status: 'completed',
-                      attendance_status: gameAttendance?.attendance_status || 'attending'
-                    }
-                  })
-
-                  // Combine individual game attendees with season attendees
-                  const allAttendees = [
-                    ...(game.game_attendees || []),
-                    ...seasonAttendeesWithStatus
-                  ]
-
-                  // Remove duplicates based on player_id (in case someone is both individual and season attendee)
-                  const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
-                    index === self.findIndex(a => a.player_id === attendee.player_id)
-                  )
-
-                  return {
-                    ...game,
-                    game_attendees: uniqueAttendees,
-                    season_attendees: seasonAttendees // Store season attendees for hasPurchasedSeason calculation
-                  }
-                }
-              } catch (err) {
-                console.error('Error fetching season attendees for game:', game.id, err)
-              }
-            }
-            return game
-          })
-        )
-        
-        setGames(gamesWithSeasonAttendees.slice(0, 6)) // Show only the first 6 games
-      }
-    } catch (err) {
-      console.error('Error fetching games:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchUpcomingSeasons = async () => {
-    if (!supabase) {
-      return
-    }
-
-    try {
-      const { data, error } = await supabase
+      const { data: seasons, error: seasonsError } = await supabase
         .from('seasons')
         .select(`
           *,
-          groups (
+          groups!inner (
             name,
             whatsapp_group
-          ),
-          season_attendees (
-            id,
-            player_id,
-            payment_status
           )
         `)
         .gte('first_game_date', new Date().toISOString().split('T')[0])
         .order('first_game_date', { ascending: true })
-        .limit(3) // Show only the first 3 upcoming seasons on homepage
+        .limit(3)
+      
+      if (gamesError) console.error('Fallback games error:', gamesError)
+      if (seasonsError) console.error('Fallback seasons error:', seasonsError)
 
-      if (error) {
-        console.error('Error fetching seasons:', error)
-        setSeasons([]) // Set empty array on error
-      } else {
-        setSeasons(data || [])
-      }
-    } catch (err) {
-      console.error('Error fetching seasons:', err)
+      setGames((games as unknown as Game[]) || [])
+      setSeasons((seasons as unknown as Season[]) || [])
+    } catch (error) {
+      console.error('Fallback query failed:', error)
+      setGames([])
+      setSeasons([])
     }
   }
+
   return (
     <div className="min-h-screen bg-white">
       <div className="h-24" style={{background: 'linear-gradient(to bottom, #e2e8f0 0%, #ffffff 100%)'}}>
@@ -412,9 +377,10 @@ export default function Home() {
           
           {/* Game Cards Grid */}
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-              <p className="text-gray-600 mt-4">Loading upcoming games...</p>
+            <div className="max-w-lg mx-auto space-y-4 md:space-y-6 px-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <GameCardSkeleton key={index} />
+              ))}
             </div>
           ) : games.length === 0 && seasons.length === 0 ? (
             <div className="text-center py-12">
@@ -476,6 +442,7 @@ export default function Home() {
                           seasonSpotsAvailable={seasonSpotsAvailable}
                           gameSpotsAvailable={gameSpotsAvailable}
                           isUserAttending={isUserAttending}
+                          seasonAttendees={season.season_attendees}
                         />
                       )
                     })}
@@ -519,8 +486,8 @@ export default function Home() {
                           ))
                           
                           // Check if user has purchased the season (for season games)
-                          const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(
-                            (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                          const hasPurchasedSeason = game.season_id && player && game.season_game_attendance?.some(
+                            (attendance) => attendance.season_attendees.player_id === player.id && attendance.season_attendees.payment_status === 'completed'
                           ) || false
 
                           // For season games, if they purchased the season, they're considered attending by default

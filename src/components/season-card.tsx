@@ -2,8 +2,9 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
-import { Clock, MapPin, Calendar, SmilePlus } from 'lucide-react'
+import { Clock, MapPin, Calendar, SmilePlus, CalendarCheck } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { AnimatedAvatarGroup } from '@/components/ui/animated-avatar-group'
 
 interface SeasonCardProps {
   seasonId: string
@@ -23,6 +24,15 @@ interface SeasonCardProps {
   gameSpotsAvailable: number
   isUserAttending?: boolean
   isPastSeason?: boolean
+  seasonAttendees?: Array<{
+    id: string
+    player_id: string
+    payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
+  }>
 }
 
 const gradients = [
@@ -48,10 +58,7 @@ const getRandomGradient = (seasonId: string) => {
   return gradients[Math.abs(hash) % gradients.length]
 }
 
-const generateAvatarStack = (attendees: number, maxAvatars: number) => {
-  const avatars = []
-  const avatarCount = Math.min(attendees, maxAvatars)
-  
+const generateAvatarStack = (attendees: number, maxAvatars: number, seasonAttendees?: SeasonCardProps['seasonAttendees']) => {
   // If no attendees, show empty state avatar
   if (attendees === 0) {
     return (
@@ -61,39 +68,39 @@ const generateAvatarStack = (attendees: number, maxAvatars: number) => {
     )
   }
   
-  const userInitials = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
-  const avatarColors = [
-    'bg-blue-400', 'bg-green-400', 'bg-purple-400', 'bg-pink-400', 
-    'bg-yellow-400', 'bg-red-400', 'bg-indigo-400', 'bg-teal-400',
-    'bg-orange-400', 'bg-cyan-400'
-  ]
-  
-  for (let i = 0; i < avatarCount; i++) {
-    const colorIndex = i % avatarColors.length
-    avatars.push(
-      <div
-        key={i}
-        className={`w-6 h-6 rounded-full ${avatarColors[colorIndex]} border-2 border-white flex items-center justify-center text-xs font-semibold text-white`}
-        style={{ marginLeft: i > 0 ? '-8px' : '0', zIndex: maxAvatars - i }}
-      >
-        {userInitials[i]}
-      </div>
+  // Use real player data if available, otherwise fall back to mock data
+  let avatarData
+  if (seasonAttendees && seasonAttendees.length > 0) {
+    // Filter to only completed payments and get unique players
+    const actualAttendees = seasonAttendees.filter(att => att.payment_status === 'completed')
+    const uniqueAttendees = actualAttendees.filter((attendee, index, self) =>
+      index === self.findIndex(a => a.player_id === attendee.player_id)
     )
+    
+    avatarData = uniqueAttendees.slice(0, maxAvatars).map((attendee, index) => ({
+      id: attendee.id || `season-attendee-${index}`,
+      name: attendee.players?.name || `Player ${index + 1}`,
+      photo_url: attendee.players?.photo_url,
+      fallback: attendee.players?.name?.charAt(0).toUpperCase() || String.fromCharCode(65 + index)
+    }))
+  } else {
+    // Fallback to mock data if no real data available
+    avatarData = Array.from({ length: Math.min(attendees, maxAvatars) }, (_, index) => ({
+      id: `season-attendee-${index}`,
+      name: `Player ${index + 1}`,
+      fallback: String.fromCharCode(65 + index) // A, B, C, etc.
+    }))
   }
   
-  if (attendees > maxAvatars) {
-    avatars.push(
-      <div
-        key="more"
-        className="w-6 h-6 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-xs font-semibold text-gray-600"
-        style={{ marginLeft: '-8px', zIndex: 0 }}
-      >
-        +{attendees - maxAvatars}
-      </div>
-    )
-  }
-  
-  return avatars
+  return (
+    <AnimatedAvatarGroup
+      avatars={avatarData}
+      maxVisible={maxAvatars}
+      size="sm"
+      overlap={8}
+      hoverEffect="lift"
+    />
+  )
 }
 
 export function SeasonCard({
@@ -110,6 +117,7 @@ export function SeasonCard({
   seasonSpotsAvailable,
   isUserAttending = false,
   isPastSeason = false,
+  seasonAttendees,
 }: SeasonCardProps) {
   const formatTime = (timeString: string) => {
     return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
@@ -135,7 +143,7 @@ export function SeasonCard({
     return '' // Show nothing for custom
   }
 
-  const seasonAttendees = seasonSpots - seasonSpotsAvailable
+  const seasonAttendeesCount = seasonSpots - seasonSpotsAvailable
 
   return (
     <motion.div
@@ -172,12 +180,12 @@ export function SeasonCard({
             
             {/* Season Price or Attending status in top right */}
             {isPastSeason ? (
-              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
+              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
                 Completed
               </span>
             ) : isUserAttending ? (
-              <span className="px-3 py-1 bg-green-100 text-green-600 text-xs font-medium rounded-full">
-                Attending
+              <span className="px-3 py-2 bg-green-100 text-green-600 text-xs font-medium rounded-md flex items-center justify-center">
+                <CalendarCheck className="w-4 h-4" />
               </span>
             ) : (
               <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm font-medium">
@@ -207,7 +215,7 @@ export function SeasonCard({
           {/* Spots Available */}
           <div className="flex items-center mb-3">
             <div className="flex items-center -space-x-2 mr-2">
-              {generateAvatarStack(seasonAttendees, 3)}
+              {generateAvatarStack(seasonAttendeesCount, 3, seasonAttendees)}
             </div>
             <span className={`text-sm font-medium ${seasonSpotsAvailable <= 0 ? 'text-red-600' : 'text-gray-600'}`}>
               {seasonSpotsAvailable <= 0

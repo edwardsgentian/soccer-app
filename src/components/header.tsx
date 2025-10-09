@@ -1,17 +1,36 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
+import { LoadingButton } from "@/components/ui/loading-button"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { AuthModal } from "@/components/auth/auth-modal"
+import { useRouter } from "next/navigation"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [authModalOpen, setAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [signingOut, setSigningOut] = useState(false)
   const { user, player, signOut } = useAuth()
+  const router = useRouter()
+
+  // Preload routes on hover
+  const handleMouseEnter = (href: string) => {
+    router.prefetch(href)
+  }
+
+  // Handle sign out with loading state
+  const handleSignOut = async () => {
+    setSigningOut(true)
+    try {
+      await signOut()
+    } finally {
+      setSigningOut(false)
+    }
+  }
 
   return (
     <header className="bg-transparent">
@@ -32,13 +51,25 @@ export function Header() {
 
           {/* Desktop Navigation - Centered */}
           <nav className="hidden md:flex items-center space-x-8 flex-1 justify-center">
-            <Link href="/games" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link 
+              href="/games" 
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+              onMouseEnter={() => handleMouseEnter('/games')}
+            >
               Games
             </Link>
-            <Link href="/groups" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link 
+              href="/groups" 
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+              onMouseEnter={() => handleMouseEnter('/groups')}
+            >
               Groups
             </Link>
-            <Link href="/profile" className="text-gray-600 hover:text-gray-900 transition-colors">
+            <Link 
+              href="/profile" 
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+              onMouseEnter={() => handleMouseEnter('/profile')}
+            >
               Profile
             </Link>
           </nav>
@@ -50,9 +81,15 @@ export function Header() {
                 <span className="text-sm text-gray-600">
                   Hi, {player?.name || user.email}
                 </span>
-                <Button variant="outline" size="sm" onClick={signOut}>
+                <LoadingButton 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleSignOut}
+                  loading={signingOut}
+                  loadingText="Signing out..."
+                >
                   Sign Out
-                </Button>
+                </LoadingButton>
               </div>
             ) : (
               <Button 
@@ -140,6 +177,7 @@ export function Header() {
                       href="/" 
                       className="block text-lg text-gray-700 hover:text-gray-900 transition-colors py-2"
                       onClick={() => setIsMenuOpen(false)}
+                      onMouseEnter={() => handleMouseEnter('/')}
                     >
                       Home
                     </Link>
@@ -147,6 +185,7 @@ export function Header() {
                       href="/games" 
                       className="block text-lg text-gray-700 hover:text-gray-900 transition-colors py-2"
                       onClick={() => setIsMenuOpen(false)}
+                      onMouseEnter={() => handleMouseEnter('/games')}
                     >
                       Games
                     </Link>
@@ -154,6 +193,7 @@ export function Header() {
                       href="/groups" 
                       className="block text-lg text-gray-700 hover:text-gray-900 transition-colors py-2"
                       onClick={() => setIsMenuOpen(false)}
+                      onMouseEnter={() => handleMouseEnter('/groups')}
                     >
                       Groups
                     </Link>
@@ -161,6 +201,7 @@ export function Header() {
                       href="/profile" 
                       className="block text-lg text-gray-700 hover:text-gray-900 transition-colors py-2"
                       onClick={() => setIsMenuOpen(false)}
+                      onMouseEnter={() => handleMouseEnter('/profile')}
                     >
                       My Profile
                     </Link>
@@ -173,17 +214,19 @@ export function Header() {
                         <div className="text-sm text-gray-600">
                           Hi, {player?.name || user.email}
                         </div>
-                        <Button 
+                        <LoadingButton 
                           variant="outline" 
                           size="sm" 
                           onClick={() => {
-                            signOut()
+                            handleSignOut()
                             setIsMenuOpen(false)
                           }}
+                          loading={signingOut}
+                          loadingText="Signing out..."
                           className="w-full"
                         >
                           Sign Out
-                        </Button>
+                        </LoadingButton>
                       </div>
                     ) : (
                       <Button 

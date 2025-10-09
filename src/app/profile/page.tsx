@@ -48,6 +48,7 @@ interface GameHistory {
   created_at: string
   amount_paid: number
   games: {
+    id: string
     name: string
     game_date: string
     game_time: string
@@ -68,6 +69,10 @@ interface GameHistory {
         id: string
         player_id: string
         payment_status: string
+        players?: {
+          name: string
+          photo_url?: string
+        }
       }
     }[]
     seasons?: {
@@ -128,6 +133,15 @@ interface SeasonHistory {
       name: string
       whatsapp_group?: string
     }
+    season_attendees?: {
+      id: string
+      player_id: string
+      payment_status: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
+    }[]
   }
 }
 
@@ -144,15 +158,51 @@ export default function ProfilePage() {
   const [showEditForm, setShowEditForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'attended' | 'groups' | 'upcoming'>('upcoming')
   const [authModalOpen, setAuthModalOpen] = useState(false)
+  
+  // Progressive loading states
+  const [basicDataLoaded, setBasicDataLoaded] = useState(false)
+  const [tabsDataLoaded, setTabsDataLoaded] = useState(false)
+  
+  // Track loading state for individual sections
+  const [sectionLoading, setSectionLoading] = useState({
+    gameHistory: false,
+    createdGames: false,
+    createdGroups: false,
+    memberGroups: false,
+    upcomingGames: false,
+    upcomingSeasons: false,
+    pastSeasons: false
+  })
+  
+  const refreshData = useCallback(() => {
+    setBasicDataLoaded(false)
+    setTabsDataLoaded(false)
+    setLoading(true)
+  }, [])
+
+  // Load basic profile data first (fast)
+  const loadBasicData = useCallback(async () => {
+    if (!user || !player || basicDataLoaded) return
+    
+    try {
+      // Basic profile data is already available from auth context
+      // Just set the basic data as loaded
+      setBasicDataLoaded(true)
+      setLoading(false)
+    } catch (error) {
+      console.error('Error loading basic data:', error)
+      setLoading(false)
+    }
+  }, [user, player, basicDataLoaded])
+
 
   const fetchGameHistory = useCallback(async () => {
     if (!supabase || !user) {
-      setLoading(false)
       return
     }
 
     try {
-      // Query games table directly for past games
+      // Simplified query to avoid timeouts
       const { data: allGames, error } = await supabase
         .from('games')
         .select(`
@@ -170,14 +220,6 @@ export default function ProfilePage() {
             player_id,
             payment_status,
             attendance_status
-          ),
-          season_game_attendance (
-            attendance_status,
-            season_attendees (
-              id,
-              player_id,
-              payment_status
-            )
           )
         `)
         .lt('game_date', new Date().toISOString().split('T')[0])
@@ -186,8 +228,122 @@ export default function ProfilePage() {
       if (error) {
         console.error('Error fetching game history:', error)
       } else {
+        // Process games with player data
+        const gamesWithPlayerData = await Promise.all(
+          (allGames || []).map(async (game) => {
+            // First, fetch player data for individual game attendees
+            let gameAttendeesWithPlayers = game.game_attendees || []
+            if (game.game_attendees && game.game_attendees.length > 0) {
+              try {
+                const { data: gameAttendeesData, error: gameAttendeesError } = await supabase
+                  .from('game_attendees')
+                  .select(`
+                    id,
+                    player_id,
+                    payment_status,
+                    attendance_status,
+                    players (
+                      name,
+                      photo_url
+                    )
+                  `)
+                  .eq('game_id', game.id)
+                  .eq('payment_status', 'completed')
+
+                if (!gameAttendeesError && gameAttendeesData) {
+                  gameAttendeesWithPlayers = gameAttendeesData.map(attendee => ({
+                    id: attendee.id,
+                    player_id: attendee.player_id,
+                    payment_status: attendee.payment_status,
+                    attendance_status: attendee.attendance_status,
+                    players: attendee.players || { name: 'Unknown Player' }
+                  }))
+                }
+              } catch (err) {
+                console.error('Error fetching game attendees for game:', game.id, err)
+              }
+            }
+
+            if (game.season_id) {
+              try {
+                // Fetch season attendees for this game's season
+                const { data: seasonAttendees, error: seasonError } = await supabase
+                  .from('season_attendees')
+                  .select(`
+                    id,
+                    created_at,
+                    player_id,
+                    players (
+                      name,
+                      photo_url
+                    )
+                  `)
+                  .eq('season_id', game.season_id)
+                  .eq('payment_status', 'completed')
+
+                if (!seasonError && seasonAttendees) {
+                  // Fetch season game attendance for this specific game
+                  const { data: seasonGameAttendance } = await supabase
+                    .from('season_game_attendance')
+                    .select('season_attendee_id, attendance_status')
+                    .eq('game_id', game.id)
+
+                  // Combine season attendees with their attendance status for this game
+                  const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
+                    const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
+                    return {
+                      id: attendee.id,
+                      player_id: attendee.player_id,
+                      payment_status: 'completed',
+                      attendance_status: gameAttendance?.attendance_status || 'attending',
+                      players: attendee.players || { name: 'Unknown Player' }
+                    }
+                  })
+
+                  // Combine individual game attendees with season attendees
+                  const allAttendees = [
+                    ...gameAttendeesWithPlayers,
+                    ...seasonAttendeesWithStatus
+                  ]
+
+                  // Remove duplicates based on player_id
+                  const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
+                    index === self.findIndex(a => a.player_id === attendee.player_id)
+                  )
+
+                  // Create season_game_attendance structure with player data
+                  const seasonGameAttendanceWithPlayers = seasonAttendeesWithStatus.map(attendee => ({
+                    attendance_status: attendee.attendance_status,
+                    season_attendees: {
+                      id: attendee.id,
+                      player_id: attendee.player_id,
+                      payment_status: attendee.payment_status,
+                      players: attendee.players
+                    }
+                  }))
+
+                  return {
+                    ...game,
+                    game_attendees: uniqueAttendees,
+                    season_attendees: seasonAttendees,
+                    season_game_attendance: seasonGameAttendanceWithPlayers
+                  }
+                }
+              } catch (err) {
+                console.error('Error fetching season attendees for game:', game.id, err)
+              }
+            }
+            
+            // For non-season games, return with processed individual attendees
+            return {
+              ...game,
+              game_attendees: gameAttendeesWithPlayers
+            }
+          })
+        )
+
         // Filter for games where user attended
-        const pastGames = allGames?.filter((game) => {
+        const pastGames = gamesWithPlayerData?.filter((game) => {
           const userAttendee = game.game_attendees?.find(
             (attendee: GameAttendee) => 
               attendee.player_id === (player?.id || user.id) && 
@@ -204,6 +360,7 @@ export default function ProfilePage() {
           created_at: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.created_at || '',
           amount_paid: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
           games: {
+            id: game.id,
             name: game.name,
             game_date: game.game_date,
             game_time: game.game_time,
@@ -213,6 +370,7 @@ export default function ProfilePage() {
             season_signup_deadline: game.season_signup_deadline,
             total_tickets: game.total_tickets,
             game_attendees: game.game_attendees,
+            season_game_attendance: game.season_game_attendance,
             seasons: game.seasons,
             groups: game.groups
           }
@@ -222,8 +380,6 @@ export default function ProfilePage() {
       }
     } catch (err) {
       console.error('Error fetching game history:', err)
-    } finally {
-      setLoading(false)
     }
   }, [user, player?.id])
 
@@ -341,7 +497,7 @@ export default function ProfilePage() {
     if (!supabase || !user) return
 
     try {
-      // Query games table directly (like homepage does)
+      // Simplified query to avoid timeouts
       const { data: allGames, error } = await supabase
         .from('games')
         .select(`
@@ -359,14 +515,6 @@ export default function ProfilePage() {
             player_id,
             payment_status,
             attendance_status
-          ),
-          season_game_attendance (
-            attendance_status,
-            season_attendees (
-              id,
-              player_id,
-              payment_status
-            )
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
@@ -375,9 +523,42 @@ export default function ProfilePage() {
       if (error) {
         console.error('Error fetching upcoming games:', error)
       } else {
-        // For each game, if it's part of a season, fetch season attendees
-        const gamesWithSeasonAttendees = await Promise.all(
+        // For each game, fetch player data for attendees
+        const gamesWithPlayerData = await Promise.all(
           (allGames || []).map(async (game) => {
+            // First, fetch player data for individual game attendees
+            let gameAttendeesWithPlayers = game.game_attendees || []
+            if (game.game_attendees && game.game_attendees.length > 0) {
+              try {
+                const { data: gameAttendeesData, error: gameAttendeesError } = await supabase
+                  .from('game_attendees')
+                  .select(`
+                    id,
+                    player_id,
+                    payment_status,
+                    attendance_status,
+                    players (
+                      name,
+                      photo_url
+                    )
+                  `)
+                  .eq('game_id', game.id)
+                  .eq('payment_status', 'completed')
+
+                if (!gameAttendeesError && gameAttendeesData) {
+                  gameAttendeesWithPlayers = gameAttendeesData.map(attendee => ({
+                    id: attendee.id,
+                    player_id: attendee.player_id,
+                    payment_status: attendee.payment_status,
+                    attendance_status: attendee.attendance_status,
+                    players: attendee.players || { name: 'Unknown Player' }
+                  }))
+                }
+              } catch (err) {
+                console.error('Error fetching game attendees for game:', game.id, err)
+              }
+            }
+
             if (game.season_id) {
               try {
                 // Fetch season attendees for this game's season
@@ -409,13 +590,14 @@ export default function ProfilePage() {
                       id: attendee.id,
                       player_id: attendee.player_id,
                       payment_status: 'completed',
-                      attendance_status: gameAttendance?.attendance_status || 'attending'
+                      attendance_status: gameAttendance?.attendance_status || 'attending',
+                      players: attendee.players || { name: 'Unknown Player' }
                     }
                   })
 
                   // Combine individual game attendees with season attendees
                   const allAttendees = [
-                    ...(game.game_attendees || []),
+                    ...gameAttendeesWithPlayers,
                     ...seasonAttendeesWithStatus
                   ]
 
@@ -424,22 +606,39 @@ export default function ProfilePage() {
                     index === self.findIndex(a => a.player_id === attendee.player_id)
                   )
 
+                  // Create season_game_attendance structure with player data
+                  const seasonGameAttendanceWithPlayers = seasonAttendeesWithStatus.map(attendee => ({
+                    attendance_status: attendee.attendance_status,
+                    season_attendees: {
+                      id: attendee.id,
+                      player_id: attendee.player_id,
+                      payment_status: attendee.payment_status,
+                      players: attendee.players
+                    }
+                  }))
+
                   return {
                     ...game,
                     game_attendees: uniqueAttendees,
-                    season_attendees: seasonAttendees
+                    season_attendees: seasonAttendees,
+                    season_game_attendance: seasonGameAttendanceWithPlayers
                   }
                 }
               } catch (err) {
                 console.error('Error fetching season attendees for game:', game.id, err)
               }
             }
-            return game
+            
+            // For non-season games, return with processed individual attendees
+            return {
+              ...game,
+              game_attendees: gameAttendeesWithPlayers
+            }
           })
         )
 
         // Filter for games where user is attending (including season attendees)
-        const upcomingGames = gamesWithSeasonAttendees?.filter((game) => {
+        const upcomingGames = gamesWithPlayerData?.filter((game) => {
           const userAttendee = game.game_attendees?.find(
             (attendee: GameAttendee) => 
               attendee.player_id === (player?.id || user.id) && 
@@ -456,6 +655,7 @@ export default function ProfilePage() {
           created_at: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.created_at || '',
           amount_paid: game.game_attendees?.find((a: GameAttendee) => a.player_id === (player?.id || user.id))?.amount_paid || 0,
           games: {
+            id: game.id,
             name: game.name,
             game_date: game.game_date,
             game_time: game.game_time,
@@ -465,6 +665,7 @@ export default function ProfilePage() {
             season_signup_deadline: game.season_signup_deadline,
             total_tickets: game.total_tickets,
             game_attendees: game.game_attendees,
+            season_game_attendance: game.season_game_attendance,
             seasons: game.seasons,
             groups: game.groups
           }
@@ -530,13 +731,14 @@ export default function ProfilePage() {
     if (!supabase || !user) return
 
     try {
+      // Simplified query to avoid timeouts
       const { data, error } = await supabase
         .from('season_attendees')
         .select(`
           id,
           created_at,
           amount_paid,
-          seasons!inner (
+          seasons (
             id,
             name,
             description,
@@ -561,6 +763,7 @@ export default function ProfilePage() {
 
       if (error) {
         console.error('Error fetching past seasons:', error)
+        setPastSeasons([])
       } else {
         // Filter past seasons on the client side
         const today = new Date().toISOString().split('T')[0]
@@ -568,26 +771,96 @@ export default function ProfilePage() {
           (item) => item.seasons.first_game_date < today
         ) || []
         
-        setPastSeasons(pastSeasons)
+        // Fetch season attendees separately to avoid complex nested queries
+        const seasonsWithAttendees = await Promise.all(
+          pastSeasons.map(async (season) => {
+            try {
+              const { data: attendeesData } = await supabase
+                .from('season_attendees')
+                .select(`
+                  id,
+                  player_id,
+                  payment_status,
+                  players (
+                    name,
+                    photo_url
+                  )
+                `)
+                .eq('season_id', season.seasons.id)
+                .eq('payment_status', 'completed')
+
+              return {
+                ...season,
+                seasons: {
+                  ...season.seasons,
+                  season_attendees: attendeesData || []
+                }
+              }
+            } catch (err) {
+              console.error('Error fetching season attendees for season:', season.seasons.id, err)
+              return season
+            }
+          })
+        )
+        
+        setPastSeasons(seasonsWithAttendees)
       }
     } catch (err) {
       console.error('Error fetching past seasons:', err)
+      setPastSeasons([])
     }
   }, [user, player?.id])
 
+  // Load tabs data in background (slower)
+  const loadTabsData = useCallback(async () => {
+    if (!user || !player || tabsDataLoaded) return
+    
+    try {
+      // Run all fetch functions in parallel for better performance
+      Promise.allSettled([
+        fetchGameHistory(),
+        fetchCreatedGames(),
+        fetchCreatedGroups(),
+        fetchMemberGroups(),
+        fetchUpcomingGames(),
+        fetchUpcomingSeasons(),
+        fetchPastSeasons()
+      ]).then((results) => {
+        // Log any failed requests for debugging
+        results.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            const functionNames = [
+              'fetchGameHistory',
+              'fetchCreatedGames', 
+              'fetchCreatedGroups',
+              'fetchMemberGroups',
+              'fetchUpcomingGames',
+              'fetchUpcomingSeasons',
+              'fetchPastSeasons'
+            ]
+            console.error(`Failed to fetch ${functionNames[index]}:`, result.reason)
+          }
+        })
+        setTabsDataLoaded(true)
+      })
+    } catch (error) {
+      console.error('Error loading tabs data:', error)
+    }
+  }, [user, player, tabsDataLoaded, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
+
   useEffect(() => {
     if (user && player) {
-      fetchGameHistory()
-      fetchCreatedGames()
-      fetchCreatedGroups()
-      fetchMemberGroups()
-      fetchUpcomingGames()
-      fetchUpcomingSeasons()
-      fetchPastSeasons()
+      // Load basic data first (instant)
+      loadBasicData()
+      
+      // Then load tabs data in background
+      setTimeout(() => {
+        loadTabsData()
+      }, 100) // Small delay to ensure basic data loads first
     } else if (!authLoading) {
       setLoading(false)
     }
-  }, [user, player, authLoading, fetchGameHistory, fetchCreatedGames, fetchCreatedGroups, fetchMemberGroups, fetchUpcomingGames, fetchUpcomingSeasons, fetchPastSeasons])
+  }, [user, player, authLoading, loadBasicData, loadTabsData])
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -687,14 +960,42 @@ export default function ProfilePage() {
     }, 0)
   }
 
-  if (authLoading || loading) {
+  if (authLoading || (!basicDataLoaded && loading)) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
         <div className="container mx-auto px-4 py-16">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading profile...</p>
+          <div className="max-w-4xl mx-auto">
+            {/* Profile Header Skeleton */}
+            <div className="text-center mb-12">
+              <div className="w-32 h-32 bg-gray-200 rounded-full mx-auto mb-6 animate-pulse"></div>
+              <div className="h-8 bg-gray-200 rounded mx-auto mb-4 w-64 animate-pulse"></div>
+              <div className="h-4 bg-gray-200 rounded mx-auto w-48 animate-pulse"></div>
+            </div>
+
+            {/* Stats Skeleton */}
+            <div className="flex justify-center gap-8 mb-12">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="text-center">
+                  <div className="w-20 h-20 bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-16 mx-auto animate-pulse"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Content Sections Skeleton */}
+            <div className="space-y-12">
+              {[1, 2, 3].map((i) => (
+                <div key={i}>
+                  <div className="h-6 bg-gray-200 rounded mb-6 w-48 animate-pulse"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3].map((j) => (
+                      <div key={j} className="bg-gray-200 rounded-lg h-48 animate-pulse"></div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -974,7 +1275,12 @@ export default function ProfilePage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  {gameHistory.length === 0 && pastSeasons.length === 0 ? (
+                  {!tabsDataLoaded ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading your game history...</p>
+                    </div>
+                  ) : gameHistory.length === 0 && pastSeasons.length === 0 ? (
                     <div className="text-center py-12">
                       <Trophy className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600">No games or seasons attended yet.</p>
@@ -1010,6 +1316,7 @@ export default function ProfilePage() {
                                 gameSpotsAvailable={season.seasons.game_spots}
                                 isUserAttending={true}
                                 isPastSeason={true}
+                                seasonAttendees={season.seasons.season_attendees}
                               />
                             ))}
                           </div>
@@ -1059,7 +1366,7 @@ export default function ProfilePage() {
                                       location={game.games.location}
                                       maxAttendees={game.games.total_tickets || 10}
                                       groupName={game.games.groups.name}
-                                      gameId={game.id}
+                                      gameId={game.games.id}
                                       tags={[]}
                                       seasonId={game.games.season_id || game.games.seasons?.id}
                                       seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}
@@ -1091,18 +1398,23 @@ export default function ProfilePage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                {memberGroups.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">No groups joined yet.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {memberGroups.map((group) => (
-                      <GroupCard key={group.id} group={group} />
-                    ))}
-                  </div>
-                )}
+                  {!tabsDataLoaded ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading your groups...</p>
+                    </div>
+                  ) : memberGroups.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600">No groups joined yet.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {memberGroups.map((group) => (
+                        <GroupCard key={group.id} group={group} />
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -1114,8 +1426,12 @@ export default function ProfilePage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  
-                  {upcomingGames.length === 0 && upcomingSeasons.length === 0 ? (
+                  {!tabsDataLoaded ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading your upcoming games...</p>
+                    </div>
+                  ) : upcomingGames.length === 0 && upcomingSeasons.length === 0 ? (
                     <div className="text-center py-12">
                       <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600">No upcoming games or seasons registered.</p>
@@ -1150,6 +1466,7 @@ export default function ProfilePage() {
                                 seasonSpotsAvailable={season.seasons.season_spots - 1} // User is attending
                                 gameSpotsAvailable={season.seasons.game_spots}
                                 isUserAttending={true}
+                                seasonAttendees={season.seasons.season_attendees}
                               />
                             ))}
                           </div>
@@ -1199,7 +1516,7 @@ export default function ProfilePage() {
                                       location={game.games.location}
                                       maxAttendees={game.games.total_tickets || 10}
                                       groupName={game.games.groups.name}
-                                      gameId={game.id}
+                                      gameId={game.games.id}
                                       tags={[]}
                                       seasonId={game.games.season_id || game.games.seasons?.id}
                                       seasonSignupDeadline={game.games.season_signup_deadline || game.games.seasons?.season_signup_deadline}

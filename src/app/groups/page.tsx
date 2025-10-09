@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import { LoadingButton } from '@/components/ui/loading-button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { Calendar, Instagram, Globe, Component } from 'lucide-react'
+import { CalendarClock, Component, Users } from 'lucide-react'
 import Image from 'next/image'
+import { useServerPagination } from '@/hooks/usePagination'
+import { Pagination } from '@/components/ui/pagination'
+import { fetchGroups } from '@/lib/queries'
+import { fetchGroupsData } from '@/lib/optimized-queries'
 
 interface Group {
   id: string
@@ -21,57 +26,56 @@ interface Group {
   games?: Array<{
     id: string
     game_date: string
+    game_attendees?: Array<{
+      player_id: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
+    }>
+  }>
+  seasons?: Array<{
+    id: string
+    season_attendees?: Array<{
+      player_id: string
+    }>
   }>
 }
 
 export default function GroupsPage() {
-  const [groups, setGroups] = useState<Group[]>([])
+  const [allGroups, setAllGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [totalCount, setTotalCount] = useState(0)
+  const [hasMore, setHasMore] = useState(false)
+  const [creatingGroup, setCreatingGroup] = useState(false)
+  
+  // Use server-side pagination hook
+  const pagination = useServerPagination({ pageSize: 12 })
 
   useEffect(() => {
-    fetchGroups()
-  }, [])
+    loadGroupsData()
+  }, [pagination.currentPage])
 
-  const fetchGroups = async () => {
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
-
+  const loadGroupsData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('groups')
-        .select(`
-          *,
-          organizer:players!created_by (
-            id,
-            name,
-            photo_url
-          ),
-          games!inner (
-            id,
-            game_date
-          )
-        `)
-        .gte('games.game_date', new Date().toISOString().split('T')[0])
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('Error fetching groups:', error)
-        return
-      }
-
-      setGroups(data || [])
+      setLoading(true)
+      // Use optimized query with caching and pagination
+      const result = await fetchGroupsData(pagination.currentPage, pagination.pageSize)
+      
+      setAllGroups(result.groups)
+      setTotalCount(result.totalCount)
+      setHasMore(result.hasMore)
     } catch (err) {
       console.error('Error fetching groups:', err)
+      setAllGroups([])
     } finally {
       setLoading(false)
     }
   }
 
   const handleGroupCreated = () => {
-    fetchGroups() // Refresh the groups list
+    loadGroupsData() // Refresh the groups list
   }
 
   return (
@@ -83,33 +87,37 @@ export default function GroupsPage() {
         <div className="mb-8">
           <div className="text-center mb-6">
             <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">
-              Soccer Groups
+              Discover Groups
             </h1>
             <p className="text-gray-600">
-              Find and join soccer groups in your area
+              Find and join groups in your area
             </p>
           </div>
           <div className="flex justify-center">
-            <Button onClick={() => setShowCreateModal(true)}>
+            <LoadingButton 
+              onClick={() => setShowCreateModal(true)}
+              loading={creatingGroup}
+              loadingText="Creating..."
+            >
               Create Group
-            </Button>
+            </LoadingButton>
           </div>
         </div>
 
         {/* Groups Grid */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading groups...</p>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading groups...</p>
           </div>
-        ) : groups.length === 0 ? (
+        ) : pagination.totalItems === 0 ? (
           <div className="text-center py-12">
             <Component className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               No groups yet
             </h3>
             <p className="text-gray-600 mb-6">
-              Be the first to create a soccer group in your area!
+              Be the first to create a group in your area!
             </p>
             <Button
               onClick={() => setShowCreateModal(true)}
@@ -118,11 +126,28 @@ export default function GroupsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group) => (
-              <GroupCard key={group.id} group={group} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {allGroups.map((group) => (
+                <GroupCard key={group.id} group={group} />
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            {Math.ceil(totalCount / pagination.pageSize) > 1 && (
+              <div className="mt-8">
+                <Pagination
+                  currentPage={pagination.currentPage}
+                  totalPages={Math.ceil(totalCount / pagination.pageSize)}
+                  onPageChange={pagination.goToPage}
+                  showPageSizeSelector={true}
+                  pageSize={pagination.pageSize}
+                  onPageSizeChange={pagination.setPageSize}
+                  pageSizeOptions={[6, 12, 24, 48]}
+                />
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -136,46 +161,38 @@ export default function GroupsPage() {
 }
 
 function GroupCard({ group }: { group: Group }) {
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
 
   return (
     <div 
       className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer"
       onClick={() => window.location.href = `/groups/${group.id}`}
     >
-        {/* Group Header */}
-        <div className="h-32 bg-gray-50 flex items-center justify-center overflow-hidden">
-          {group.photo_url ? (
-            <Image
-              src={group.photo_url}
-              alt={group.name}
-              width={400}
-              height={128}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Component className="w-8 h-8 text-gray-400" />
-          )}
-        </div>
+        <div className="p-6 text-center">
+          {/* Group Image - Same size as icons */}
+          <div className="flex justify-center mb-4">
+            {group.photo_url ? (
+              <Image
+                src={group.photo_url}
+                alt={group.name}
+                width={64}
+                height={64}
+                className="w-16 h-16 rounded object-cover"
+              />
+            ) : (
+              <Component className="w-16 h-16 text-gray-400" />
+            )}
+          </div>
 
-        <div className="p-6">
           {/* Group Name */}
-          <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
-          
+          <h3 className="text-xl font-bold text-gray-900 mb-4">{group.name}</h3>
 
           {/* Tags */}
           {group.tags && group.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
               {group.tags.map((tag, index) => (
                 <span
                   key={index}
-                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
+                  className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded"
                 >
                   {tag}
                 </span>
@@ -183,44 +200,37 @@ function GroupCard({ group }: { group: Group }) {
             </div>
           )}
 
-          {/* Upcoming Games Count */}
-          <div className="flex items-center text-gray-600 text-sm mb-4">
-            <Calendar className="w-4 h-4 mr-2" />
-            <span>{group.games?.length || 0} upcoming games</span>
-          </div>
+          {/* Stats */}
+          <div className="flex items-center justify-center gap-6">
+            {/* Upcoming Games Count */}
+            <div className="flex items-center text-gray-600 text-sm">
+              <CalendarClock className="w-4 h-4 mr-2" />
+              <span>{(() => {
+                const today = new Date().toISOString().split('T')[0]
+                return group.games?.filter(game => game.game_date >= today).length || 0
+              })()}</span>
+            </div>
 
-          {/* Social Links */}
-          <div className="flex items-center gap-4 mb-4">
-            {group.instagram && (
-              <a
-                href={`https://instagram.com/${group.instagram.replace('@', '')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-gray-600 hover:text-pink-600 transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Instagram className="w-4 h-4 mr-1" />
-                <span className="text-sm">{group.instagram}</span>
-              </a>
-            )}
-            {group.website && (
-              <a
-                href={group.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Globe className="w-4 h-4 mr-1" />
-                <span className="text-sm">Website</span>
-              </a>
-            )}
-          </div>
-
-          {/* Created Date */}
-          <div className="flex items-center text-gray-500 text-sm">
-            <Calendar className="w-4 h-4 mr-1" />
-            <span>Created {formatDate(group.created_at)}</span>
+            {/* Player Count */}
+            <div className="flex items-center text-gray-600 text-sm">
+              <Users className="w-4 h-4 mr-2" />
+              <span>{(() => {
+                const allPlayerIds = new Set<string>()
+                // Add game attendees
+                group.games?.forEach(game => {
+                  game.game_attendees?.forEach(attendee => {
+                    allPlayerIds.add(attendee.player_id)
+                  })
+                })
+                // Add season attendees
+                group.seasons?.forEach(season => {
+                  season.season_attendees?.forEach(attendee => {
+                    allPlayerIds.add(attendee.player_id)
+                  })
+                })
+                return allPlayerIds.size
+              })()}</span>
+            </div>
           </div>
         </div>
     </div>

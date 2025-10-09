@@ -70,6 +70,11 @@ interface Game {
     id: string
     player_id: string
     payment_status: string
+    attendance_status?: 'attending' | 'not_attending'
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
   season_game_attendance?: {
     attendance_status: 'attending' | 'not_attending'
@@ -77,6 +82,10 @@ interface Game {
       id: string
       player_id: string
       payment_status: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
     }
   }[]
 }
@@ -126,16 +135,6 @@ export default function SeasonDetailPage() {
         throw seasonError
       }
 
-      console.log('=== RAW SEASON DATA ===')
-      console.log('Season ID:', seasonData.id)
-      console.log('Season Spots:', seasonData.season_spots)
-      console.log('Season Attendees Count:', seasonData.season_attendees?.length || 0)
-      console.log('Season Attendees Details:', seasonData.season_attendees?.map((att: { id: string; player_id: string; payment_status: string; players?: { name: string } }) => ({
-        id: att.id,
-        player_id: att.player_id,
-        payment_status: att.payment_status,
-        player_name: att.players?.name
-      })))
 
       setSeason(seasonData)
 
@@ -158,14 +157,22 @@ export default function SeasonDetailPage() {
             id,
             player_id,
             payment_status,
-            attendance_status
+            attendance_status,
+            players (
+              name,
+              photo_url
+            )
           ),
           season_game_attendance (
             attendance_status,
             season_attendees (
               id,
               player_id,
-              payment_status
+              payment_status,
+              players (
+                name,
+                photo_url
+              )
             )
           )
         `)
@@ -191,13 +198,14 @@ export default function SeasonDetailPage() {
               ) || []
 
               // Combine season attendees with their attendance status for this game
-              const seasonAttendeesWithStatus = seasonAttendees.map((attendee: { id: string; player_id: string; payment_status: string }) => {
+              const seasonAttendeesWithStatus = seasonAttendees.map((attendee: { id: string; player_id: string; payment_status: string; players?: { name: string; photo_url?: string } }) => {
                 const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
                 return {
                   id: attendee.id,
                   player_id: attendee.player_id,
                   payment_status: 'completed',
-                  attendance_status: gameAttendance?.attendance_status || 'attending'
+                  attendance_status: gameAttendance?.attendance_status || 'attending',
+                  players: attendee.players || { name: 'Unknown Player' }
                 }
               })
 
@@ -212,9 +220,21 @@ export default function SeasonDetailPage() {
                 index === self.findIndex(a => a.player_id === attendee.player_id)
               )
 
+              // Create season_game_attendance structure with player data
+              const seasonGameAttendanceWithPlayers = seasonAttendeesWithStatus.map((attendee: { id: string; player_id: string; payment_status: string; attendance_status: string; players: { name: string; photo_url?: string } }) => ({
+                attendance_status: attendee.attendance_status,
+                season_attendees: {
+                  id: attendee.id,
+                  player_id: attendee.player_id,
+                  payment_status: attendee.payment_status,
+                  players: attendee.players
+                }
+              }))
+
               return {
                 ...game,
-                game_attendees: uniqueAttendees
+                game_attendees: uniqueAttendees,
+                season_game_attendance: seasonGameAttendanceWithPlayers
               }
             } catch (err) {
               console.error('Error combining attendees for game:', game.id, err)
@@ -341,13 +361,6 @@ export default function SeasonDetailPage() {
   
   const seasonSpotsAvailable = season.season_spots - seasonAttendeesCount
   
-  // Debug logging
-  console.log('=== SEASON ATTENDEES CALCULATION ===')
-  console.log('Total Spots:', season.season_spots)
-  console.log('Raw Attendees Count:', season.season_attendees?.length || 0)
-  console.log('Paid Attendees Count:', uniqueSeasonAttendees.length)
-  console.log('Unique Attendees Count:', deduplicatedAttendees.length)
-  console.log('Final Count:', seasonAttendeesCount)
   console.log('Available Spots:', seasonSpotsAvailable)
   console.log('Deduplicated Attendees:', deduplicatedAttendees.map((att: { id: string; player_id: string; payment_status: string; players?: { name: string; photo_url?: string } }) => ({
     id: att.id,

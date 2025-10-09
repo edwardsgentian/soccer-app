@@ -29,6 +29,10 @@ interface Season {
     id: string
     player_id: string
     payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
 }
 
@@ -59,7 +63,11 @@ export default function SeasonsPage() {
           season_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            players (
+              name,
+              photo_url
+            )
           )
         `)
         .gte('first_game_date', new Date().toISOString().split('T')[0])
@@ -155,6 +163,7 @@ export default function SeasonsPage() {
                   seasonSpotsAvailable={seasonSpotsAvailable}
                   gameSpotsAvailable={gameSpotsAvailable}
                   isUserAttending={isUserAttending}
+                  seasonAttendees={season.season_attendees}
                 />
               )
             })}

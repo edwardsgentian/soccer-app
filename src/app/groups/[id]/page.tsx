@@ -12,6 +12,9 @@ import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import { GroupEditForm } from '@/components/groups/group-edit-form'
+import { GlassyButton } from '@/components/ui/glassy-button'
+import { AnimatedAvatar } from '@/components/ui/animated-avatar'
+import { fetchGroupDetailData } from '@/lib/optimized-queries'
 
 // Animated counter component
 function AnimatedCounter({ value }: { value: number }) {
@@ -79,11 +82,31 @@ interface Game {
     player_id: string
     payment_status: string
     attendance_status?: 'attending' | 'not_attending'
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
   season_attendees?: {
     id: string
     player_id: string
     payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
+  }[]
+  season_game_attendance?: {
+    attendance_status: 'attending' | 'not_attending'
+    season_attendees: {
+      id: string
+      player_id: string
+      payment_status: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
+    }
   }[]
 }
 
@@ -108,6 +131,10 @@ interface Season {
     id: string
     player_id: string
     payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
 }
 
@@ -126,15 +153,20 @@ export default function GroupDetailPage() {
   const [players, setPlayers] = useState<Player[]>([])
   const [hasUserJoined, setHasUserJoined] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
+  
+  // Progressive loading states
+  const [basicDataLoaded, setBasicDataLoaded] = useState(false)
+  const [tabsDataLoaded, setTabsDataLoaded] = useState(false)
 
-  const fetchGroupDetails = useCallback(async () => {
-    if (!supabase) {
+  // Load basic group data first (fast)
+  const loadBasicData = useCallback(async () => {
+    if (!supabase || basicDataLoaded) {
       setLoading(false)
       return
     }
 
     try {
-      // Fetch group details
+      // Fetch only basic group data first
       const { data: groupData, error: groupError } = await supabase
         .from('groups')
         .select('*')
@@ -142,241 +174,65 @@ export default function GroupDetailPage() {
         .single()
 
       if (groupError) {
-        console.error('Error fetching group:', groupError)
-        setError('Failed to load group details')
-        return
+        throw new Error('Group not found')
       }
 
       setGroup(groupData)
+      setBasicDataLoaded(true)
+      setLoading(false)
+    } catch (err) {
+      console.error('Error fetching basic group data:', err)
+      setError('Failed to load group details')
+      setLoading(false)
+    }
+  }, [groupId, basicDataLoaded])
 
-      // Fetch games for this group
-      const { data: gamesData, error: gamesError } = await supabase
-        .from('games')
-        .select(`
-          *,
-          groups (
-            name,
-            whatsapp_group
-          ),
-          seasons (
-            id,
-            season_signup_deadline
-          ),
-          game_attendees (
-            id,
-            player_id,
-            payment_status,
-            attendance_status
-          )
-        `)
-        .eq('group_id', groupId)
-        .order('game_date', { ascending: true })
+  // Load tabs data in background (slower)
+  const loadTabsData = useCallback(async () => {
+    if (!supabase || !group || tabsDataLoaded) return
 
-      if (gamesError) {
-        console.error('Error fetching games:', gamesError)
-      } else {
-        // For each game, if it's part of a season, fetch season attendees
-        const gamesWithSeasonAttendees = await Promise.all(
-          (gamesData || []).map(async (game) => {
-            if (game.season_id) {
-              try {
-                // Fetch season attendees for this game's season
-                const { data: seasonAttendees, error: seasonError } = await supabase
-                  .from('season_attendees')
-                  .select(`
-                    id,
-                    created_at,
-                    player_id,
-                    players (
-                      name,
-                      photo_url
-                    )
-                  `)
-                  .eq('season_id', game.season_id)
-                  .eq('payment_status', 'completed')
-
-                if (!seasonError && seasonAttendees) {
-                  // Fetch season game attendance for this specific game
-                  const { data: seasonGameAttendance } = await supabase
-                    .from('season_game_attendance')
-                    .select('season_attendee_id, attendance_status')
-                    .eq('game_id', game.id)
-
-                  // Combine season attendees with their attendance status for this game
-                  const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
-                    const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-                    return {
-                      id: attendee.id,
-                      player_id: attendee.player_id,
-                      payment_status: 'completed',
-                      attendance_status: gameAttendance?.attendance_status || 'attending'
-                    }
-                  })
-
-                  // Combine individual game attendees with season attendees
-                  const allAttendees = [
-                    ...(game.game_attendees || []),
-                    ...seasonAttendeesWithStatus
-                  ]
-
-                  // Remove duplicates based on player_id
-                  const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
-                    index === self.findIndex(a => a.player_id === attendee.player_id)
-                  )
-
-                  return {
-                    ...game,
-                    game_attendees: uniqueAttendees,
-                    season_attendees: seasonAttendees
-                  }
-                }
-              } catch (err) {
-                console.error('Error fetching season attendees for game:', game.id, err)
-              }
-            }
-            return game
-          })
-        )
-        setGames(gamesWithSeasonAttendees)
-      }
-
-      // Fetch seasons for this group
-      const { data: seasonsData, error: seasonsError } = await supabase
-        .from('seasons')
-        .select(`
-          *,
-          groups (
-            name,
-            whatsapp_group
-          ),
-          season_attendees (
-            id,
-            player_id,
-            payment_status
-          )
-        `)
-        .eq('group_id', groupId)
-        .order('first_game_date', { ascending: true })
-
-      if (seasonsError) {
-        console.error('Error fetching seasons:', seasonsError)
-      } else {
-        setSeasons(seasonsData || [])
-      }
+    try {
+      // Use optimized query with caching for detailed data
+      const { games, seasons, players } = await fetchGroupDetailData(groupId)
+      
+      setGames(games as unknown as Game[])
+      setSeasons(seasons as unknown as Season[])
+      setPlayers(players)
 
       // Check if user has joined any games or seasons in this group
       if (player) {
-        const hasJoinedGame = (gamesData || []).some((game: { game_attendees?: { player_id: string; payment_status: string }[] }) => 
-          game.game_attendees?.some((attendee: { player_id: string; payment_status: string }) => 
+        const hasJoinedGame = games.some((game: any) => 
+          game.game_attendees?.some((attendee: any) => 
             attendee.player_id === player.id && attendee.payment_status === 'completed'
           )
         )
         
-        const hasJoinedSeason = (seasonsData || []).some((season: { season_attendees?: { player_id: string; payment_status: string }[] }) => 
-          season.season_attendees?.some((attendee: { player_id: string; payment_status: string }) => 
+        const hasJoinedSeason = seasons.some((season: any) => 
+          season.season_attendees?.some((attendee: any) => 
             attendee.player_id === player.id && attendee.payment_status === 'completed'
           )
         )
         
         setHasUserJoined(hasJoinedGame || hasJoinedSeason)
       }
-
-      // Fetch players from both individual game attendees and season attendees
-      const allPlayers = new Map<string, Player>()
-
-      // Fetch individual game attendees (only if there are games)
-      let gameAttendeesData = null
-      let gameAttendeesError = null
       
-      if (gamesData && gamesData.length > 0) {
-        const result = await supabase
-          .from('game_attendees')
-          .select(`
-            player_id,
-            players!inner (
-              id,
-              name,
-              email,
-              photo_url
-            )
-          `)
-          .eq('payment_status', 'completed')
-          .in('game_id', gamesData.map(game => game.id))
-        
-        gameAttendeesData = result.data
-        gameAttendeesError = result.error
-      }
-
-      if (!gameAttendeesError && gameAttendeesData) {
-        (gameAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-          if (attendee.players && attendee.players.id) {
-            const player = attendee.players
-            if (player && player.id) {
-              allPlayers.set(player.id, {
-                id: player.id,
-                name: player.name,
-                email: '', // Hide email
-                photo_url: player.photo_url
-              })
-            }
-          }
-        })
-      }
-
-      // Fetch season attendees (only if there are seasons)
-      let seasonAttendeesData = null
-      let seasonAttendeesError = null
-      
-      if (seasonsData && seasonsData.length > 0) {
-        const result = await supabase
-          .from('season_attendees')
-          .select(`
-            player_id,
-            players!inner (
-              id,
-              name,
-              email,
-              photo_url
-            )
-          `)
-          .eq('payment_status', 'completed')
-          .in('season_id', seasonsData.map(season => season.id))
-        
-        seasonAttendeesData = result.data
-        seasonAttendeesError = result.error
-      }
-
-      if (!seasonAttendeesError && seasonAttendeesData) {
-        (seasonAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-          if (attendee.players && attendee.players.id) {
-            const player = attendee.players
-            if (player && player.id) {
-              allPlayers.set(player.id, {
-                id: player.id,
-                name: player.name,
-                email: '', // Hide email
-                photo_url: player.photo_url
-              })
-            }
-          }
-        })
-      }
-
-      const playersArray = Array.from(allPlayers.values())
-      setPlayers(playersArray)
+      setTabsDataLoaded(true)
     } catch (err) {
-      console.error('Error fetching group details:', err)
-      setError('Failed to load group details')
-    } finally {
-      setLoading(false)
+      console.error('Error fetching tabs data:', err)
     }
-  }, [groupId, player])
+  }, [groupId, group, player, tabsDataLoaded])
 
   useEffect(() => {
     if (groupId) {
-      fetchGroupDetails()
+      // Load basic data first (instant)
+      loadBasicData()
+      
+      // Then load tabs data in background
+      setTimeout(() => {
+        loadTabsData()
+      }, 100) // Small delay to ensure basic data loads first
     }
-  }, [groupId, fetchGroupDetails])
+  }, [groupId, loadBasicData, loadTabsData])
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -397,7 +253,14 @@ export default function GroupDetailPage() {
             onSuccess={async () => {
               // Wait a bit for DB to update
               await new Promise(resolve => setTimeout(resolve, 200))
-              await fetchGroupDetails()
+              // Reset states and reload data
+              setBasicDataLoaded(false)
+              setTabsDataLoaded(false)
+              setLoading(true)
+              await loadBasicData()
+              setTimeout(() => {
+                loadTabsData()
+              }, 100)
               setShowEditForm(false)
             }}
             onCancel={() => setShowEditForm(false)}
@@ -407,7 +270,7 @@ export default function GroupDetailPage() {
     )
   }
 
-  if (loading) {
+  if (loading || !basicDataLoaded) {
     return (
       <div className="min-h-screen bg-white">
         <Header />
@@ -500,55 +363,28 @@ export default function GroupDetailPage() {
           <div className="mb-8">
             <div className="flex flex-wrap justify-center gap-3">
               {group.whatsapp_group && hasUserJoined && (
-                <div className="relative group/social">
-                  <a
-                    href={group.whatsapp_group}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                  </a>
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                    WhatsApp Group
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
-                  </div>
-                </div>
+                <GlassyButton
+                  href={group.whatsapp_group}
+                  tooltip="WhatsApp Group"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </GlassyButton>
               )}
               {group.instagram && (
-                <div className="relative group/social">
-                  <a
-                    href={group.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    <Instagram className="w-5 h-5" />
-                  </a>
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                    Instagram
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
-                  </div>
-                </div>
+                <GlassyButton
+                  href={group.instagram}
+                  tooltip="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </GlassyButton>
               )}
               {group.website && (
-                <div className="relative group/social">
-                  <a
-                    href={group.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    <Globe className="w-5 h-5" />
-                  </a>
-                  {/* Tooltip */}
-                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
-                    Website
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
-                  </div>
-                </div>
+                <GlassyButton
+                  href={group.website}
+                  tooltip="Website"
+                >
+                  <Globe className="w-5 h-5" />
+                </GlassyButton>
               )}
             </div>
           </div>
@@ -575,7 +411,7 @@ export default function GroupDetailPage() {
                 {group.tags.map((tag, index) => (
                   <span
                     key={index}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded"
                   >
                     {tag}
                   </span>
@@ -614,33 +450,16 @@ export default function GroupDetailPage() {
             {players.length > 0 ? (
               <div className="flex flex-wrap justify-center gap-2">
                 {players.map((player) => (
-                  <div 
-                    key={player.id} 
-                    className="relative group"
-                  >
-                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
-                      {player.photo_url ? (
-                        <Image
-                          src={player.photo_url}
-                          alt={player.name}
-                          width={40}
-                          height={40}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <span className="text-sm font-semibold text-gray-600">
-                          {player.name?.charAt(0).toUpperCase() || '?'}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                      {player.name || 'Unknown Player'}
-                      {/* Tooltip arrow */}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
-                    </div>
-                  </div>
+                  <AnimatedAvatar
+                    key={player.id}
+                    src={player.photo_url}
+                    alt={player.name}
+                    fallback={player.name?.charAt(0).toUpperCase() || '?'}
+                    name={player.name || 'Unknown Player'}
+                    size="md"
+                    hoverEffect="lift"
+                    showTooltip={true}
+                  />
                 ))}
               </div>
             ) : (
@@ -709,12 +528,17 @@ export default function GroupDetailPage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                {games.length > 0 ? (
+                  {!tabsDataLoaded ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading games...</p>
+                    </div>
+                  ) : games.length > 0 ? (
                   <div className="max-w-lg mx-auto space-y-6">
                   {games.map((game) => {
                     // Check if user has purchased the season (for season games)
-                    const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(
-                      (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                    const hasPurchasedSeason = game.season_id && player && game.season_game_attendance?.some(
+                      (attendance) => attendance.season_attendees.player_id === player.id && attendance.season_attendees.payment_status === 'completed'
                     ) || false
 
                     // Check if current user is attending this game
@@ -735,6 +559,7 @@ export default function GroupDetailPage() {
                         price={game.price}
                         maxAttendees={game.total_tickets}
                         gameAttendees={game.game_attendees || []}
+                        seasonGameAttendance={game.season_game_attendance || []}
                         seasonId={game.season_id}
                         seasonSignupDeadline={game.season_signup_deadline}
                         groupName={group.name}
@@ -782,7 +607,12 @@ export default function GroupDetailPage() {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                {seasons.length > 0 ? (
+                  {!tabsDataLoaded ? (
+                    <div className="text-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                      <p className="text-gray-600">Loading seasons...</p>
+                    </div>
+                  ) : seasons.length > 0 ? (
                   <div className="max-w-lg mx-auto space-y-6">
                   {seasons.map((season) => (
                         <SeasonCard
@@ -802,6 +632,7 @@ export default function GroupDetailPage() {
                           location={season.location}
                       seasonSpotsAvailable={season.season_spots - (season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0)}
                       gameSpotsAvailable={season.game_spots}
+                      seasonAttendees={season.season_attendees}
                     />
                   ))}
                   </div>

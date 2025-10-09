@@ -8,6 +8,7 @@ import { Header } from '@/components/header'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
+import { GameCardSkeleton, SeasonCardSkeleton } from '@/components/ui/skeleton-loader'
 
 interface Game {
   id: string
@@ -34,11 +35,20 @@ interface Game {
     id: string
     player_id: string
     payment_status: string
+    attendance_status?: 'attending' | 'not_attending'
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
   season_attendees?: {
     id: string
     player_id: string
     payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
   season_game_attendance?: {
     attendance_status: 'attending' | 'not_attending'
@@ -46,6 +56,10 @@ interface Game {
       id: string
       player_id: string
       payment_status: string
+      players?: {
+        name: string
+        photo_url?: string
+      }
     }
   }[]
 }
@@ -71,6 +85,10 @@ interface Season {
     id: string
     player_id: string
     payment_status: string
+    players?: {
+      name: string
+      photo_url?: string
+    }
   }[]
 }
 
@@ -79,19 +97,55 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([])
   const [seasons, setSeasons] = useState<Season[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMoreGames, setHasMoreGames] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalGames, setTotalGames] = useState(0)
+  const [dataFetched, setDataFetched] = useState(false)
+  
+  const GAMES_PER_PAGE = 10
+  const CACHE_KEY = 'games-page-data'
+  const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes
 
   useEffect(() => {
-    fetchGames()
-    fetchSeasons()
-  }, [])
+    if (!dataFetched) {
+      fetchGames()
+      fetchSeasons()
+    }
+  }, [dataFetched])
 
-  const fetchGames = async () => {
+  const fetchGames = async (page: number = 1, append: boolean = false) => {
     if (!supabase) {
       setLoading(false)
       return
     }
 
     try {
+      // Check cache for first page only
+      if (page === 1 && !append) {
+        const cachedData = getCachedData()
+        if (cachedData) {
+          setGames(cachedData.games)
+          setTotalGames(cachedData.totalGames)
+          setHasMoreGames(cachedData.hasMoreGames)
+          setLoading(false)
+          setDataFetched(true)
+          return
+        }
+      }
+
+      const offset = (page - 1) * GAMES_PER_PAGE
+      
+      // First, get total count for pagination
+      const { count: totalCount } = await supabase
+        .from('games')
+        .select('*', { count: 'exact', head: true })
+        .gte('game_date', new Date().toISOString().split('T')[0])
+
+      setTotalGames(totalCount || 0)
+      setHasMoreGames(offset + GAMES_PER_PAGE < (totalCount || 0))
+
+      // Then fetch the paginated games
       const { data, error } = await supabase
         .from('games')
         .select(`
@@ -109,27 +163,54 @@ export default function GamesPage() {
             player_id,
             payment_status,
             attendance_status
-          ),
-          season_game_attendance (
-            attendance_status,
-            season_attendees (
-              id,
-              player_id,
-              payment_status
-            )
           )
         `)
         .gte('game_date', new Date().toISOString().split('T')[0])
         .order('game_date', { ascending: true })
+        .range(offset, offset + GAMES_PER_PAGE - 1)
 
       if (error) {
         console.error('Error fetching games:', error)
         return
       }
 
-      // For each game, if it's part of a season, fetch season attendees
-      const gamesWithSeasonAttendees = await Promise.all(
+
+      // For each game, fetch player data separately to avoid complex nested queries
+      const gamesWithPlayerData = await Promise.all(
         (data || []).map(async (game) => {
+          // First, fetch player data for individual game attendees
+          let gameAttendeesWithPlayers = game.game_attendees || []
+          if (game.game_attendees && game.game_attendees.length > 0) {
+            try {
+              const { data: gameAttendeesData, error: gameAttendeesError } = await supabase
+                .from('game_attendees')
+                .select(`
+                  id,
+                  player_id,
+                  payment_status,
+                  attendance_status,
+                  players (
+                    name,
+                    photo_url
+                  )
+                `)
+                .eq('game_id', game.id)
+                .eq('payment_status', 'completed')
+
+              if (!gameAttendeesError && gameAttendeesData) {
+                gameAttendeesWithPlayers = gameAttendeesData.map(attendee => ({
+                  id: attendee.id,
+                  player_id: attendee.player_id,
+                  payment_status: attendee.payment_status,
+                  attendance_status: attendee.attendance_status,
+                  players: attendee.players || { name: 'Unknown Player' }
+                }))
+              }
+            } catch (err) {
+              console.error('Error fetching game attendees for game:', game.id, err)
+            }
+          }
+
           if (game.season_id) {
             try {
               // Fetch season attendees for this game's season
@@ -161,13 +242,14 @@ export default function GamesPage() {
                     id: attendee.id,
                     player_id: attendee.player_id,
                     payment_status: 'completed',
-                    attendance_status: gameAttendance?.attendance_status || 'attending'
+                    attendance_status: gameAttendance?.attendance_status || 'attending',
+                    players: attendee.players || { name: 'Unknown Player' }
                   }
                 })
 
                 // Combine individual game attendees with season attendees
                 const allAttendees = [
-                  ...(game.game_attendees || []),
+                  ...gameAttendeesWithPlayers,
                   ...seasonAttendeesWithStatus
                 ]
 
@@ -176,26 +258,93 @@ export default function GamesPage() {
                   index === self.findIndex(a => a.player_id === attendee.player_id)
                 )
 
+                // Create season_game_attendance structure with player data
+                const seasonGameAttendanceWithPlayers = seasonAttendeesWithStatus.map(attendee => ({
+                  attendance_status: attendee.attendance_status,
+                  season_attendees: {
+                    id: attendee.id,
+                    player_id: attendee.player_id,
+                    payment_status: attendee.payment_status,
+                    players: attendee.players
+                  }
+                }))
+
                 return {
                   ...game,
                   game_attendees: uniqueAttendees,
-                  season_attendees: seasonAttendees
+                  season_attendees: seasonAttendees,
+                  season_game_attendance: seasonGameAttendanceWithPlayers
                 }
               }
             } catch (err) {
               console.error('Error fetching season attendees for game:', game.id, err)
             }
           }
-          return game
+          
+          // For non-season games, return with processed individual attendees
+          return {
+            ...game,
+            game_attendees: gameAttendeesWithPlayers
+          }
         })
       )
 
-      setGames(gamesWithSeasonAttendees)
+      if (append) {
+        setGames(prevGames => [...prevGames, ...gamesWithPlayerData])
+      } else {
+        setGames(gamesWithPlayerData)
+        // Cache the first page data
+        if (page === 1) {
+          setCachedData({
+            games: gamesWithPlayerData,
+            totalGames: totalCount || 0,
+            hasMoreGames: offset + GAMES_PER_PAGE < (totalCount || 0)
+          })
+        }
+      }
     } catch (err) {
       console.error('Error fetching games:', err)
     } finally {
       setLoading(false)
+      setLoadingMore(false)
+      setDataFetched(true)
     }
+  }
+
+  // Simple cache functions
+  const getCachedData = () => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached)
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          return data
+        }
+      }
+    } catch (error) {
+      console.error('Error reading cache:', error)
+    }
+    return null
+  }
+
+  const setCachedData = (data: any) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }))
+    } catch (error) {
+      console.error('Error setting cache:', error)
+    }
+  }
+
+  const loadMoreGames = async () => {
+    if (loadingMore || !hasMoreGames) return
+    
+    setLoadingMore(true)
+    const nextPage = currentPage + 1
+    setCurrentPage(nextPage)
+    await fetchGames(nextPage, true)
   }
 
   const fetchSeasons = async () => {
@@ -213,7 +362,11 @@ export default function GamesPage() {
           season_attendees (
             id,
             player_id,
-            payment_status
+            payment_status,
+            players (
+              name,
+              photo_url
+            )
           )
         `)
         .gte('first_game_date', new Date().toISOString().split('T')[0])
@@ -259,15 +412,16 @@ export default function GamesPage() {
             Upcoming Games
           </h1>
           <p className="text-gray-600">
-            Find and join soccer games in your area
+            Find and join games in your area
           </p>
         </div>
 
         {/* Games Grid */}
         {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading games...</p>
+          <div className="max-w-lg mx-auto space-y-6">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <GameCardSkeleton key={index} />
+            ))}
           </div>
         ) : games.length === 0 && seasons.length === 0 ? (
           <div className="text-center py-12">
@@ -328,6 +482,7 @@ export default function GamesPage() {
                       seasonSpotsAvailable={seasonSpotsAvailable}
                       gameSpotsAvailable={gameSpotsAvailable}
                       isUserAttending={isUserAttending}
+                      seasonAttendees={season.season_attendees}
                     />
                   )
                 })}
@@ -371,8 +526,8 @@ export default function GamesPage() {
                       ))
 
                       // Check if user has purchased the season (for season games)
-                      const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(
-                        (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
+                      const hasPurchasedSeason = game.season_id && player && game.season_game_attendance?.some(
+                        (attendance) => attendance.season_attendees.player_id === player.id && attendance.season_attendees.payment_status === 'completed'
                       ) || false
 
                       // For season games, if they purchased the season, they're considered attending by default
@@ -402,6 +557,27 @@ export default function GamesPage() {
                 </div>
               ))
             })()}
+              </div>
+            )}
+
+            {/* Load More Button */}
+            {games.length > 0 && hasMoreGames && (
+              <div className="max-w-lg mx-auto mt-8">
+                <Button
+                  onClick={loadMoreGames}
+                  disabled={loadingMore}
+                  className="w-full"
+                  variant="outline"
+                >
+                  {loadingMore ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-900 mr-2"></div>
+                      Loading more games...
+                    </div>
+                  ) : (
+                    `Load More Games (${totalGames - games.length} remaining)`
+                  )}
+                </Button>
               </div>
             )}
           </>

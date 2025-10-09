@@ -1,12 +1,39 @@
 {
   "name": "soccer-app",
   "version": "0.1.9",
+  "description": "A modern web application for managing soccer games, groups, and player interactions",
   "private": true,
+  "keywords": [
+    "soccer",
+    "sports",
+    "games",
+    "groups",
+    "nextjs",
+    "typescript",
+    "supabase",
+    "react"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/soccer-app.git"
+  },
+  "homepage": "https://github.com/yourusername/soccer-app#readme",
+  "bugs": {
+    "url": "https://github.com/yourusername/soccer-app/issues"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "type-check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "clean": "rm -rf .next out dist",
+    "preview": "next build && next start"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.3",
