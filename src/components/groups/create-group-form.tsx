@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
 // import { useAuth } from '@/contexts/auth-context'
 
 interface CreateGroupFormProps {
@@ -176,10 +177,11 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
             <div className="flex items-start space-x-4">
               {previewUrl && (
                 <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-300">
-                  <img
+                  <Image
                     src={previewUrl}
                     alt="Group preview"
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
               )}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
+import Image from 'next/image'
 
 interface ProfileFormProps {
   onSuccess?: () => void
@@ -294,12 +295,13 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                 <div className="flex items-center gap-6">
                   {/* Preview */}
                   <div className="flex-shrink-0">
-                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                    <div className="relative w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
                       {previewUrl ? (
-                        <img
+                        <Image
                           src={previewUrl}
                           alt="Profile preview"
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       ) : (
                         <span className="text-3xl text-gray-400 font-bold">

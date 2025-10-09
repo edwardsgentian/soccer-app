@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { X } from 'lucide-react'
+import Image from 'next/image'
 
 interface GroupEditFormProps {
   groupId: string
@@ -237,10 +238,11 @@ export function GroupEditForm({ groupId, onSuccess, onCancel }: GroupEditFormPro
                 <div className="flex items-start space-x-4">
                   {previewUrl && (
                     <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-300">
-                      <img
+                      <Image
                         src={previewUrl}
                         alt="Group preview"
-                        className="w-full h-full object-cover"
+                        fill
+                        className="object-cover"
                       />
                     </div>
                   )}

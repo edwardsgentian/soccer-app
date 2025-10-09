@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { fetchHomepageData, getCachedData, setCachedData } from '@/lib/optimized-queries'
+import { GameCardSkeleton } from '@/components/ui/skeleton-loader'
 
 interface Game {
   id: string
@@ -143,7 +144,7 @@ export default function Home() {
     }
   }, [dataFetched, loadHomepageData])
 
-  const loadHomepageData = async () => {
+  const loadHomepageData = useCallback(async () => {
     try {
       // Check cache first
       const cacheKey = 'homepage-data'
@@ -231,7 +232,7 @@ export default function Home() {
       setGames([])
       setSeasons([])
     }
-  }
+  }, [])
 
   return (
     <div className="min-h-screen bg-white">

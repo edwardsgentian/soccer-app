@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingButton } from '@/components/ui/loading-button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
@@ -53,7 +53,7 @@ export default function GroupsPage() {
     loadGroupsData()
   }, [pagination.currentPage, loadGroupsData])
 
-  const loadGroupsData = async () => {
+  const loadGroupsData = useCallback(async () => {
     try {
       setLoading(true)
       // Use optimized query with caching and pagination
@@ -68,7 +68,7 @@ export default function GroupsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [pagination.currentPage, pagination.pageSize])
 
   const handleGroupCreated = () => {
     loadGroupsData() // Refresh the groups list

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
@@ -8,6 +8,7 @@ import { Header } from '@/components/header'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
+import { GameCardSkeleton } from '@/components/ui/skeleton-loader'
 
 interface Game {
   id: string
@@ -113,7 +114,7 @@ export default function GamesPage() {
     }
   }, [dataFetched, fetchGames, fetchSeasons])
 
-  const fetchGames = async (page: number = 1, append: boolean = false) => {
+  const fetchGames = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!supabase) {
       setLoading(false)
       return
@@ -339,7 +340,7 @@ export default function GamesPage() {
     } catch (error) {
       console.error('Error setting cache:', error)
     }
-  }
+  }, [supabase, currentPage, setCachedData])
 
   const loadMoreGames = async () => {
     if (loadingMore || !hasMoreGames) return
@@ -350,7 +351,7 @@ export default function GamesPage() {
     await fetchGames(nextPage, true)
   }
 
-  const fetchSeasons = async () => {
+  const fetchSeasons = useCallback(async () => {
     if (!supabase) return
 
     try {
@@ -384,7 +385,7 @@ export default function GamesPage() {
     } catch (err) {
       console.error('Error fetching seasons:', err)
     }
-  }
+  }, [supabase])
 
 
   // const formatDate = (dateString: string) => {
