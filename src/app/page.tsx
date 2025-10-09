@@ -117,21 +117,17 @@ export default function Home() {
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   useEffect(() => {
-    console.log('Homepage useEffect called')
     fetchUpcomingGames()
     fetchUpcomingSeasons()
   }, [])
 
   const fetchUpcomingGames = async () => {
-    console.log('fetchUpcomingGames called, supabase:', !!supabase)
     if (!supabase) {
-      console.log('No supabase client, setting loading to false')
       setLoading(false)
       return
     }
 
     try {
-      console.log('Fetching upcoming games...')
       // First, get all upcoming games
       const { data: allGames, error: gamesError } = await supabase
         .from('games')
@@ -167,8 +163,6 @@ export default function Home() {
         console.error('Error fetching games:', gamesError)
         setGames([]) // Set empty array on error
       } else {
-        console.log('Games data received:', allGames)
-        
         // For each game, if it's part of a season, fetch season attendees
         const gamesWithSeasonAttendees = await Promise.all(
           (allGames || []).map(async (game) => {
@@ -232,18 +226,6 @@ export default function Home() {
           })
         )
         
-        // Debug: Log attendee data for season games
-        gamesWithSeasonAttendees.forEach(game => {
-          if (game.season_id) {
-            console.log(`Homepage - Game ${game.name} (season game) - total attendees: ${game.game_attendees?.length || 0}`)
-            const attendingCount = game.game_attendees?.filter((att: { payment_status: string; attendance_status?: string }) => 
-              att.payment_status === 'completed' && 
-              (att.attendance_status === 'attending' || !att.attendance_status)
-            ).length || 0
-            console.log(`Homepage - Game ${game.name} - attending count: ${attendingCount}`)
-          }
-        })
-        
         setGames(gamesWithSeasonAttendees.slice(0, 6)) // Show only the first 6 games
       }
     } catch (err) {
@@ -254,9 +236,7 @@ export default function Home() {
   }
 
   const fetchUpcomingSeasons = async () => {
-    console.log('fetchUpcomingSeasons called, supabase:', !!supabase)
     if (!supabase) {
-      console.log('No supabase client in fetchUpcomingSeasons')
       return
     }
 
@@ -283,7 +263,6 @@ export default function Home() {
         console.error('Error fetching seasons:', error)
         setSeasons([]) // Set empty array on error
       } else {
-        console.log('Seasons data received:', data)
         setSeasons(data || [])
       }
     } catch (err) {
@@ -535,11 +514,6 @@ export default function Home() {
                           const isUserAttending = !!(player && game.game_attendees?.some(
                             (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
                           ))
-                          
-                          // Debug: Log attendee data for season games
-                          if (game.season_id) {
-                            console.log(`Game ${game.name} (season game) - individual attendees:`, game.game_attendees?.length || 0)
-                          }
                           
                           // Check if user has purchased the season (for season games)
                           const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(

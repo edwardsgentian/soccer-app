@@ -9,10 +9,32 @@ import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
 import { Calendar, Edit, Trophy, Users, Component, Instagram, Globe } from 'lucide-react'
 import Image from 'next/image'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { AuthModal } from '@/components/auth/auth-modal'
+
+// Animated counter component
+function AnimatedCounter({ value }: { value: number }) {
+  const count = useMotionValue(0)
+  const rounded = useTransform(count, (latest) => {
+    // Handle decimal values (like hours played)
+    if (value % 1 !== 0) {
+      return latest.toFixed(1)
+    }
+    return Math.round(latest).toString()
+  })
+
+  useEffect(() => {
+    const controls = animate(count, value, {
+      duration: 1.5,
+      ease: "easeOut"
+    })
+    return controls.stop
+  }, [count, value])
+
+  return <motion.span>{rounded}</motion.span>
+}
 
 interface GameAttendee {
   id: string
@@ -78,6 +100,7 @@ interface CreatedGroup {
   tags?: string[]
   instagram?: string
   website?: string
+  photo_url?: string
   games?: Array<{
     id: string
     game_date: string
@@ -715,7 +738,10 @@ export default function ProfilePage() {
         <div className="container mx-auto px-4 py-16">
           <ProfileForm
             isEditing={true}
-            onSuccess={() => setShowEditForm(false)}
+            onSuccess={() => {
+              setShowEditForm(false)
+              window.location.reload()
+            }}
             onCancel={() => setShowEditForm(false)}
           />
         </div>
@@ -775,19 +801,25 @@ export default function ProfilePage() {
           {/* Joined Date */}
           <p className="text-gray-600 mb-8">Joined {formatDate(player.member_since)}</p>
 
-          {/* Simple Stats - Luma Style */}
-          <div className="flex justify-center gap-8 mb-8">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{createdGroups.length + createdGames.length}</div>
-              <div className="text-sm text-gray-600">Hosted</div>
+          {/* Stats Cards */}
+          <div className="flex justify-center gap-4 mb-8">
+            <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
+              <div className="text-3xl font-bold mb-1">
+                <AnimatedCounter value={createdGroups.length + createdGames.length} />
+              </div>
+              <div className="text-sm text-gray-700">Hosted</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{gameHistory.length}</div>
-              <div className="text-sm text-gray-600">Attended</div>
+            <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
+              <div className="text-3xl font-bold mb-1">
+                <AnimatedCounter value={gameHistory.length} />
+              </div>
+              <div className="text-sm text-gray-700">Attended</div>
             </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">{calculateTotalHoursPlayed().toFixed(1)}</div>
-              <div className="text-sm text-gray-600">Hours Played</div>
+            <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
+              <div className="text-3xl font-bold mb-1">
+                <AnimatedCounter value={calculateTotalHoursPlayed()} />
+              </div>
+              <div className="text-sm text-gray-700">Hours Played</div>
             </div>
           </div>
 
@@ -800,6 +832,83 @@ export default function ProfilePage() {
             <Edit className="w-4 h-4 mr-2" />
             Edit Profile
           </Button>
+
+          {/* Profile Details */}
+          <div className="bg-gray-50 rounded-xl p-6 text-left max-w-2xl mx-auto space-y-6">
+            {/* Experience Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(player as { sport?: string }).sport && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Sport</p>
+                    <p className="text-gray-900">{(player as { sport?: string }).sport}</p>
+                  </div>
+                )}
+                {player.playing_experience && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Playing Experience</p>
+                    <p className="text-gray-900">{player.playing_experience}</p>
+                  </div>
+                )}
+                {player.skill_level && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Skill Level</p>
+                    <p className="text-gray-900">{player.skill_level}</p>
+                  </div>
+                )}
+                {player.favorite_team && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Favorite Team</p>
+                    <p className="text-gray-900">{player.favorite_team}</p>
+                  </div>
+                )}
+                {player.favorite_player && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Favorite Player</p>
+                    <p className="text-gray-900">{player.favorite_player}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* About Section */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">About</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {player.home_location && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Location</p>
+                    <p className="text-gray-900">{player.home_location}</p>
+                  </div>
+                )}
+                {(player as { originally_from?: string }).originally_from && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Originally From</p>
+                    <p className="text-gray-900">{(player as { originally_from?: string }).originally_from}</p>
+                  </div>
+                )}
+                {player.languages && player.languages.length > 0 && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Languages</p>
+                    <p className="text-gray-900">{player.languages.join(', ')}</p>
+                  </div>
+                )}
+                {player.instagram && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Instagram</p>
+                    <p className="text-gray-900">{player.instagram}</p>
+                  </div>
+                )}
+                {player.other_sports && (
+                  <div>
+                    <p className="text-sm text-gray-500 mb-1">Other Sports</p>
+                    <p className="text-gray-900">{player.other_sports}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tabbed Content Panel */}

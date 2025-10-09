@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { X, Mail, ArrowLeft } from 'lucide-react'
 
@@ -51,7 +52,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }: ForgotPa
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b">
+        <div className="flex items-center justify-between p-6">
           <h2 className="text-xl font-semibold">
             {success ? 'Check Your Email' : 'Reset Password'}
           </h2>
@@ -64,8 +65,14 @@ export function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }: ForgotPa
         <div className="p-6">
           {success ? (
             <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                <Mail className="w-8 h-8 text-green-600" />
+              <div className="w-24 h-24 mx-auto bg-[#F8F3BD] rounded-xl flex items-center justify-center overflow-hidden">
+                <Image 
+                  src="/checkemail.jpg" 
+                  alt="Check Email" 
+                  width={96} 
+                  height={96}
+                  className="object-cover"
+                />
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -98,7 +105,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }: ForgotPa
                   <input
                     type="email"
                     required
-                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                     placeholder="Enter your email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -119,7 +126,7 @@ export function ForgotPasswordModal({ isOpen, onClose, onBackToLogin }: ForgotPa
               <div className="text-center">
                 <button
                   type="button"
-                  className="text-sm text-green-600 hover:text-green-700 flex items-center justify-center"
+                  className="text-sm text-black hover:text-gray-700 flex items-center justify-center font-medium"
                   onClick={onBackToLogin}
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />

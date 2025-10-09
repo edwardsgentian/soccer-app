@@ -81,8 +81,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const refreshPlayer = async () => {
-    if (user) {
-      await fetchPlayer()
+    if (!user || !supabase) return
+
+    try {
+      // Always fetch fresh data from database, bypassing localStorage
+      const { data, error } = await supabase
+        .from('players')
+        .select('*')
+        .eq('id', user.id)
+        .single()
+
+      if (error) {
+        console.error('Error refreshing player:', error)
+        return
+      }
+
+      // Update both state and localStorage with fresh data
+      setPlayer(data)
+      localStorage.setItem('soccer_app_player', JSON.stringify(data))
+    } catch (err) {
+      console.error('Error refreshing player:', err)
     }
   }
 
@@ -182,6 +200,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       console.log('Querying players table...')
+      console.log('Supabase client exists:', !!supabase)
       
       // Add timeout to prevent hanging
       const queryPromise = supabase
@@ -190,14 +209,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('email', email)
         .single()
 
+      console.log('Query promise created, starting race...')
+
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Login request timed out')), 10000)
+        setTimeout(() => {
+          console.log('Timeout triggered after 10 seconds')
+          reject(new Error('Login request timed out'))
+        }, 10000)
       )
 
       const result = await Promise.race([
         queryPromise,
         timeoutPromise
       ]) as { data: { id: string; email: string; password_hash: string; name: string; photo_url?: string; member_since: string } | null; error: { message: string; code?: string } | null }
+      
+      console.log('Race completed, result:', result)
       const { data: playerData, error: playerError } = result
 
       console.log('Player query result:', { playerData, playerError })

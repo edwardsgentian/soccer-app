@@ -139,7 +139,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Enter your full name"
             />
           </div>
@@ -154,7 +154,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
               value={formData.email}
               onChange={(e) => handleInputChange('email', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Enter your email"
             />
           </div>
@@ -169,7 +169,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Enter your phone number"
             />
           </div>
@@ -185,7 +185,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
               onChange={(e) => handleInputChange('password', e.target.value)}
               required
               minLength={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Create a password (min 6 characters)"
             />
           </div>
@@ -200,7 +200,7 @@ export function SignUpForm({ onSuccess, onSwitchToSignIn, prefillData }: SignUpF
               value={formData.confirmPassword}
               onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
               placeholder="Confirm your password"
             />
           </div>

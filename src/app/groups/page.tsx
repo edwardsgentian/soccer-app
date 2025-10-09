@@ -6,6 +6,7 @@ import { GroupManagementModal } from '@/components/groups/group-management-modal
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { Calendar, Instagram, Globe, Component } from 'lucide-react'
+import Image from 'next/image'
 
 interface Group {
   id: string
@@ -16,6 +17,7 @@ interface Group {
   website?: string
   whatsapp_group?: string
   created_at: string
+  photo_url?: string
   games?: Array<{
     id: string
     game_date: string
@@ -148,8 +150,18 @@ function GroupCard({ group }: { group: Group }) {
       onClick={() => window.location.href = `/groups/${group.id}`}
     >
         {/* Group Header */}
-        <div className="h-32 bg-gray-50 flex items-center justify-center">
-          <Component className="w-8 h-8 text-gray-400" />
+        <div className="h-32 bg-gray-50 flex items-center justify-center overflow-hidden">
+          {group.photo_url ? (
+            <Image
+              src={group.photo_url}
+              alt={group.name}
+              width={400}
+              height={128}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <Component className="w-8 h-8 text-gray-400" />
+          )}
         </div>
 
         <div className="p-6">

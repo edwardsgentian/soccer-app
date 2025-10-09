@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { Ticket, MapPin, Clock8, List, BadgePlus, ClipboardCheck } from 'lucide-react'
+import { Ticket, MapPin, Clock8, List, BadgePlus, ClipboardCheck, Trash2 } from 'lucide-react'
 import Image from 'next/image'
 
 // Google Maps API types
@@ -256,18 +256,15 @@ export function CreateGameWizard({ onCancel, onComplete, loading = false }: Wiza
               )
             })}
           </nav>
-          <button onClick={onCancel} className="text-white/80 hover:text-white mb-4">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
         </aside>
 
         {/* Main Content */}
         <main className="flex-1 bg-white flex flex-col relative overflow-hidden lg:m-4 lg:rounded-lg">
           {/* Discard */}
           <div className="absolute top-4 right-4 z-10">
-            <Button variant="outline" onClick={onCancel}>Discard</Button>
+            <Button variant="outline" size="icon" onClick={onCancel}>
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
 
           {/* Step Header */}

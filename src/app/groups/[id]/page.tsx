@@ -6,11 +6,34 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
-import { ArrowLeft, Instagram, Globe, MessageCircle, Component } from 'lucide-react'
+import { ArrowLeft, Instagram, Globe, MessageCircle, Component, Edit } from 'lucide-react'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
+import { GroupEditForm } from '@/components/groups/group-edit-form'
+
+// Animated counter component
+function AnimatedCounter({ value }: { value: number }) {
+  const count = useMotionValue(0)
+  const rounded = useTransform(count, (latest) => {
+    // Handle decimal values
+    if (value % 1 !== 0) {
+      return latest.toFixed(1)
+    }
+    return Math.round(latest).toString()
+  })
+
+  useEffect(() => {
+    const controls = animate(count, value, {
+      duration: 1.5,
+      ease: "easeOut"
+    })
+    return controls.stop
+  }, [count, value])
+
+  return <motion.span>{rounded}</motion.span>
+}
 
 interface Player {
   id: string
@@ -31,6 +54,7 @@ interface Group {
   whatsapp_group?: string
   created_by?: string
   created_at: string
+  photo_url?: string
 }
 
 interface Game {
@@ -101,6 +125,7 @@ export default function GroupDetailPage() {
   const [activeTab, setActiveTab] = useState<'games' | 'seasons'>('games')
   const [players, setPlayers] = useState<Player[]>([])
   const [hasUserJoined, setHasUserJoined] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
 
   const fetchGroupDetails = useCallback(async () => {
     if (!supabase) {
@@ -259,14 +284,6 @@ export default function GroupDetailPage() {
       // Fetch players from both individual game attendees and season attendees
       const allPlayers = new Map<string, Player>()
 
-      console.log('=== DEBUGGING PLAYERS FETCH ===')
-      console.log('Games data:', gamesData)
-      console.log('Seasons data:', seasonsData)
-      console.log('Game IDs:', gamesData?.map(game => game.id))
-      console.log('Season IDs:', seasonsData?.map(season => season.id))
-      console.log('Number of games:', gamesData?.length || 0)
-      console.log('Number of seasons:', seasonsData?.length || 0)
-
       // Fetch individual game attendees (only if there are games)
       let gameAttendeesData = null
       let gameAttendeesError = null
@@ -288,34 +305,20 @@ export default function GroupDetailPage() {
         
         gameAttendeesData = result.data
         gameAttendeesError = result.error
-      } else {
-        console.log('No games found, skipping game attendees fetch')
       }
-
-      console.log('Game attendees query result:', gameAttendeesData)
-      console.log('Game attendees error:', gameAttendeesError)
 
       if (!gameAttendeesError && gameAttendeesData) {
         (gameAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-          console.log('Processing game attendee:', attendee)
-          console.log('Attendee players field:', attendee.players)
-          
           if (attendee.players && attendee.players.id) {
             const player = attendee.players
-            console.log('Player object:', player)
             if (player && player.id) {
-              console.log('Adding game attendee player:', player)
               allPlayers.set(player.id, {
                 id: player.id,
                 name: player.name,
                 email: '', // Hide email
                 photo_url: player.photo_url
               })
-            } else {
-              console.log('Player object missing id:', player)
             }
-          } else {
-            console.log('No valid players found in attendee')
           }
         })
       }
@@ -341,42 +344,25 @@ export default function GroupDetailPage() {
         
         seasonAttendeesData = result.data
         seasonAttendeesError = result.error
-      } else {
-        console.log('No seasons found, skipping season attendees fetch')
       }
-
-      console.log('Season attendees query result:', seasonAttendeesData)
-      console.log('Season attendees error:', seasonAttendeesError)
 
       if (!seasonAttendeesError && seasonAttendeesData) {
         (seasonAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-          console.log('Processing season attendee:', attendee)
-          console.log('Season attendee players field:', attendee.players)
-          
           if (attendee.players && attendee.players.id) {
             const player = attendee.players
-            console.log('Season player object:', player)
             if (player && player.id) {
-              console.log('Adding season attendee player:', player)
               allPlayers.set(player.id, {
                 id: player.id,
                 name: player.name,
                 email: '', // Hide email
                 photo_url: player.photo_url
               })
-            } else {
-              console.log('Season player object missing id:', player)
             }
-          } else {
-            console.log('No valid players found in season attendee')
           }
         })
       }
 
-      console.log('All players collected:', Array.from(allPlayers.values()))
-      console.log('Total players count:', allPlayers.size)
       const playersArray = Array.from(allPlayers.values())
-      console.log('Setting players state with:', playersArray)
       setPlayers(playersArray)
     } catch (err) {
       console.error('Error fetching group details:', err)
@@ -399,6 +385,26 @@ export default function GroupDetailPage() {
       month: 'long', 
       day: 'numeric' 
     })
+  }
+
+  if (showEditForm) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header />
+        <div className="container mx-auto px-4 py-16">
+          <GroupEditForm
+            groupId={groupId}
+            onSuccess={async () => {
+              // Wait a bit for DB to update
+              await new Promise(resolve => setTimeout(resolve, 200))
+              await fetchGroupDetails()
+              setShowEditForm(false)
+            }}
+            onCancel={() => setShowEditForm(false)}
+          />
+        </div>
+      </div>
+    )
   }
 
   if (loading) {
@@ -439,9 +445,6 @@ export default function GroupDetailPage() {
     )
   }
 
-  // Debug log for players state
-  console.log('Group page render - players state:', players, 'length:', players.length)
-
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -461,32 +464,48 @@ export default function GroupDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Group Information */}
           <div className="lg:col-span-2 space-y-8">
-            {/* Group Header */}
+              {/* Group Header */}
             <div>
-              {/* Group Icon */}
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                <Component className="w-12 h-12 text-gray-600" />
+              {/* Group Icon/Photo */}
+              <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
+                {group.photo_url ? (
+                  <Image
+                    src={group.photo_url}
+                    alt={group.name}
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Component className="w-12 h-12 text-gray-600" />
+                )}
               </div>
 
-              {/* Group Name */}
+                {/* Group Name */}
               <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{group.name}</h1>
               
               {/* Created Date */}
               <p className="text-gray-600 mb-6">Created {formatDate(group.created_at)}</p>
 
               {/* Group Stats */}
-              <div className="flex gap-8 mb-8">
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{games.length}</div>
-                  <div className="text-sm text-gray-600">Games</div>
+              <div className="flex gap-4 mb-8">
+                <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
+                  <div className="text-3xl font-bold mb-1">
+                    <AnimatedCounter value={games.length} />
+                  </div>
+                  <div className="text-sm text-gray-700">Games</div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{seasons.length}</div>
-                  <div className="text-sm text-gray-600">Seasons</div>
+                <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
+                  <div className="text-3xl font-bold mb-1">
+                    <AnimatedCounter value={seasons.length} />
+                  </div>
+                  <div className="text-sm text-gray-700">Seasons</div>
                 </div>
-                <div>
-                  <div className="text-2xl font-bold text-gray-900">{players.length}</div>
-                  <div className="text-sm text-gray-600">Players</div>
+                <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
+                  <div className="text-3xl font-bold mb-1">
+                    <AnimatedCounter value={players.length} />
+                  </div>
+                  <div className="text-sm text-gray-700">Players</div>
                 </div>
               </div>
             </div>
@@ -498,23 +517,23 @@ export default function GroupDetailPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">About</h2>
               <p className="text-gray-600 leading-relaxed mb-6">{group.description}</p>
 
-              {/* Tags */}
-              {group.tags && group.tags.length > 0 && (
-                <div className="mb-6">
-                  <div className="flex flex-wrap gap-2">
-                    {group.tags.map((tag, index) => (
-                      <span
-                        key={index}
+                {/* Tags */}
+                {group.tags && group.tags.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex flex-wrap gap-2">
+                      {group.tags.map((tag, index) => (
+                        <span
+                          key={index}
                         className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Social Links */}
+                {/* Social Links */}
               <div>
                 <div className="flex flex-wrap gap-4">
                   {group.whatsapp_group && hasUserJoined && (
@@ -738,9 +757,18 @@ export default function GroupDetailPage() {
           <div className="lg:col-span-1">
             <div className="lg:sticky lg:top-8">
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                {/* Add Game/Season Button */}
+                {/* Admin Actions */}
                 {player && group && player.id === group.created_by && (
-                  <div className="mb-6">
+                  <div className="mb-6 space-y-3">
+                    <Button
+                      onClick={() => setShowEditForm(true)}
+                      variant="outline"
+                      className="w-full"
+                      size="lg"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Edit Group
+                    </Button>
                     <Button
                       onClick={() => router.push(`/create-game?groupId=${groupId}`)}
                       className="w-full bg-black hover:bg-gray-800 text-white"
@@ -755,7 +783,7 @@ export default function GroupDetailPage() {
                 <div className="pt-6">
                   <h3 className="font-semibold text-gray-900 mb-4">
                     Group Players ({players.length})
-                  </h3>
+                        </h3>
                   {players.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
                       {players.map((player) => (
@@ -777,7 +805,7 @@ export default function GroupDetailPage() {
                                 {player.name?.charAt(0).toUpperCase() || '?'}
                               </span>
                             )}
-                          </div>
+                      </div>
                           
                           {/* Tooltip */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">

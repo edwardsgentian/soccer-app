@@ -67,7 +67,8 @@ function CreateGameContent() {
       router.push(`/groups/${groupId}`)
     } catch (err) {
       console.error('Error creating game/season:', err)
-      alert(err instanceof Error ? err.message : 'Failed to create game/season')
+      const errorMessage = err instanceof Error ? err.message : JSON.stringify(err) || 'Failed to create game/season'
+      alert(errorMessage)
     } finally {
       setLoading(false)
     }

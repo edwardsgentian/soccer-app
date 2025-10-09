@@ -21,6 +21,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
     photo_url: '',
     
     // Soccer-specific questions
+    sport: '',
     playing_experience: '',
     skill_level: '',
     favorite_team: '',
@@ -28,11 +29,13 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
     other_sports: '',
     languages: '',
     home_location: '',
-    time_in_nyc: '',
+    originally_from: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [retryCount, setRetryCount] = useState(0)
+  const [uploading, setUploading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   useEffect(() => {
     if (isEditing && player) {
@@ -42,6 +45,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         phone: player.phone || '',
         instagram: player.instagram || '',
         photo_url: player.photo_url || '',
+        sport: (player as { sport?: string }).sport || '',
         playing_experience: player.playing_experience || '',
         skill_level: player.skill_level || '',
         favorite_team: player.favorite_team || '',
@@ -49,10 +53,50 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         other_sports: player.other_sports || '',
         languages: player.languages?.join(', ') || '',
         home_location: player.home_location || '',
-        time_in_nyc: player.time_in_nyc || '',
+        originally_from: (player as { originally_from?: string }).originally_from || '',
       })
+      setPreviewUrl(player.photo_url || null)
     }
   }, [isEditing, player])
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file')
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB')
+      return
+    }
+
+    setUploading(true)
+    setError(null)
+
+    try {
+      // Convert to base64 for simple storage
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const base64String = reader.result as string
+        setPreviewUrl(base64String)
+        handleInputChange('photo_url', base64String)
+        setUploading(false)
+      }
+      reader.onerror = () => {
+        setError('Failed to read image file')
+        setUploading(false)
+      }
+      reader.readAsDataURL(file)
+    } catch (err) {
+      setError('Failed to upload image')
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,6 +120,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         phone: formData.phone,
         instagram: formData.instagram || null,
         photo_url: formData.photo_url || null,
+        sport: formData.sport || null,
         playing_experience: formData.playing_experience || null,
         skill_level: formData.skill_level || null,
         favorite_team: formData.favorite_team || null,
@@ -83,7 +128,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         other_sports: formData.other_sports || null,
         languages: languagesArray,
         home_location: formData.home_location || null,
-        time_in_nyc: formData.time_in_nyc || null,
+        originally_from: formData.originally_from || null,
       }
 
       // Database operation
@@ -129,6 +174,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
       onSuccess?.()
     } catch (err) {
       console.error('Profile save error:', err)
+      console.error('Full error details:', JSON.stringify(err, null, 2))
       
       // Provide more specific error messages
       if (err instanceof Error) {
@@ -143,6 +189,11 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         } else {
           setError(`Error saving profile: ${err.message}`)
         }
+      } else if (typeof err === 'object' && err !== null) {
+        // Handle Supabase error objects
+        const supabaseError = err as { message?: string; details?: string; hint?: string; code?: string }
+        const errorMsg = supabaseError.message || supabaseError.details || supabaseError.hint || 'Unknown error'
+        setError(`Error saving profile: ${errorMsg}`)
       } else {
         setError('An unexpected error occurred. Please try again.')
       }
@@ -187,7 +238,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -202,7 +253,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="Enter your email"
                 />
               </div>
@@ -217,7 +268,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
                   required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="Enter your phone number"
                 />
               </div>
@@ -231,40 +282,95 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   type="text"
                   value={formData.instagram}
                   onChange={(e) => handleInputChange('instagram', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="@yourusername"
                 />
               </div>
 
               <div className="md:col-span-2">
-                <label htmlFor="photo_url" className="block text-sm font-medium text-gray-700 mb-1">
-                  Photo URL
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Profile Photo
                 </label>
-                <input
-                  id="photo_url"
-                  type="url"
-                  value={formData.photo_url}
-                  onChange={(e) => handleInputChange('photo_url', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="https://example.com/your-photo.jpg"
-                />
+                <div className="flex items-center gap-6">
+                  {/* Preview */}
+                  <div className="flex-shrink-0">
+                    <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
+                      {previewUrl ? (
+                        <img
+                          src={previewUrl}
+                          alt="Profile preview"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-3xl text-gray-400 font-bold">
+                          {formData.name.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Upload button */}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="photo_upload"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="photo_upload"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer"
+                    >
+                      {uploading ? 'Uploading...' : 'Upload Photo'}
+                    </label>
+                    <p className="mt-2 text-xs text-gray-500">
+                      JPG, PNG or GIF. Max size 5MB.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Soccer-Specific Questions */}
+          {/* Experience Questions */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Soccer Information</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience</h3>
             <div className="space-y-4">
               <div>
+                <label htmlFor="sport" className="block text-sm font-medium text-gray-700 mb-1">
+                  Select a sport
+                </label>
+                <select
+                  id="sport"
+                  value={formData.sport}
+                  onChange={(e) => handleInputChange('sport', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                >
+                  <option value="">Select a sport</option>
+                  <option value="Soccer">Soccer</option>
+                  <option value="Basketball">Basketball</option>
+                  <option value="Tennis">Tennis</option>
+                  <option value="Volleyball">Volleyball</option>
+                  <option value="Baseball">Baseball</option>
+                  <option value="Softball">Softball</option>
+                  <option value="Football">Football</option>
+                  <option value="Rugby">Rugby</option>
+                  <option value="Hockey">Hockey</option>
+                  <option value="Cricket">Cricket</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div>
                 <label htmlFor="playing_experience" className="block text-sm font-medium text-gray-700 mb-1">
-                  How long have you been playing soccer?
+                  How long have you been playing
                 </label>
                 <select
                   id="playing_experience"
                   value={formData.playing_experience}
                   onChange={(e) => handleInputChange('playing_experience', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 >
                   <option value="">Select experience level</option>
                   <option value="Just starting out">Just starting out</option>
@@ -284,7 +390,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   id="skill_level"
                   value={formData.skill_level}
                   onChange={(e) => handleInputChange('skill_level', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                 >
                   <option value="">Select skill level</option>
                   <option value="Beginner">Beginner</option>
@@ -306,7 +412,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                     type="text"
                     value={formData.favorite_team}
                     onChange={(e) => handleInputChange('favorite_team', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                     placeholder="e.g., Arsenal, Barcelona, USWNT"
                   />
                 </div>
@@ -320,7 +426,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                     type="text"
                     value={formData.favorite_player}
                     onChange={(e) => handleInputChange('favorite_player', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                     placeholder="e.g., Messi, Rapinoe, Kerr"
                   />
                 </div>
@@ -335,7 +441,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   value={formData.other_sports}
                   onChange={(e) => handleInputChange('other_sports', e.target.value)}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="e.g., Basketball, Tennis, Running..."
                 />
               </div>
@@ -355,7 +461,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   type="text"
                   value={formData.languages}
                   onChange={(e) => handleInputChange('languages', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="e.g., English, Spanish, French"
                 />
               </div>
@@ -369,30 +475,23 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
                   type="text"
                   value={formData.home_location}
                   onChange={(e) => handleInputChange('home_location', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
                   placeholder="e.g., Manhattan, Brooklyn, Queens"
                 />
               </div>
 
               <div>
-                <label htmlFor="time_in_nyc" className="block text-sm font-medium text-gray-700 mb-1">
-                  How long have you been in New York?
+                <label htmlFor="originally_from" className="block text-sm font-medium text-gray-700 mb-1">
+                  Originally From
                 </label>
-                <select
-                  id="time_in_nyc"
-                  value={formData.time_in_nyc}
-                  onChange={(e) => handleInputChange('time_in_nyc', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                >
-                  <option value="">Select time in NYC</option>
-                  <option value="Just moved here">Just moved here</option>
-                  <option value="Less than 1 year">Less than 1 year</option>
-                  <option value="1-2 years">1-2 years</option>
-                  <option value="2-5 years">2-5 years</option>
-                  <option value="5-10 years">5-10 years</option>
-                  <option value="10+ years">10+ years</option>
-                  <option value="Born and raised">Born and raised</option>
-                </select>
+                <input
+                  id="originally_from"
+                  type="text"
+                  value={formData.originally_from}
+                  onChange={(e) => handleInputChange('originally_from', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                  placeholder="e.g., London, Paris, Tokyo"
+                />
               </div>
             </div>
           </div>

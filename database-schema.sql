@@ -10,7 +10,8 @@ CREATE TABLE groups (
   tags TEXT[],
   instagram VARCHAR(255),
   website VARCHAR(255),
-  photos TEXT[], -- Array of photo URLs
+  photos TEXT[], -- Array of photo URLs (legacy)
+  photo_url VARCHAR(500), -- Main group photo URL
   admin_password VARCHAR(255) NOT NULL, -- Hashed password for group management
   whatsapp_group VARCHAR(255),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

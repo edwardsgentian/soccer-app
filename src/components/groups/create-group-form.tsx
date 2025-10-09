@@ -21,9 +21,56 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
     whatsapp_group: '',
     admin_password: '',
     confirm_password: '',
+    photo_url: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !supabase) return
+
+    setUploading(true)
+    setError(null)
+
+    try {
+      // Create a unique file name
+      const fileExt = file.name.split('.').pop()
+      const fileName = `group-${Date.now()}.${fileExt}`
+      const filePath = `group-photos/${fileName}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        })
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError)
+        throw new Error(uploadError.message || 'Failed to upload image')
+      }
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('photos')
+        .getPublicUrl(filePath)
+
+      setFormData(prev => ({ ...prev, photo_url: publicUrl }))
+      setPreviewUrl(publicUrl)
+    } catch (err) {
+      console.error('Error uploading image:', err)
+      const errorMessage = err instanceof Error ? err.message : 'Failed to upload image'
+      setError(errorMessage.includes('Bucket not found') 
+        ? 'Storage not configured. Please contact the administrator.'
+        : errorMessage)
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,6 +109,7 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
           website: formData.website || null,
           whatsapp_group: formData.whatsapp_group,
           admin_password: hashedPassword,
+          photo_url: formData.photo_url || null,
         })
 
       if (error) {
@@ -118,6 +166,46 @@ export function CreateGroupForm({ onSuccess, onCancel }: CreateGroupFormProps) {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               placeholder="Describe your group, playing style, skill level, etc."
             />
+          </div>
+
+          {/* Image Upload */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Group Photo (optional)
+            </label>
+            <div className="flex items-start space-x-4">
+              {previewUrl && (
+                <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-300">
+                  <img
+                    src={previewUrl}
+                    alt="Group preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="flex-1">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  disabled={uploading}
+                  className="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-medium
+                    file:bg-black file:text-white
+                    hover:file:bg-gray-800
+                    file:cursor-pointer cursor-pointer
+                    disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                {uploading && (
+                  <p className="mt-2 text-sm text-gray-500">Uploading...</p>
+                )}
+                <p className="mt-2 text-xs text-gray-500">
+                  Upload a photo for your group (PNG, JPG, max 5MB)
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Tags */}

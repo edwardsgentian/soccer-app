@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 
@@ -14,16 +15,22 @@ function AuthCallbackContent() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
+        // Check hash parameters (PKCE flow)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1))
+        const hashError = hashParams.get('error')
+        const hashErrorDescription = hashParams.get('error_description')
+        
+        // Also check query parameters
         const code = searchParams.get('code')
-        const error = searchParams.get('error')
-        const errorDescription = searchParams.get('error_description')
+        const error = searchParams.get('error') || hashError
+        const errorDescription = searchParams.get('error_description') || hashErrorDescription
         
         // Check for URL error parameters first
         if (error) {
           if (error === 'access_denied' && errorDescription?.includes('expired')) {
-            setError('Your email confirmation link has expired. Please try signing up again.')
+            setError('Your email confirmation link has expired. Please request a new confirmation email.')
           } else if (error === 'access_denied') {
-            setError('Email confirmation link is invalid. Please try signing up again.')
+            setError('Email confirmation link is invalid. Please request a new confirmation email.')
           } else {
             setError(`Email confirmation failed: ${errorDescription || error}`)
           }
@@ -103,32 +110,30 @@ function AuthCallbackContent() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">❌</div>
-            <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-4">
-              Email Confirmation Failed
-            </h1>
-            <p className="text-xl text-gray-600 mb-8">
-              {error}
-            </p>
-            <div className="space-y-4">
-              <button
-                onClick={() => router.push('/')}
-                className="text-white px-6 py-3 rounded-lg font-medium mr-4"
-              >
-                Return to Home
-              </button>
-              <button
-                onClick={() => router.push('/?signup=true')}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium"
-              >
-                Try Signing Up Again
-              </button>
-            </div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="mb-8">
+            <Image 
+              src="/failed.jpeg" 
+              alt="Failed" 
+              width={200} 
+              height={200}
+              className="mx-auto"
+              priority
+            />
           </div>
+          <h1 className="hero-h1 text-5xl font-medium text-gray-900 mb-4">
+            Email Confirmation Failed
+          </h1>
+          <p className="text-lg text-gray-600 mb-8">
+            {error}
+          </p>
+          <button
+            onClick={() => router.push('/?signup=true')}
+            className="bg-black hover:bg-gray-800 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+          >
+            Try Signing Up Again
+          </button>
         </div>
       </div>
     )
