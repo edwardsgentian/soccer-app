@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import Image from 'next/image'
-import { ReactNode } from 'react'
 
 interface AnimatedAvatarProps {
   src?: string
@@ -26,7 +25,6 @@ export function AnimatedAvatar({
   className = '',
   showTooltip = true,
   hoverEffect = 'lift',
-  overlap = false,
   zIndex = 1
 }: AnimatedAvatarProps) {
   const sizeClasses = {

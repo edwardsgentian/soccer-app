@@ -10,7 +10,6 @@ import { Header } from "@/components/header";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
-import { GameCardSkeleton, SeasonCardSkeleton } from '@/components/ui/skeleton-loader'
 import { fetchHomepageData, getCachedData, setCachedData } from '@/lib/optimized-queries'
 
 interface Game {
@@ -142,7 +141,7 @@ export default function Home() {
     if (!dataFetched) {
       loadHomepageData()
     }
-  }, [dataFetched])
+  }, [dataFetched, loadHomepageData])
 
   const loadHomepageData = async () => {
     try {

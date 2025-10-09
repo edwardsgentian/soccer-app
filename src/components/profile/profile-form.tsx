@@ -92,7 +92,7 @@ export function ProfileForm({ onSuccess, onCancel, isEditing = false }: ProfileF
         setUploading(false)
       }
       reader.readAsDataURL(file)
-    } catch (err) {
+    } catch {
       setError('Failed to upload image')
       setUploading(false)
     }

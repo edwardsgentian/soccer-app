@@ -10,7 +10,6 @@ import { Calendar, Clock, MapPin, DollarSign, ArrowLeft } from 'lucide-react'
 import { JoinModal } from '@/components/join-flow/join-modal'
 import { AttendanceToggle } from '@/components/attendance-toggle'
 import { useAuth } from '@/contexts/auth-context'
-import { GameCardSkeleton, Skeleton } from '@/components/ui/skeleton-loader'
 import { AnimatedAvatarGroup } from '@/components/ui/animated-avatar-group'
 
 interface Game {
@@ -140,7 +139,12 @@ export default function GameDetailPage() {
       }
 
       // Transform individual game attendees
-      const individualAttendees = (attendeesData || []).map((attendee: any) => ({
+      const individualAttendees = (attendeesData || []).map((attendee: {
+        id: string;
+        created_at: string;
+        attendance_status: string;
+        players?: { name?: string; photo_url?: string };
+      }) => ({
         id: attendee.id,
         created_at: attendee.created_at,
         attendance_status: attendee.attendance_status,
@@ -151,7 +155,12 @@ export default function GameDetailPage() {
       }))
 
       // If this is a season game, also fetch season attendees
-      let seasonAttendees: any[] = []
+      let seasonAttendees: Array<{
+        id: string;
+        player_id: string;
+        payment_status: string;
+        players: { name: string; photo_url?: string };
+      }> = []
       if (gameData?.season_id) {
         try {
           // Fetch season attendees for this game's season
@@ -177,7 +186,12 @@ export default function GameDetailPage() {
               .eq('game_id', gameId)
 
             // Combine season attendees with their attendance status for this game
-            seasonAttendees = seasonAttendeesData.map((attendee: any) => {
+            seasonAttendees = seasonAttendeesData.map((attendee: {
+              id: string;
+              player_id: string;
+              payment_status: string;
+              players: { name: string; photo_url?: string };
+            }) => {
               const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
               return {
                 id: attendee.id,
@@ -280,31 +294,6 @@ export default function GameDetailPage() {
     return `${displayHour}:${minutes} ${ampm}`
   }
 
-  // Generate random gradient based on gameId for consistency with game cards
-  const getRandomGradient = () => {
-    const gradients = [
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100',
-      'from-stone-200 to-yellow-100'
-    ]
-    
-    // Use gameId to consistently select the same gradient
-    const hash = gameId.split('').reduce((a, b) => {
-      a = ((a << 5) - a) + b.charCodeAt(0)
-      return a & a
-    }, 0)
-    
-    return gradients[Math.abs(hash) % gradients.length]
-  }
 
   if (loading) {
     return (

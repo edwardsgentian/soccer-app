@@ -10,7 +10,7 @@ interface CacheOptions {
 }
 
 class CacheManager {
-  private cache = new Map<string, CacheItem<any>>()
+  private cache = new Map<string, CacheItem<unknown>>()
   private defaultTTL = 5 * 60 * 1000 // 5 minutes
   private maxSize = 200 // Increased cache size
   private prefetchQueue = new Set<string>() // Track prefetched items

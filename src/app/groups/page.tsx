@@ -4,13 +4,11 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { LoadingButton } from '@/components/ui/loading-button'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
-import { supabase } from '@/lib/supabase'
 import { Header } from '@/components/header'
 import { CalendarClock, Component, Users } from 'lucide-react'
 import Image from 'next/image'
 import { useServerPagination } from '@/hooks/usePagination'
 import { Pagination } from '@/components/ui/pagination'
-import { fetchGroups } from '@/lib/queries'
 import { fetchGroupsData } from '@/lib/optimized-queries'
 
 interface Group {
@@ -47,15 +45,13 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
-  const [hasMore, setHasMore] = useState(false)
-  const [creatingGroup, setCreatingGroup] = useState(false)
   
   // Use server-side pagination hook
   const pagination = useServerPagination({ pageSize: 12 })
 
   useEffect(() => {
     loadGroupsData()
-  }, [pagination.currentPage])
+  }, [pagination.currentPage, loadGroupsData])
 
   const loadGroupsData = async () => {
     try {

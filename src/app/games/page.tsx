@@ -8,7 +8,6 @@ import { Header } from '@/components/header'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
-import { GameCardSkeleton, SeasonCardSkeleton } from '@/components/ui/skeleton-loader'
 
 interface Game {
   id: string
@@ -112,7 +111,7 @@ export default function GamesPage() {
       fetchGames()
       fetchSeasons()
     }
-  }, [dataFetched])
+  }, [dataFetched, fetchGames, fetchSeasons])
 
   const fetchGames = async (page: number = 1, append: boolean = false) => {
     if (!supabase) {
@@ -327,7 +326,11 @@ export default function GamesPage() {
     return null
   }
 
-  const setCachedData = (data: any) => {
+  const setCachedData = (data: {
+    games: Game[];
+    totalGames: number;
+    hasMoreGames: boolean;
+  }) => {
     try {
       localStorage.setItem(CACHE_KEY, JSON.stringify({
         data,

@@ -34,7 +34,6 @@ export function useMemoizedQuery<T>(
   const [isStale, setIsStale] = useState(false)
   
   const lastFetchTime = useRef<number>(0)
-  const isInitialMount = useRef(true)
 
   const getCache = useCallback(() => {
     if (queryKey.startsWith('games:')) return gameCache

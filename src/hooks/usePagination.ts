@@ -64,7 +64,7 @@ export function usePagination<T>(
     setCurrentPage(1) // Reset to first page when page size changes
   }, [])
 
-  const setData = useCallback((newData: T[]) => {
+  const setData = useCallback(() => {
     // Reset to first page when data changes
     setCurrentPage(1)
   }, [])

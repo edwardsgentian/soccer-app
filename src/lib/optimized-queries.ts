@@ -212,7 +212,7 @@ export const fetchOptimizedSeasons = async (limit: number = 10) => {
 }
 
 // Cache management
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
+const cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>()
 
 export const getCachedData = (key: string) => {
   const cached = cache.get(key)
@@ -223,7 +223,7 @@ export const getCachedData = (key: string) => {
   return null
 }
 
-export const setCachedData = (key: string, data: any, ttl: number = 5 * 60 * 1000) => { // 5 minutes default
+export const setCachedData = (key: string, data: unknown, ttl: number = 5 * 60 * 1000) => { // 5 minutes default
   cache.set(key, {
     data,
     timestamp: Date.now(),
@@ -269,7 +269,7 @@ export const fetchOptimizedGroups = async (page: number = 1, pageSize: number = 
 
     // Step 2: Get game data for these groups in batch
     const groupIds = groups?.map(group => group.id) || []
-    const { data: gamesData, error: gamesError } = await supabase
+    const { data: gamesData } = await supabase
       .from('games')
       .select(`
         id,
@@ -282,7 +282,7 @@ export const fetchOptimizedGroups = async (page: number = 1, pageSize: number = 
       .in('group_id', groupIds)
 
     // Step 3: Get season data for these groups in batch
-    const { data: seasonsData, error: seasonsError } = await supabase
+    const { data: seasonsData } = await supabase
       .from('seasons')
       .select(`
         id,
@@ -366,7 +366,7 @@ export const fetchGroupDetailData = async (groupId: string) => {
     }
 
     // Fetch games for this group with all the original nested data
-    const { data: gamesData, error: gamesError } = await supabase
+    const { data: gamesData } = await supabase
       .from('games')
       .select(`
         *,
@@ -389,7 +389,7 @@ export const fetchGroupDetailData = async (groupId: string) => {
       .order('game_date', { ascending: true })
 
     // Fetch seasons for this group with all the original nested data
-    const { data: seasonsData, error: seasonsError } = await supabase
+    const { data: seasonsData } = await supabase
       .from('seasons')
       .select(`
         *,
@@ -525,7 +525,7 @@ export const fetchGroupDetailData = async (groupId: string) => {
     )
 
     // Fetch players from both individual game attendees and season attendees (original logic)
-    const allPlayers = new Map<string, any>()
+    const allPlayers = new Map<string, { name: string; photo_url?: string }>()
 
     // Fetch individual game attendees (only if there are games)
     let gameAttendeesData = null

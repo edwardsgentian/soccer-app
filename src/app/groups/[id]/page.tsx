@@ -201,14 +201,30 @@ export default function GroupDetailPage() {
 
       // Check if user has joined any games or seasons in this group
       if (player) {
-        const hasJoinedGame = games.some((game: any) => 
-          game.game_attendees?.some((attendee: any) => 
+        const hasJoinedGame = games.some((game: {
+          game_attendees?: Array<{
+            player_id: string;
+            payment_status: string;
+          }>;
+        }) => 
+          game.game_attendees?.some((attendee: {
+            player_id: string;
+            payment_status: string;
+          }) => 
             attendee.player_id === player.id && attendee.payment_status === 'completed'
           )
         )
         
-        const hasJoinedSeason = seasons.some((season: any) => 
-          season.season_attendees?.some((attendee: any) => 
+        const hasJoinedSeason = seasons.some((season: {
+          season_attendees?: Array<{
+            player_id: string;
+            payment_status: string;
+          }>;
+        }) => 
+          season.season_attendees?.some((attendee: {
+            player_id: string;
+            payment_status: string;
+          }) => 
             attendee.player_id === player.id && attendee.payment_status === 'completed'
           )
         )

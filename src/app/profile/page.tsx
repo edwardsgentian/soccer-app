@@ -163,22 +163,6 @@ export default function ProfilePage() {
   const [basicDataLoaded, setBasicDataLoaded] = useState(false)
   const [tabsDataLoaded, setTabsDataLoaded] = useState(false)
   
-  // Track loading state for individual sections
-  const [sectionLoading, setSectionLoading] = useState({
-    gameHistory: false,
-    createdGames: false,
-    createdGroups: false,
-    memberGroups: false,
-    upcomingGames: false,
-    upcomingSeasons: false,
-    pastSeasons: false
-  })
-  
-  const refreshData = useCallback(() => {
-    setBasicDataLoaded(false)
-    setTabsDataLoaded(false)
-    setLoading(true)
-  }, [])
 
   // Load basic profile data first (fast)
   const loadBasicData = useCallback(async () => {
