@@ -102,7 +102,7 @@ export function Header() {
             <div className="fixed top-0 left-0 h-full w-full bg-white shadow-xl z-50 md:hidden transform transition-transform duration-300 ease-in-out">
               <div className="flex flex-col h-full">
                 {/* Menu Header */}
-                <div className="flex items-center justify-between p-4 border-b">
+                <div className="flex items-center justify-between p-4">
                   <div className="flex items-center space-x-3">
                     <Image 
                       src="/face.png" 
@@ -137,6 +137,13 @@ export function Header() {
                 <nav className="flex-1 p-4">
                   <div className="space-y-6">
                     <Link 
+                      href="/" 
+                      className="block text-lg text-gray-700 hover:text-gray-900 transition-colors py-2"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Home
+                    </Link>
+                    <Link 
                       href="/games" 
                       className="block text-lg text-gray-700 hover:text-gray-900 transition-colors py-2"
                       onClick={() => setIsMenuOpen(false)}
@@ -160,7 +167,7 @@ export function Header() {
                   </div>
 
                   {/* User Actions */}
-                  <div className="mt-8 pt-6 border-t">
+                  <div className="mt-8 pt-6">
                     {user ? (
                       <div className="space-y-4">
                         <div className="text-sm text-gray-600">

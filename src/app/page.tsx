@@ -353,7 +353,7 @@ export default function Home() {
           <div className="lg:hidden">
             <div className="text-center">
               {/* Mobile Text Layout */}
-              <div className="space-y-2 mb-8">
+              <div className="space-y-2 mb-6">
                 <h1 className="hero-h1 text-6xl font-serif text-gray-900">
                   <SplitText>Community</SplitText>
                 </h1>
@@ -371,42 +371,44 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
               >
-                <p className="text-lg text-gray-600 mb-6 px-4">
+                <p className="text-sm md:text-base text-gray-600 mb-6 px-4">
                   Create a group or find games near you
                 </p>
                 <Button
                   onClick={() => setShowCreateModal(true)}
-                  className="mb-8"
+                  className="mb-8 text-sm md:text-base"
                 >
                   Create a group
                 </Button>
               </motion.div>
 
               {/* Mobile Video Circle */}
-              <motion.div 
-                className="w-96 h-96 mx-auto mt-12"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              >
-                <div className="w-full h-full rounded-full overflow-hidden">
-                  <video
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover"
-                  >
-                    <source src="/clouds_sports.mp4" type="video/mp4" />
-                  </video>
-                </div>
-              </motion.div>
+              <div className="w-full px-4">
+                <motion.div 
+                  className="w-full max-w-sm aspect-square mx-auto mt-8"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden">
+                    <video
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full object-cover"
+                    >
+                      <source src="/clouds_sports.mp4" type="video/mp4" />
+                    </video>
+                  </div>
+                </motion.div>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Upcoming Games Section */}
-        <div className="mb-12" style={{ marginTop: '-50px' }}>
+        <div className="mb-8 md:mb-12" style={{ marginTop: '-20px' }}>
           
           {/* Game Cards Grid */}
           {loading ? (
@@ -425,14 +427,15 @@ export default function Home() {
                   className="w-16 h-16 mx-auto rounded-full object-cover"
                 />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
                 No upcoming games or seasons yet
               </h3>
-              <p className="text-gray-600 mb-6">
+              <p className="text-sm md:text-base text-gray-600 mb-6 px-4">
                 Be the first to create a game or season in your area!
               </p>
               <Button
                 onClick={() => window.location.href = '/groups'}
+                className="text-sm md:text-base"
               >
                 Create a Group
               </Button>
@@ -441,7 +444,7 @@ export default function Home() {
             <>
               {/* Seasons Section */}
               {seasons.length > 0 && (
-                <div className="max-w-lg mx-auto mb-8 mt-24 space-y-6">
+                <div className="max-w-lg mx-auto mb-6 md:mb-8 mt-12 md:mt-24 space-y-4 md:space-y-6 px-4">
                     {seasons.map((season) => {
                       // Calculate season attendees including organizer if they should be included
                       const seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
@@ -481,7 +484,7 @@ export default function Home() {
 
               {/* Games Section */}
               {games.length > 0 && (
-                <div className="max-w-lg mx-auto space-y-6">
+                <div className="max-w-lg mx-auto space-y-4 md:space-y-6 px-4">
                 {(() => {
                   // Group games by date
                   const gamesByDate = games.reduce((acc, game) => {

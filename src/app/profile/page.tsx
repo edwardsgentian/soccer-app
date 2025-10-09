@@ -603,8 +603,18 @@ export default function ProfilePage() {
       <Link href={`/groups/${group.id}`} className="block">
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer">
           {/* Group Header */}
-          <div className="h-32 bg-gray-50 flex items-center justify-center">
-            <Component className="w-8 h-8 text-gray-400" />
+          <div className="h-32 bg-gray-50 flex items-center justify-center overflow-hidden">
+            {group.photo_url ? (
+              <Image
+                src={group.photo_url}
+                alt={group.name}
+                width={400}
+                height={128}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Component className="w-8 h-8 text-gray-400" />
+            )}
           </div>
 
           <div className="p-6">
@@ -775,21 +785,21 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 md:py-16 max-w-4xl">
         {/* Profile Header - Luma Style */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8 md:mb-12">
           {/* Profile Photo */}
-          <div className="w-32 h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6">
             {player.photo_url ? (
               <Image
                 src={player.photo_url}
                 alt={player.name}
                 width={128}
                 height={128}
-                className="w-32 h-32 rounded-full object-cover"
+                className="w-24 h-24 md:w-32 md:h-32 rounded-full object-cover"
               />
             ) : (
-              <span className="text-4xl text-gray-600 font-bold">
+              <span className="text-3xl md:text-4xl text-gray-600 font-bold">
                 {player.name.charAt(0).toUpperCase()}
               </span>
             )}
@@ -799,27 +809,27 @@ export default function ProfilePage() {
           <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{player.name}</h1>
           
           {/* Joined Date */}
-          <p className="text-gray-600 mb-8">Joined {formatDate(player.member_since)}</p>
+          <p className="text-xs md:text-sm text-gray-600 mb-8">Joined {formatDate(player.member_since)}</p>
 
           {/* Stats Cards */}
-          <div className="flex justify-center gap-4 mb-8">
-            <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
-              <div className="text-3xl font-bold mb-1">
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-8">
+            <div className="bg-gray-100 text-black rounded-xl px-4 md:px-5 py-2 md:py-3 text-center min-w-[90px] md:min-w-[110px]">
+              <div className="text-2xl md:text-3xl font-bold mb-1">
                 <AnimatedCounter value={createdGroups.length + createdGames.length} />
               </div>
-              <div className="text-sm text-gray-700">Hosted</div>
+              <div className="text-xs md:text-sm text-gray-700">Hosted</div>
             </div>
-            <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
-              <div className="text-3xl font-bold mb-1">
+            <div className="bg-gray-100 text-black rounded-xl px-4 md:px-5 py-2 md:py-3 text-center min-w-[90px] md:min-w-[110px]">
+              <div className="text-2xl md:text-3xl font-bold mb-1">
                 <AnimatedCounter value={gameHistory.length} />
               </div>
-              <div className="text-sm text-gray-700">Attended</div>
+              <div className="text-xs md:text-sm text-gray-700">Attended</div>
             </div>
-            <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
-              <div className="text-3xl font-bold mb-1">
+            <div className="bg-gray-100 text-black rounded-xl px-4 md:px-5 py-2 md:py-3 text-center min-w-[90px] md:min-w-[110px]">
+              <div className="text-2xl md:text-3xl font-bold mb-1">
                 <AnimatedCounter value={calculateTotalHoursPlayed()} />
               </div>
-              <div className="text-sm text-gray-700">Hours Played</div>
+              <div className="text-xs md:text-sm text-gray-700">Hours Played</div>
             </div>
           </div>
 
@@ -827,17 +837,17 @@ export default function ProfilePage() {
           <Button
             onClick={() => setShowEditForm(true)}
             variant="outline"
-            className="mb-8"
+            className="mb-8 text-sm md:text-base"
           >
             <Edit className="w-4 h-4 mr-2" />
             Edit Profile
           </Button>
 
           {/* Profile Details */}
-          <div className="bg-gray-50 rounded-xl p-6 text-left max-w-2xl mx-auto space-y-6">
+          <div className="bg-gray-50 rounded-xl p-4 md:p-6 text-left max-w-2xl mx-auto space-y-6">
             {/* Experience Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Experience</h3>
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">Experience</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {(player as { sport?: string }).sport && (
                   <div>
@@ -874,7 +884,7 @@ export default function ProfilePage() {
 
             {/* About Section */}
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">About</h3>
+              <h3 className="text-base md:text-lg font-semibold text-gray-900 mb-4">About</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {player.home_location && (
                   <div>
@@ -915,17 +925,17 @@ export default function ProfilePage() {
         <div>
           {/* Tab Headers - Motion.dev Style */}
           <motion.div 
-            className="px-6 pt-6 flex justify-center"
+            className="px-2 md:px-6 pt-4 md:pt-6 flex justify-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="flex bg-gray-100 p-1 rounded-lg">
+            <div className="flex bg-gray-100 p-1 rounded-lg w-full max-w-md md:w-auto">
               {['upcoming', 'attended', 'groups'].map((tab) => (
                 <motion.button
                   key={tab}
                   onClick={() => setActiveTab(tab as 'upcoming' | 'attended' | 'groups')}
-                  className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md text-center transition-colors ${
+                  className={`relative flex-1 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-md text-center transition-colors ${
                     activeTab === tab
                       ? 'text-black bg-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
@@ -954,7 +964,7 @@ export default function ProfilePage() {
           </motion.div>
 
           {/* Tab Content */}
-          <div className="p-6">
+          <div className="p-4 md:p-6">
             <AnimatePresence mode="wait">
               {activeTab === 'attended' && (
                 <motion.div

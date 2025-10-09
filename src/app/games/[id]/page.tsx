@@ -469,12 +469,12 @@ export default function GameDetailPage() {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6 md:py-8">
         {/* Back Button */}
         <Button
           variant="outline"
           onClick={() => window.history.back()}
-          className="mb-6"
+          className="mb-4 md:mb-6 text-sm"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
@@ -482,63 +482,63 @@ export default function GameDetailPage() {
 
         {/* Main Content - Airbnb Style Layout */}
         <div className="max-w-7xl mx-auto pb-32 lg:pb-0">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
             {/* Left Column - Game Information */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6 md:space-y-8">
               {/* Game Header */}
               <div>
                 <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{game.name}</h1>
-                <Link href={`/groups/${game.groups.id}`} className="text-lg font-semibold text-gray-600 mb-4 hover:text-black transition-colors">
+                <Link href={`/groups/${game.groups.id}`} className="text-base md:text-lg font-semibold text-gray-600 mb-4 hover:text-black transition-colors">
                   {game.groups.name}
                 </Link>
                 
                 {game.description && (
-                  <p className="text-gray-700 text-base leading-relaxed">{game.description}</p>
+                  <p className="text-gray-700 text-sm md:text-base leading-relaxed">{game.description}</p>
                 )}
               </div>
 
               {/* Game Details */}
-              <div className="border-t border-gray-200 pt-8">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Game overview</h2>
+              <div className="border-t border-gray-200 pt-6 md:pt-8">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 md:mb-6">Game overview</h2>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                   <div className="flex items-start">
-                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
-                      <Calendar className="w-5 h-5 text-gray-600" />
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg mr-3 md:mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Calendar className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900 mb-1">Date</div>
-                      <div className="text-gray-600">{formatDate(game.game_date)}</div>
+                      <div className="font-semibold text-sm md:text-base text-gray-900 mb-1">Date</div>
+                      <div className="text-sm md:text-base text-gray-600">{formatDate(game.game_date)}</div>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
-                      <Clock className="w-5 h-5 text-gray-600" />
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg mr-3 md:mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <Clock className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900 mb-1">Time</div>
-                      <div className="text-gray-600">{formatTime(game.game_time)}</div>
+                      <div className="font-semibold text-sm md:text-base text-gray-900 mb-1">Time</div>
+                      <div className="text-sm md:text-base text-gray-600">{formatTime(game.game_time)}</div>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
-                      <MapPin className="w-5 h-5 text-gray-600" />
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg mr-3 md:mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <MapPin className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900 mb-1">Location</div>
-                      <div className="text-gray-600">{game.location}</div>
+                      <div className="font-semibold text-sm md:text-base text-gray-900 mb-1">Location</div>
+                      <div className="text-sm md:text-base text-gray-600">{game.location}</div>
                     </div>
                   </div>
                   
                   <div className="flex items-start">
-                    <div className="w-8 h-8 rounded-lg mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
-                      <BadgeDollarSign className="w-5 h-5 text-gray-600" />
+                    <div className="w-7 h-7 md:w-8 md:h-8 rounded-lg mr-3 md:mr-4 mt-1 flex items-center justify-center" style={{ backgroundColor: '#F8F3BD' }}>
+                      <BadgeDollarSign className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
                     </div>
                     <div>
-                      <div className="font-semibold text-gray-900 mb-1">Price</div>
-                      <div className="text-gray-600">${game.price} per player</div>
+                      <div className="font-semibold text-sm md:text-base text-gray-900 mb-1">Price</div>
+                      <div className="text-sm md:text-base text-gray-600">${game.price} per player</div>
                     </div>
                   </div>
                 </div>
@@ -546,10 +546,10 @@ export default function GameDetailPage() {
 
               {/* WhatsApp Group - Only visible to users who have joined - Mobile Only */}
               {game.groups.whatsapp_group && hasPaid && (
-                <div className="lg:hidden border-t border-gray-200 pt-8">
+                <div className="lg:hidden border-t border-gray-200 pt-6 md:pt-8">
                   <Button
                     variant="outline"
-                    className="w-full"
+                    className="w-full text-sm md:text-base"
                     onClick={() => window.open(game.groups.whatsapp_group, '_blank')}
                   >
                     Join WhatsApp Group
@@ -564,12 +564,12 @@ export default function GameDetailPage() {
                 <div className="bg-white rounded-xl border border-gray-200 p-4 lg:p-6 shadow-sm">
                   {/* Price - Only show if user hasn't paid */}
                   {!hasPaid && (
-                    <div className="mb-6">
+                    <div className="mb-4 md:mb-6">
                       <div className="flex items-baseline mb-2">
-                        <span className="text-3xl font-bold text-gray-900">${game.price}</span>
-                        <span className="text-gray-600 ml-2">per player</span>
+                        <span className="text-2xl md:text-3xl font-bold text-gray-900">${game.price}</span>
+                        <span className="text-sm md:text-base text-gray-600 ml-2">per player</span>
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-xs md:text-sm text-gray-600">
                         {spotsLeft} of {game.total_tickets} spots available
                       </div>
                     </div>

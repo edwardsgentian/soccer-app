@@ -449,174 +449,257 @@ export default function GroupDetailPage() {
     <div className="min-h-screen bg-white">
       <Header />
       
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        {/* Back Button */}
-        <Button
-          variant="outline"
-          onClick={() => window.location.href = '/groups'}
-          className="mb-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Groups
-        </Button>
-
-        {/* Main Content - Airbnb Style Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Group Information */}
-          <div className="lg:col-span-2 space-y-8">
-              {/* Group Header */}
-            <div>
-              {/* Group Icon/Photo */}
-              <div className="w-24 h-24 bg-gray-100 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
-                {group.photo_url ? (
-                  <Image
-                    src={group.photo_url}
-                    alt={group.name}
-                    width={96}
-                    height={96}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <Component className="w-12 h-12 text-gray-600" />
-                )}
-              </div>
-
-                {/* Group Name */}
-              <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{group.name}</h1>
-              
-              {/* Created Date */}
-              <p className="text-gray-600 mb-6">Created {formatDate(group.created_at)}</p>
-
-              {/* Group Stats */}
-              <div className="flex gap-4 mb-8">
-                <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
-                  <div className="text-3xl font-bold mb-1">
-                    <AnimatedCounter value={games.length} />
-                  </div>
-                  <div className="text-sm text-gray-700">Games</div>
-                </div>
-                <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
-                  <div className="text-3xl font-bold mb-1">
-                    <AnimatedCounter value={seasons.length} />
-                  </div>
-                  <div className="text-sm text-gray-700">Seasons</div>
-                </div>
-                <div className="bg-gray-100 text-black rounded-xl px-5 py-3 text-center min-w-[110px]">
-                  <div className="text-3xl font-bold mb-1">
-                    <AnimatedCounter value={players.length} />
-                  </div>
-                  <div className="text-sm text-gray-700">Players</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200"></div>
-
-            {/* About Section */}
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">About</h2>
-              <p className="text-gray-600 leading-relaxed mb-6">{group.description}</p>
-
-                {/* Tags */}
-                {group.tags && group.tags.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex flex-wrap gap-2">
-                      {group.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                        className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Social Links */}
-              <div>
-                <div className="flex flex-wrap gap-4">
-                  {group.whatsapp_group && hasUserJoined && (
-                    <a
-                      href={group.whatsapp_group}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-green-600 hover:text-green-700 transition-colors"
-                    >
-                      <MessageCircle className="w-5 h-5 mr-2" />
-                      WhatsApp Group
-                    </a>
-                  )}
-                  {group.instagram && (
-                    <a
-                      href={group.instagram}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-pink-600 hover:text-pink-700 transition-colors"
-                    >
-                      <Instagram className="w-5 h-5 mr-2" />
-                      Instagram
-                    </a>
-                  )}
-                  {group.website && (
-                    <a
-                      href={group.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center text-blue-600 hover:text-blue-700 transition-colors"
-                    >
-                      <Globe className="w-5 h-5 mr-2" />
-                      Website
-                    </a>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-gray-200"></div>
-
-            {/* Tab Headers - Motion.dev Style */}
-            <motion.div 
-              className="flex justify-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+      <div className="container mx-auto px-4 py-8 md:py-16 max-w-4xl">
+        {/* Back Button and Edit Group */}
+        <div className="flex justify-between items-center mb-6">
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = '/groups'}
+            className="text-sm"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Back to Groups</span>
+            <span className="sm:hidden">Back</span>
+          </Button>
+          
+          {player && group && player.id === group.created_by && (
+            <Button
+              onClick={() => setShowEditForm(true)}
+              variant="outline"
+              size="icon"
             >
-              <div className="flex bg-gray-100 p-1 rounded-lg">
-                {['games', 'seasons'].map((tab) => (
-                  <motion.button
-                    key={tab}
-                    onClick={() => setActiveTab(tab as 'games' | 'seasons')}
-                    className={`relative flex-1 px-4 py-2 text-sm font-medium rounded-md text-center transition-colors ${
-                      activeTab === tab
-                        ? 'text-black bg-white shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+              <Edit className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        {/* Group Header - Centered Layout */}
+        <div className="text-center mb-8 md:mb-12">
+          {/* Group Icon/Photo */}
+          <div className="w-20 h-20 md:w-24 md:h-24 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4 md:mb-6 overflow-hidden">
+            {group.photo_url ? (
+              <Image
+                src={group.photo_url}
+                alt={group.name}
+                width={96}
+                height={96}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <Component className="w-12 h-12 text-gray-600" />
+            )}
+          </div>
+
+          {/* Group Name */}
+          <h1 className="hero-h1 text-6xl font-medium text-gray-900 mb-2">{group.name}</h1>
+          
+          {/* Created Date */}
+          <p className="text-xs md:text-sm text-gray-600 mb-4">Created {formatDate(group.created_at)}</p>
+
+          {/* Social Links */}
+          <div className="mb-8">
+            <div className="flex flex-wrap justify-center gap-3">
+              {group.whatsapp_group && hasUserJoined && (
+                <div className="relative group/social">
+                  <a
+                    href={group.whatsapp_group}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
                   >
-                    {activeTab === tab && (
-                      <motion.div
-                        className="absolute inset-0 bg-white rounded-md shadow-sm"
-                        layoutId="activeTab"
-                        transition={{
-                          type: "spring",
-                          stiffness: 500,
-                          damping: 30
-                        }}
-                        style={{ zIndex: -1 }}
-                      />
-                    )}
-                    <span className="relative z-10">
-                      {tab === 'games' ? 'Games' : 'Seasons'}
-                    </span>
-                  </motion.button>
+                    <MessageCircle className="w-5 h-5" />
+                  </a>
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    WhatsApp Group
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
+                  </div>
+                </div>
+              )}
+              {group.instagram && (
+                <div className="relative group/social">
+                  <a
+                    href={group.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    <Instagram className="w-5 h-5" />
+                  </a>
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    Instagram
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
+                  </div>
+                </div>
+              )}
+              {group.website && (
+                <div className="relative group/social">
+                  <a
+                    href={group.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-600 hover:text-gray-900 transition-colors"
+                  >
+                    <Globe className="w-5 h-5" />
+                  </a>
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-xs rounded-lg opacity-0 group-hover/social:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">
+                    Website
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-black"></div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Add Game/Season Button - Only for Admins */}
+          {player && group && player.id === group.created_by && (
+            <div className="mb-8">
+              <Button
+                onClick={() => router.push(`/create-game?groupId=${groupId}`)}
+                className="bg-black hover:bg-gray-800 text-white text-sm md:text-base"
+              >
+                Add Game/Season
+              </Button>
+            </div>
+          )}
+
+          {/* Description */}
+          <p className="text-sm md:text-base text-gray-600 leading-relaxed mb-6 max-w-2xl mx-auto px-4">{group.description}</p>
+
+          {/* Tags */}
+          {group.tags && group.tags.length > 0 && (
+            <div className="mb-6">
+              <div className="flex flex-wrap justify-center gap-2">
+                {group.tags.map((tag, index) => (
+                  <span
+                    key={index}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full"
+                  >
+                    {tag}
+                  </span>
                 ))}
               </div>
-            </motion.div>
+            </div>
+          )}
 
-            {/* Tabbed Content */}
-            <div className="mt-8">
+          {/* Group Stats */}
+          <div className="flex flex-wrap justify-center gap-3 md:gap-4 mb-8">
+            <div className="bg-gray-100 text-black rounded-xl px-4 md:px-5 py-2 md:py-3 text-center min-w-[90px] md:min-w-[110px]">
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                <AnimatedCounter value={games.length} />
+              </div>
+              <div className="text-xs md:text-sm text-gray-700">Games</div>
+            </div>
+            <div className="bg-gray-100 text-black rounded-xl px-4 md:px-5 py-2 md:py-3 text-center min-w-[90px] md:min-w-[110px]">
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                <AnimatedCounter value={seasons.length} />
+              </div>
+              <div className="text-xs md:text-sm text-gray-700">Seasons</div>
+            </div>
+            <div className="bg-gray-100 text-black rounded-xl px-4 md:px-5 py-2 md:py-3 text-center min-w-[90px] md:min-w-[110px]">
+              <div className="text-2xl md:text-3xl font-bold mb-1">
+                <AnimatedCounter value={players.length} />
+              </div>
+              <div className="text-xs md:text-sm text-gray-700">Players</div>
+            </div>
+          </div>
+
+          {/* Group Players */}
+          <div className="mb-8">
+            <h3 className="text-sm md:text-base font-semibold text-gray-900 mb-4">
+              Group Players ({players.length})
+            </h3>
+            {players.length > 0 ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                {players.map((player) => (
+                  <div 
+                    key={player.id} 
+                    className="relative group"
+                  >
+                    <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
+                      {player.photo_url ? (
+                        <Image
+                          src={player.photo_url}
+                          alt={player.name}
+                          width={40}
+                          height={40}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-gray-600">
+                          {player.name?.charAt(0).toUpperCase() || '?'}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                      {player.name || 'Unknown Player'}
+                      {/* Tooltip arrow */}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm">
+                  {games.length === 0 && seasons.length === 0 
+                    ? "No games or seasons yet - players will appear here once games/seasons are created and people sign up"
+                    : "No players have signed up for games or seasons yet"
+                  }
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tabbed Content Panel */}
+        <div>
+          {/* Tab Headers - Motion.dev Style */}
+          <motion.div 
+            className="px-2 md:px-6 pt-4 md:pt-6 flex justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="flex bg-gray-100 p-1 rounded-lg w-full max-w-sm md:w-auto">
+              {['games', 'seasons'].map((tab) => (
+                <motion.button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as 'games' | 'seasons')}
+                  className={`relative flex-1 px-3 md:px-4 py-2 text-xs md:text-sm font-medium rounded-md text-center transition-colors ${
+                    activeTab === tab
+                      ? 'text-black bg-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {activeTab === tab && (
+                    <motion.div
+                      className="absolute inset-0 bg-white rounded-md shadow-sm"
+                      layoutId="activeTab"
+                      transition={{
+                        type: "spring",
+                        stiffness: 500,
+                        damping: 30
+                      }}
+                      style={{ zIndex: -1 }}
+                    />
+                  )}
+                  <span className="relative z-10">
+                    {tab === 'games' ? 'Games' : 'Seasons'}
+                  </span>
+                </motion.button>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Tab Content */}
+          <div className="p-4 md:p-6">
               <AnimatePresence mode="wait">
               {activeTab === 'games' && (
                 <motion.div
@@ -625,10 +708,10 @@ export default function GroupDetailPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-6"
                 >
                 {games.length > 0 ? (
-                  games.map((game) => {
+                  <div className="max-w-lg mx-auto space-y-6">
+                  {games.map((game) => {
                     // Check if user has purchased the season (for season games)
                     const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(
                       (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
@@ -660,7 +743,8 @@ export default function GroupDetailPage() {
                         hasPurchasedSeason={hasPurchasedSeason}
                       />
                     )
-                  })
+                  })}
+                  </div>
                 ) : (
               <div className="text-center py-12">
                     <div className="mb-4">
@@ -697,10 +781,10 @@ export default function GroupDetailPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-6"
                 >
                 {seasons.length > 0 ? (
-                  seasons.map((season) => (
+                  <div className="max-w-lg mx-auto space-y-6">
+                  {seasons.map((season) => (
                         <SeasonCard
                           key={season.id}
                           seasonId={season.id}
@@ -719,7 +803,8 @@ export default function GroupDetailPage() {
                       seasonSpotsAvailable={season.season_spots - (season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0)}
                       gameSpotsAvailable={season.game_spots}
                     />
-                  ))
+                  ))}
+                  </div>
                 ) : (
                   <div className="text-center py-12">
                     <div className="mb-4">
@@ -751,85 +836,6 @@ export default function GroupDetailPage() {
 
             </AnimatePresence>
             </div>
-          </div>
-
-          {/* Right Column - Players & Actions */}
-          <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-8">
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                {/* Admin Actions */}
-                {player && group && player.id === group.created_by && (
-                  <div className="mb-6 space-y-3">
-                    <Button
-                      onClick={() => setShowEditForm(true)}
-                      variant="outline"
-                      className="w-full"
-                      size="lg"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit Group
-                    </Button>
-                    <Button
-                      onClick={() => router.push(`/create-game?groupId=${groupId}`)}
-                      className="w-full bg-black hover:bg-gray-800 text-white"
-                      size="lg"
-                    >
-                      Add Game/Season
-                    </Button>
-                  </div>
-                )}
-
-                {/* Group Players */}
-                <div className="pt-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">
-                    Group Players ({players.length})
-                        </h3>
-                  {players.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {players.map((player) => (
-                        <div 
-                          key={player.id} 
-                          className="relative group"
-                        >
-                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
-                            {player.photo_url ? (
-                              <Image
-                                src={player.photo_url}
-                                alt={player.name}
-                                width={40}
-                                height={40}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <span className="text-sm font-semibold text-gray-600">
-                                {player.name?.charAt(0).toUpperCase() || '?'}
-                              </span>
-                            )}
-                      </div>
-                          
-                          {/* Tooltip */}
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                            {player.name || 'Unknown Player'}
-                            {/* Tooltip arrow */}
-                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-black"></div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <p className="text-gray-500 text-sm">
-                        {games.length === 0 && seasons.length === 0 
-                          ? "No games or seasons yet - players will appear here once games/seasons are created and people sign up"
-                          : "No players have signed up for games or seasons yet"
-                        }
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
