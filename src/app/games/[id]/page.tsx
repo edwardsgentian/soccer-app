@@ -108,7 +108,7 @@ export default function GameDetailPage() {
       setGame(gameData)
 
       // Process attendees from the optimized data
-      const individualAttendees = (gameData.game_attendees || []).map((attendee: { id: string; created_at?: string; attendance_status: string; players: any }) => {
+      const individualAttendees = (gameData.game_attendees || []).map((attendee: { id: string; created_at?: string; attendance_status: string; players: { name?: string; photo_url?: string } | { name?: string; photo_url?: string }[] }) => {
         const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
         
         return {
@@ -123,7 +123,7 @@ export default function GameDetailPage() {
       })
 
       // Process season attendees
-      const seasonAttendees = (gameData.season_game_attendance || []).map((attendance: { attendance_status: string; season_attendees: { id: string; created_at?: string; players: any } }) => {
+      const seasonAttendees = (gameData.season_game_attendance || []).map((attendance: { attendance_status: string; season_attendees: { id: string; created_at?: string; players: { name?: string; photo_url?: string } | { name?: string; photo_url?: string }[] } }) => {
         const attendee = attendance.season_attendees
         const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
         

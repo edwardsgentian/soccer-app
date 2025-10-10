@@ -688,7 +688,7 @@ export default function ProfilePage() {
     if (!supabase || !user) return
 
     try {
-      const { data: _, error: __ } = await supabase
+      await supabase
         .from('season_attendees')
         .select(`
           id,
@@ -741,7 +741,7 @@ export default function ProfilePage() {
 
     try {
       // Simplified query to avoid timeouts
-      const { data: _, error: __ } = await supabase
+      await supabase
         .from('season_attendees')
         .select(`
           id,

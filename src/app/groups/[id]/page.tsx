@@ -15,7 +15,7 @@ import { GroupEditForm } from '@/components/groups/group-edit-form'
 import { GlassyButton } from '@/components/ui/glassy-button'
 import { AnimatedAvatar } from '@/components/ui/animated-avatar'
 // import { fetchGroupDetailData } from '@/lib/optimized-queries'
-import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
+import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getSeasonPlayerCount } from '@/lib/attendance-service'
 import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'
 
 // Animated counter component

@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { HomepageGameCardSkeleton, HomepageSeasonCardSkeleton } from '@/components/ui/skeleton-loader'
-import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
+import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getSeasonPlayerCount } from '@/lib/attendance-service'
 
 // Use the types from the attendance service
 import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'

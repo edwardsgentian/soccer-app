@@ -9,7 +9,7 @@ import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
 import { GameCardSkeleton } from '@/components/ui/skeleton-loader'
-import { fetchGamesWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
+import { fetchGamesWithAttendance, isUserAttendingGame, isUserAttendingSeason, getSeasonPlayerCount } from '@/lib/attendance-service'
 import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'
 
 // Use the centralized types from attendance service
