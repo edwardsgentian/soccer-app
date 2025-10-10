@@ -532,7 +532,7 @@ export default function Home() {
                           firstGameDate={season.first_game_date}
                           firstGameTime={season.first_game_time}
                           repeatType={season.repeat_type}
-                          groupName={season.groups.name}
+                          groupName={season.groups?.name || 'Unknown Group'}
                           location={season.location}
                           seasonSpotsAvailable={seasonSpotsAvailable}
                           gameSpotsAvailable={gameSpotsAvailable}
@@ -595,7 +595,7 @@ export default function Home() {
                               price={game.price}
                               location={game.location}
                               maxAttendees={game.total_tickets}
-                              groupName={game.groups.name}
+                              groupName={game.groups?.name || 'Unknown Group'}
                               gameId={game.id}
                               tags={['Intermediate', 'Outdoors']}
                               seasonId={game.season_id || game.seasons?.id}

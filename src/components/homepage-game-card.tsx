@@ -145,16 +145,28 @@ export function HomepageGameCard({
       let playerPhoto = undefined
       let fallbackLetter = '?'
       
-      if ('players' in attendee && attendee.players && attendee.players.name && attendee.players.name !== 'Unknown Player') {
-        // Individual game attendee with valid player data
-        playerName = attendee.players.name
-        playerPhoto = attendee.players.photo_url
-        fallbackLetter = attendee.players.name.charAt(0).toUpperCase()
-      } else if ('season_attendees' in attendee && attendee.season_attendees?.players && attendee.season_attendees.players.name && attendee.season_attendees.players.name !== 'Unknown Player') {
-        // Season attendee with valid player data
-        playerName = attendee.season_attendees.players.name
-        playerPhoto = attendee.season_attendees.players.photo_url
-        fallbackLetter = attendee.season_attendees.players.name.charAt(0).toUpperCase()
+      if ('players' in attendee && attendee.players) {
+        // Handle both array and object cases for players
+        const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
+        if (player && player.name && player.name !== 'Unknown Player') {
+          playerName = player.name
+          playerPhoto = player.photo_url
+          fallbackLetter = player.name.charAt(0).toUpperCase()
+        } else {
+          playerName = 'Player'
+          fallbackLetter = '?'
+        }
+      } else if ('season_attendees' in attendee && attendee.season_attendees?.players) {
+        // Handle both array and object cases for season attendees players
+        const player = Array.isArray(attendee.season_attendees.players) ? attendee.season_attendees.players[0] : attendee.season_attendees.players
+        if (player && player.name && player.name !== 'Unknown Player') {
+          playerName = player.name
+          playerPhoto = player.photo_url
+          fallbackLetter = player.name.charAt(0).toUpperCase()
+        } else {
+          playerName = 'Player'
+          fallbackLetter = '?'
+        }
       } else {
         // Fallback - don't show generic "Player X" names, just show a generic avatar
         playerName = 'Player'

@@ -77,12 +77,16 @@ const generateAvatarStack = (attendees: number, maxAvatars: number, seasonAttend
       index === self.findIndex(a => a.player_id === attendee.player_id)
     )
     
-    avatarData = uniqueAttendees.slice(0, maxAvatars).map((attendee, index) => ({
-      id: attendee.id || `season-attendee-${index}`,
-      name: attendee.players?.name || `Player ${index + 1}`,
-      photo_url: attendee.players?.photo_url,
-      fallback: attendee.players?.name?.charAt(0).toUpperCase() || String.fromCharCode(65 + index)
-    }))
+    avatarData = uniqueAttendees.slice(0, maxAvatars).map((attendee, index) => {
+      // Handle both array and object cases for players
+      const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
+      return {
+        id: attendee.id || `season-attendee-${index}`,
+        name: player?.name || `Player ${index + 1}`,
+        photo_url: player?.photo_url,
+        fallback: player?.name?.charAt(0).toUpperCase() || String.fromCharCode(65 + index)
+      }
+    })
   } else {
     // Fallback to mock data if no real data available
     avatarData = Array.from({ length: Math.min(attendees, maxAvatars) }, (_, index) => ({
