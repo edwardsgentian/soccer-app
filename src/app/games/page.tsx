@@ -333,7 +333,7 @@ export default function GamesPage() {
       setLoadingMore(false)
       setDataFetched(true)
     }
-  }, [supabase, currentPage, setCachedData])
+  }, [currentPage, setCachedData, getCachedData])
 
   const loadMoreGames = async () => {
     if (loadingMore || !hasMoreGames) return
@@ -378,7 +378,7 @@ export default function GamesPage() {
     } catch (err) {
       console.error('Error fetching seasons:', err)
     }
-  }, [supabase])
+  }, [])
 
   useEffect(() => {
     if (!dataFetched) {

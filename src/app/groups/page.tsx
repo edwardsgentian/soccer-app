@@ -45,7 +45,6 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
-  const [creatingGroup, setCreatingGroup] = useState(false)
   
   // Use server-side pagination hook
   const pagination = useServerPagination({ pageSize: 12 })
@@ -63,7 +62,7 @@ export default function GroupsPage() {
       const result = await Promise.race([
         fetchGroupsData(pagination.currentPage, pagination.pageSize),
         timeoutPromise
-      ]) as any
+      ]) as { groups: Group[]; totalCount: number }
       
       setAllGroups(result.groups)
       setTotalCount(result.totalCount)
