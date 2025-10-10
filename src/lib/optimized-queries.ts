@@ -552,13 +552,11 @@ export const fetchGroupDetailData = async (groupId: string) => {
 
     if (!gameAttendeesError && gameAttendeesData) {
       (gameAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-        if (attendee.players && attendee.players.id) {
+        if (attendee.players && attendee.players.name) {
           const player = attendee.players
-          if (player && player.id) {
-            allPlayers.set(player.id, {
-              id: player.id,
+          if (player && player.name) {
+            allPlayers.set(attendee.player_id, {
               name: player.name,
-              email: '', // Hide email
               photo_url: player.photo_url
             })
           }
@@ -591,13 +589,11 @@ export const fetchGroupDetailData = async (groupId: string) => {
 
     if (!seasonAttendeesError && seasonAttendeesData) {
       (seasonAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-        if (attendee.players && attendee.players.id) {
+        if (attendee.players && attendee.players.name) {
           const player = attendee.players
-          if (player && player.id) {
-            allPlayers.set(player.id, {
-              id: player.id,
+          if (player && player.name) {
+            allPlayers.set(attendee.player_id, {
               name: player.name,
-              email: '', // Hide email
               photo_url: player.photo_url
             })
           }

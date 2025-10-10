@@ -45,23 +45,28 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
+  const [creatingGroup, setCreatingGroup] = useState(false)
   
   // Use server-side pagination hook
   const pagination = useServerPagination({ pageSize: 12 })
 
-  useEffect(() => {
-    loadGroupsData()
-  }, [pagination.currentPage, loadGroupsData])
-
   const loadGroupsData = useCallback(async () => {
     try {
       setLoading(true)
+      
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      )
+      
       // Use optimized query with caching and pagination
-      const result = await fetchGroupsData(pagination.currentPage, pagination.pageSize)
+      const result = await Promise.race([
+        fetchGroupsData(pagination.currentPage, pagination.pageSize),
+        timeoutPromise
+      ]) as any
       
       setAllGroups(result.groups)
       setTotalCount(result.totalCount)
-      setHasMore(result.hasMore)
     } catch (err) {
       console.error('Error fetching groups:', err)
       setAllGroups([])
@@ -69,6 +74,10 @@ export default function GroupsPage() {
       setLoading(false)
     }
   }, [pagination.currentPage, pagination.pageSize])
+
+  useEffect(() => {
+    loadGroupsData()
+  }, [loadGroupsData])
 
   const handleGroupCreated = () => {
     loadGroupsData() // Refresh the groups list
@@ -106,7 +115,7 @@ export default function GroupsPage() {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading groups...</p>
           </div>
-        ) : pagination.totalItems === 0 ? (
+        ) : totalCount === 0 ? (
           <div className="text-center py-12">
             <Component className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-900 mb-2">

@@ -107,12 +107,36 @@ export default function GamesPage() {
   const CACHE_KEY = 'games-page-data'
   const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes
 
-  useEffect(() => {
-    if (!dataFetched) {
-      fetchGames()
-      fetchSeasons()
+  // Simple cache functions
+  const getCachedData = () => {
+    try {
+      const cached = localStorage.getItem(CACHE_KEY)
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached)
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          return data
+        }
+      }
+    } catch (error) {
+      console.error('Error reading cache:', error)
     }
-  }, [dataFetched, fetchGames, fetchSeasons])
+    return null
+  }
+
+  const setCachedData = (data: {
+    games: Game[];
+    totalGames: number;
+    hasMoreGames: boolean;
+  }) => {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }))
+    } catch (error) {
+      console.error('Error setting cache:', error)
+    }
+  }
 
   const fetchGames = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!supabase) {
@@ -309,37 +333,6 @@ export default function GamesPage() {
       setLoadingMore(false)
       setDataFetched(true)
     }
-  }
-
-  // Simple cache functions
-  const getCachedData = () => {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY)
-      if (cached) {
-        const { data, timestamp } = JSON.parse(cached)
-        if (Date.now() - timestamp < CACHE_DURATION) {
-          return data
-        }
-      }
-    } catch (error) {
-      console.error('Error reading cache:', error)
-    }
-    return null
-  }
-
-  const setCachedData = (data: {
-    games: Game[];
-    totalGames: number;
-    hasMoreGames: boolean;
-  }) => {
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }))
-    } catch (error) {
-      console.error('Error setting cache:', error)
-    }
   }, [supabase, currentPage, setCachedData])
 
   const loadMoreGames = async () => {
@@ -387,6 +380,12 @@ export default function GamesPage() {
     }
   }, [supabase])
 
+  useEffect(() => {
+    if (!dataFetched) {
+      fetchGames()
+      fetchSeasons()
+    }
+  }, [dataFetched, fetchGames, fetchSeasons])
 
   // const formatDate = (dateString: string) => {
   //   const date = new Date(dateString)
