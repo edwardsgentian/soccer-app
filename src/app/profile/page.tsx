@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import Link from 'next/link'
+// import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, Edit, Trophy, Users, Component, Instagram, Globe, CalendarClock } from 'lucide-react'
+import { Calendar, Edit, Trophy, Users } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
@@ -124,38 +124,38 @@ interface CreatedGroup {
   }>
 }
 
-interface SeasonHistory {
-  id: string
-  created_at: string
-  amount_paid: number
-  seasons: {
-    id: string
-    name: string
-    description?: string
-    season_price: number
-    individual_game_price: number
-    total_games: number
-    season_spots: number
-    game_spots: number
-    first_game_date: string
-    first_game_time: string
-    repeat_type: string
-    location: string
-    groups: {
-      name: string
-      whatsapp_group?: string
-    }
-    season_attendees?: {
-      id: string
-      player_id: string
-      payment_status: string
-      players?: {
-        name: string
-        photo_url?: string
-      }
-    }[]
-  }
-}
+// interface SeasonHistory {
+//   id: string
+//   created_at: string
+//   amount_paid: number
+//   seasons: {
+//     id: string
+//     name: string
+//     description?: string
+//     season_price: number
+//     individual_game_price: number
+//     total_games: number
+//     season_spots: number
+//     game_spots: number
+//     first_game_date: string
+//     first_game_time: string
+//     repeat_type: string
+//     location: string
+//     groups: {
+//       name: string
+//       whatsapp_group?: string
+//     }
+//     season_attendees?: {
+//       id: string
+//       player_id: string
+//       payment_status: string
+//       players?: {
+//         name: string
+//         photo_url?: string
+//       }
+//     }[]
+//   }
+// }
 
 export default function ProfilePage() {
   const { user, player, loading: authLoading } = useAuth()
@@ -688,7 +688,7 @@ export default function ProfilePage() {
     if (!supabase || !user) return
 
     try {
-      const { data, error } = await supabase
+      const { data: _, error: __ } = await supabase
         .from('season_attendees')
         .select(`
           id,
@@ -741,7 +741,7 @@ export default function ProfilePage() {
 
     try {
       // Simplified query to avoid timeouts
-      const { data, error } = await supabase
+      const { data: _, error: __ } = await supabase
         .from('season_attendees')
         .select(`
           id,

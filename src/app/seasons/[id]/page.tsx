@@ -101,7 +101,7 @@ export default function SeasonDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
-  const [accessChecked, setAccessChecked] = useState(false)
+  const [, setAccessChecked] = useState(false)
 
   const fetchSeasonDetails = useCallback(async () => {
     if (!supabase) {
@@ -142,7 +142,7 @@ export default function SeasonDetailPage() {
 
       // Check if user has access to this season
       if (player && seasonData) {
-        const isUserAttending = seasonData.season_attendees?.some((att: any) => 
+        const isUserAttending = seasonData.season_attendees?.some((att: { payment_status: string; player_id: string }) => 
           att.payment_status === 'completed' && att.player_id === player.id
         ) || false
         setHasAccess(isUserAttending)
@@ -273,7 +273,7 @@ export default function SeasonDetailPage() {
     } finally {
       setLoading(false)
     }
-  }, [seasonId])
+  }, [seasonId, player])
 
   useEffect(() => {
     if (seasonId) {

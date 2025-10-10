@@ -82,7 +82,7 @@ export default function GameDetailPage() {
   const [userAttendanceStatus, setUserAttendanceStatus] = useState<'attending' | 'not_attending' | null>(null)
   const [hasPaid, setHasPaid] = useState(false)
   const [hasAccess, setHasAccess] = useState(false)
-  const [accessChecked, setAccessChecked] = useState(false)
+  const [, setAccessChecked] = useState(false)
 
   const handleStatusChange = async (status: 'attending' | 'not_attending') => {
     setUserAttendanceStatus(status)
@@ -108,7 +108,7 @@ export default function GameDetailPage() {
       setGame(gameData)
 
       // Process attendees from the optimized data
-      const individualAttendees = (gameData.game_attendees || []).map((attendee: any) => {
+      const individualAttendees = (gameData.game_attendees || []).map((attendee: { id: string; created_at?: string; attendance_status: string; players: any }) => {
         const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
         
         return {
@@ -123,7 +123,7 @@ export default function GameDetailPage() {
       })
 
       // Process season attendees
-      const seasonAttendees = (gameData.season_game_attendance || []).map((attendance: any) => {
+      const seasonAttendees = (gameData.season_game_attendance || []).map((attendance: { attendance_status: string; season_attendees: { id: string; created_at?: string; players: any } }) => {
         const attendee = attendance.season_attendees
         const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
         
@@ -154,7 +154,7 @@ export default function GameDetailPage() {
         
         
         // Check individual game attendance
-        const userAttendee = gameData.game_attendees?.find((attendee: any) => 
+        const userAttendee = gameData.game_attendees?.find((attendee: { player_id: string; payment_status: string }) => 
           attendee.player_id === playerId && attendee.payment_status === 'completed'
         )
 
@@ -164,7 +164,7 @@ export default function GameDetailPage() {
           setHasAccess(true) // User is signed up for individual game
         } else if (gameData?.season_id) {
           // Check season attendance
-          const seasonAttendee = (gameData.season_game_attendance as any)?.find((attendance: any) => 
+          const seasonAttendee = gameData.season_game_attendance?.find((attendance: { season_attendees?: { player_id: string; payment_status: string } }) => 
             attendance.season_attendees?.player_id === playerId && attendance.season_attendees?.payment_status === 'completed'
           )
 

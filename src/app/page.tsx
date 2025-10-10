@@ -386,7 +386,7 @@ export default function Home() {
                         {dateGames.map((game) => {
                           // Use the centralized attendance service
                           const attendanceInfo = player ? isUserAttendingGame(game, player.id) : { isAttending: false, hasPaid: false }
-                          const playerCount = getGamePlayerCount(game)
+                          // const playerCount = getGamePlayerCount(game)
                           
 
                           return (

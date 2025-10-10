@@ -14,7 +14,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, animate } from '
 import { GroupEditForm } from '@/components/groups/group-edit-form'
 import { GlassyButton } from '@/components/ui/glassy-button'
 import { AnimatedAvatar } from '@/components/ui/animated-avatar'
-import { fetchGroupDetailData } from '@/lib/optimized-queries'
+// import { fetchGroupDetailData } from '@/lib/optimized-queries'
 import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
 import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'
 
@@ -507,7 +507,7 @@ export default function GroupDetailPage() {
                   {games.map((game) => {
                     // Use the centralized attendance service
                     const attendanceInfo = player ? isUserAttendingGame(game, player.id) : { isAttending: false, hasPaid: false }
-                    const playerCount = getGamePlayerCount(game)
+                    // const playerCount = getGamePlayerCount(game)
 
                     return (
                       <HomepageGameCard

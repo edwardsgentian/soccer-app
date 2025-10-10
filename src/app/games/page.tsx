@@ -9,7 +9,7 @@ import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { useAuth } from '@/contexts/auth-context'
 import { GameCardSkeleton } from '@/components/ui/skeleton-loader'
-import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
+import { fetchGamesWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
 import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'
 
 // Use the centralized types from attendance service
@@ -26,7 +26,7 @@ export default function GamesPage() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [currentPage, setCurrentPage] = useState(1)
-  const [totalGames, setTotalGames] = useState(0)
+  const [, setTotalGames] = useState(0)
   const [hasMoreGames, setHasMoreGames] = useState(false)
   const [dataFetched, setDataFetched] = useState(false)
 
@@ -183,7 +183,7 @@ export default function GamesPage() {
                           {dateGames.map((game) => {
                             // Use the centralized attendance service
                             const attendanceInfo = player ? isUserAttendingGame(game, player.id) : { isAttending: false, hasPaid: false }
-                            const playerCount = getGamePlayerCount(game)
+                            // const playerCount = getGamePlayerCount(game)
 
 
                             

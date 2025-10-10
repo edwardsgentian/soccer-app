@@ -220,11 +220,11 @@ export async function fetchGamesWithAttendance(filters?: {
     const playerIds = new Set<string>()
     games.forEach(game => {
       // Add game attendees
-      game.game_attendees?.forEach((attendee: any) => {
+      game.game_attendees?.forEach((attendee: GameAttendee) => {
         playerIds.add(attendee.player_id)
       })
       // Add season attendees
-      game.season_game_attendance?.forEach((attendance: any) => {
+      game.season_game_attendance?.forEach((attendance: SeasonGameAttendance) => {
         playerIds.add(attendance.season_attendees?.player_id)
       })
     })
@@ -239,7 +239,7 @@ export async function fetchGamesWithAttendance(filters?: {
         game.game_attendees || [],
         playersMap
       ),
-      season_game_attendance: (game.season_game_attendance || []).map((attendance: any) => ({
+      season_game_attendance: (game.season_game_attendance || []).map((attendance: SeasonGameAttendance) => ({
         ...attendance,
         season_attendees: {
           ...attendance.season_attendees,
@@ -338,7 +338,7 @@ export async function fetchSeasonsWithAttendance(filters?: {
     // Collect all unique player IDs
     const playerIds = new Set<string>()
     seasons.forEach(season => {
-      season.season_attendees?.forEach((attendee: any) => {
+      season.season_attendees?.forEach((attendee: SeasonAttendee) => {
         playerIds.add(attendee.player_id)
       })
     })
