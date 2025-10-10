@@ -10,3 +10,4 @@ ADD COLUMN IF NOT EXISTS photo_url VARCHAR(500);
 COMMENT ON COLUMN groups.photo_url IS 'URL of the main group photo (stored in Supabase Storage)';
 
 
+

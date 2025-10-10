@@ -15,6 +15,8 @@ import { GroupEditForm } from '@/components/groups/group-edit-form'
 import { GlassyButton } from '@/components/ui/glassy-button'
 import { AnimatedAvatar } from '@/components/ui/animated-avatar'
 import { fetchGroupDetailData } from '@/lib/optimized-queries'
+import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
+import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'
 
 // Animated counter component
 function AnimatedCounter({ value }: { value: number }) {
@@ -60,83 +62,10 @@ interface Group {
   photo_url?: string
 }
 
-interface Game {
-  id: string
-  name: string
-  description?: string
-  game_date: string
-  game_time: string
-  location: string
-  price: number
-  total_tickets: number
-  available_tickets: number
-  created_at: string
-  season_id?: string
-  season_signup_deadline?: string
-  seasons?: {
-    id: string
-    season_signup_deadline: string
-  }
-  game_attendees?: {
-    id: string
-    player_id: string
-    payment_status: string
-    attendance_status?: 'attending' | 'not_attending'
-    players?: {
-      name: string
-      photo_url?: string
-    }
-  }[]
-  season_attendees?: {
-    id: string
-    player_id: string
-    payment_status: string
-    players?: {
-      name: string
-      photo_url?: string
-    }
-  }[]
-  season_game_attendance?: {
-    attendance_status: 'attending' | 'not_attending'
-    season_attendees: {
-      id: string
-      player_id: string
-      payment_status: string
-      players?: {
-        name: string
-        photo_url?: string
-      }
-    }
-  }[]
-}
+// Use the centralized types from attendance service
+type Game = GameWithAttendance
 
-interface Season {
-  id: string
-  name: string
-  description?: string
-  season_price: number
-  individual_game_price: number
-  total_games: number
-  season_spots: number
-  game_spots: number
-  first_game_date: string
-  first_game_time: string
-  repeat_type: string
-  location: string
-  groups: {
-    name: string
-    whatsapp_group?: string
-  }
-  season_attendees?: {
-    id: string
-    player_id: string
-    payment_status: string
-    players?: {
-      name: string
-      photo_url?: string
-    }
-  }[]
-}
+type Season = SeasonWithAttendance
 
 export default function GroupDetailPage() {
   const params = useParams()
@@ -176,7 +105,6 @@ export default function GroupDetailPage() {
       if (groupError) {
         throw new Error('Group not found')
       }
-
       setGroup(groupData)
       setBasicDataLoaded(true)
       setLoading(false)
@@ -189,52 +117,72 @@ export default function GroupDetailPage() {
 
   // Load tabs data in background (slower)
   const loadTabsData = useCallback(async () => {
-    if (!supabase || !group || tabsDataLoaded) return
+    if (!supabase || !group || tabsDataLoaded) {
+      return
+    }
 
     try {
-      // Use optimized query with caching for detailed data
-      const result = await fetchGroupDetailData(groupId) as { 
-        games: Game[]; 
-        seasons: Season[]; 
-        players: Player[] 
-      } | null
-      const { games = [], seasons = [], players = [] } = result || {}
+      // Use the centralized attendance service
+      const [games, seasons] = await Promise.all([
+        fetchGamesWithAttendance({ groupId }),
+        fetchSeasonsWithAttendance({ groupId })
+      ])
       
-      setGames(games as unknown as Game[])
-      setSeasons(seasons as unknown as Season[])
-      setPlayers(players)
-
-      // Check if user has joined any games or seasons in this group
+      setGames(games)
+      setSeasons(seasons)
+      
+      // Extract unique player IDs from games and seasons attendance data
+      const playerIds = new Set<string>()
+      
+      // Get player IDs from game attendees
+      games.forEach(game => {
+        game.game_attendees?.forEach(attendee => {
+          if (attendee.player_id) {
+            playerIds.add(attendee.player_id)
+          }
+        })
+        
+        // Get player IDs from season game attendance
+        game.season_game_attendance?.forEach(attendance => {
+          if (attendance.season_attendees?.player_id) {
+            playerIds.add(attendance.season_attendees.player_id)
+          }
+        })
+      })
+      
+      // Get player IDs from season attendees
+      seasons.forEach(season => {
+        season.season_attendees?.forEach(attendee => {
+          if (attendee.player_id) {
+            playerIds.add(attendee.player_id)
+          }
+        })
+      })
+      
+      // Fetch player details if we have any player IDs
+      if (playerIds.size > 0) {
+        const { data: playersData, error: playersError } = await supabase
+          .from('players')
+          .select('id, name, email, photo_url')
+          .in('id', Array.from(playerIds))
+        
+        if (playersError) {
+          console.error('Error fetching players:', playersError)
+          setPlayers([])
+        } else {
+          setPlayers(playersData || [])
+        }
+      } else {
+        setPlayers([])
+      }
+      
+      // Check if user has joined any games or seasons in this group using centralized functions
       if (player) {
-        const hasJoinedGame = games.some((game: {
-          game_attendees?: Array<{
-            player_id: string;
-            payment_status: string;
-          }>;
-        }) => 
-          game.game_attendees?.some((attendee: {
-            player_id: string;
-            payment_status: string;
-          }) => 
-            attendee.player_id === player.id && attendee.payment_status === 'completed'
-          )
-        )
+        const hasJoinedGame = games.some(game => isUserAttendingGame(game, player.id).isAttending)
+        const hasJoinedSeason = seasons.some(season => isUserAttendingSeason(season, player.id).isAttending)
         
-        const hasJoinedSeason = seasons.some((season: {
-          season_attendees?: Array<{
-            player_id: string;
-            payment_status: string;
-          }>;
-        }) => 
-          season.season_attendees?.some((attendee: {
-            player_id: string;
-            payment_status: string;
-          }) => 
-            attendee.player_id === player.id && attendee.payment_status === 'completed'
-          )
-        )
-        
-        setHasUserJoined(hasJoinedGame || hasJoinedSeason)
+        const userJoined = hasJoinedGame || hasJoinedSeason
+        setHasUserJoined(userJoined)
       }
       
       setTabsDataLoaded(true)
@@ -415,7 +363,7 @@ export default function GroupDetailPage() {
             <div className="mb-8">
               <Button
                 onClick={() => router.push(`/create-game?groupId=${groupId}`)}
-                className="bg-black hover:bg-gray-800 text-white text-sm md:text-base"
+                size="sm"
               >
                 Add Game/Season
               </Button>
@@ -557,18 +505,9 @@ export default function GroupDetailPage() {
                   ) : games.length > 0 ? (
                   <div className="max-w-lg mx-auto space-y-6">
                   {games.map((game) => {
-                    // Check if user has purchased the season (for season games)
-                    const hasPurchasedSeason = game.season_id && player && game.season_game_attendance?.some(
-                      (attendance) => attendance.season_attendees.player_id === player.id && attendance.season_attendees.payment_status === 'completed'
-                    ) || false
-
-                    // Check if current user is attending this game
-                    const isUserAttending = !!(player && game.game_attendees?.some(
-                      (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
-                    ))
-
-                    // For season games, if they purchased the season, they're considered attending by default
-                    const isUserAttendingSeason = isUserAttending || hasPurchasedSeason
+                    // Use the centralized attendance service
+                    const attendanceInfo = player ? isUserAttendingGame(game, player.id) : { isAttending: false, hasPaid: false }
+                    const playerCount = getGamePlayerCount(game)
 
                     return (
                       <HomepageGameCard
@@ -582,11 +521,11 @@ export default function GroupDetailPage() {
                         gameAttendees={game.game_attendees || []}
                         seasonGameAttendance={game.season_game_attendance || []}
                         seasonId={game.season_id}
-                        seasonSignupDeadline={game.season_signup_deadline}
+                        seasonSignupDeadline={game.seasons?.season_signup_deadline}
                         groupName={group.name}
                         tags={[]}
-                        isUserAttending={isUserAttendingSeason}
-                        hasPurchasedSeason={hasPurchasedSeason}
+                        isUserAttending={attendanceInfo.isAttending}
+                        hasPurchasedSeason={attendanceInfo.hasPaid}
                       />
                     )
                   })}
@@ -611,6 +550,7 @@ export default function GroupDetailPage() {
                     {player && (
                 <Button
                   onClick={() => router.push(`/create-game?groupId=${groupId}`)}
+                  size="sm"
                 >
                         Create Game
                 </Button>
@@ -635,27 +575,34 @@ export default function GroupDetailPage() {
                     </div>
                   ) : seasons.length > 0 ? (
                   <div className="max-w-lg mx-auto space-y-6">
-                  {seasons.map((season) => (
-                        <SeasonCard
-                          key={season.id}
-                          seasonId={season.id}
-                          seasonName={season.name}
-                          description={season.description}
-                          seasonPrice={season.season_price}
-                          individualGamePrice={season.individual_game_price}
-                          totalGames={season.total_games}
-                          seasonSpots={season.season_spots}
-                          gameSpots={season.game_spots}
-                          firstGameDate={season.first_game_date}
-                          firstGameTime={season.first_game_time}
-                          repeatType={season.repeat_type}
-                      groupName={group.name}
-                          location={season.location}
-                      seasonSpotsAvailable={season.season_spots - (season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0)}
-                      gameSpotsAvailable={season.game_spots}
-                      seasonAttendees={season.season_attendees}
-                    />
-                  ))}
+                  {seasons.map((season) => {
+                    // Use the centralized attendance service
+                    const attendanceInfo = player ? isUserAttendingSeason(season, player.id) : { isAttending: false, hasPaid: false }
+                    const playerCount = getSeasonPlayerCount(season)
+
+                    return (
+                      <SeasonCard
+                        key={season.id}
+                        seasonId={season.id}
+                        seasonName={season.name}
+                        description={season.description}
+                        seasonPrice={season.season_price}
+                        individualGamePrice={season.individual_game_price}
+                        totalGames={season.total_games}
+                        seasonSpots={season.season_spots}
+                        gameSpots={season.game_spots}
+                        firstGameDate={season.first_game_date}
+                        firstGameTime={season.first_game_time}
+                        repeatType={season.repeat_type}
+                        groupName={group.name}
+                        location={season.location}
+                        seasonSpotsAvailable={season.season_spots - playerCount}
+                        gameSpotsAvailable={season.game_spots}
+                        seasonAttendees={season.season_attendees}
+                        isUserAttending={attendanceInfo.isAttending}
+                      />
+                    )
+                  })}
                   </div>
                 ) : (
                   <div className="text-center py-12">
@@ -677,6 +624,7 @@ export default function GroupDetailPage() {
                     {player && (
                       <Button
                         onClick={() => router.push(`/create-game?groupId=${groupId}`)}
+                        size="sm"
                       >
                         Create First Season
                       </Button>

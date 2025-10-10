@@ -100,6 +100,8 @@ export default function SeasonDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showJoinModal, setShowJoinModal] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
+  const [accessChecked, setAccessChecked] = useState(false)
 
   const fetchSeasonDetails = useCallback(async () => {
     if (!supabase) {
@@ -137,6 +139,17 @@ export default function SeasonDetailPage() {
 
 
       setSeason(seasonData)
+
+      // Check if user has access to this season
+      if (player && seasonData) {
+        const isUserAttending = seasonData.season_attendees?.some((att: any) => 
+          att.payment_status === 'completed' && att.player_id === player.id
+        ) || false
+        setHasAccess(isUserAttending)
+      } else {
+        setHasAccess(false)
+      }
+      setAccessChecked(true)
 
       // Fetch games for this season
       const { data: gamesData, error: gamesError } = await supabase
@@ -369,6 +382,7 @@ export default function SeasonDetailPage() {
     payment_status: att.payment_status
   })))
   
+
   // Check if current user is attending this season
   const isUserAttending = season.season_attendees?.some(att => 
     att.payment_status === 'completed' && att.player_id === player?.id
@@ -595,7 +609,7 @@ export default function SeasonDetailPage() {
                       <div className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg text-center font-medium mb-6">
                         Closed
                       </div>
-                    ) : !isUserAttending && seasonSpotsAvailable > 0 ? (
+                    ) : !hasAccess && seasonSpotsAvailable > 0 ? (
                       <Button 
                         onClick={() => setShowJoinModal(true)}
                         className="w-full mb-6"
@@ -677,7 +691,7 @@ export default function SeasonDetailPage() {
             <div className="w-full bg-gray-400 text-white py-3 px-4 rounded-lg text-center font-medium">
               Closed
             </div>
-          ) : !isUserAttending && seasonSpotsAvailable > 0 ? (
+          ) : !hasAccess && seasonSpotsAvailable > 0 ? (
             <Button 
               onClick={() => setShowJoinModal(true)}
               className="w-full"
@@ -685,7 +699,7 @@ export default function SeasonDetailPage() {
             >
               Join Season - ${season.season_price}
             </Button>
-          ) : isUserAttending ? (
+          ) : hasAccess ? (
             <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3">
               <div className="flex items-center justify-center">
                 <CalendarCheck className="w-5 h-5 text-green-600 mr-2" />

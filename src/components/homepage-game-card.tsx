@@ -280,13 +280,9 @@ export function HomepageGameCard({
               <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
                 Closed
               </span>
-            ) : isUserAttending ? (
+            ) : (isUserAttending || hasPurchasedSeason) ? (
               <span className="px-3 py-2 bg-green-100 text-green-600 text-xs font-medium rounded-md flex items-center justify-center">
                 <CalendarCheck className="w-4 h-4" />
-              </span>
-            ) : hasPurchasedSeason ? (
-              <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded">
-                Not Attending
               </span>
             ) : requiresSeasonSignup ? (
               <div className="relative group">

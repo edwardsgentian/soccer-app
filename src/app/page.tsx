@@ -11,100 +11,14 @@ import { useAuth } from "@/contexts/auth-context";
 import { supabase } from '@/lib/supabase'
 import { GroupManagementModal } from '@/components/groups/group-management-modal'
 import { HomepageGameCardSkeleton, HomepageSeasonCardSkeleton } from '@/components/ui/skeleton-loader'
+import { fetchGamesWithAttendance, fetchSeasonsWithAttendance, isUserAttendingGame, isUserAttendingSeason, getGamePlayerCount, getSeasonPlayerCount } from '@/lib/attendance-service'
 
-interface Game {
-  id: string
-  name: string
-  description?: string
-  game_date: string
-  game_time: string
-  location: string
-  price: number
-  total_tickets: number
-  available_tickets: number
-  created_at: string
-  season_id?: string
-  season_signup_deadline?: string
-  groups: {
-    name: string
-    whatsapp_group?: string
-  }
-  seasons?: {
-    id: string
-    season_signup_deadline: string
-  }
-  game_attendees?: {
-    id: string
-    player_id: string
-    payment_status: string
-    attendance_status?: 'attending' | 'not_attending'
-    players?: {
-      name: string
-      photo_url?: string
-    }
-  }[]
-  season_attendees?: {
-    id: string
-    player_id: string
-    payment_status: string
-    players?: {
-      name: string
-      photo_url?: string
-    }
-  }[]
-  season_game_attendance?: {
-    attendance_status: 'attending' | 'not_attending'
-    season_attendees: {
-      id: string
-      player_id: string
-      payment_status: string
-      players?: {
-        name: string
-        photo_url?: string
-      }
-    }
-  }[]
-}
+// Use the types from the attendance service
+import type { GameWithAttendance, SeasonWithAttendance } from '@/lib/attendance-service'
 
-interface Season {
-  id: string
-  name: string
-  description?: string
-  season_price: number
-  individual_game_price: number
-  total_games: number
-  season_spots: number
-  game_spots: number
-  first_game_date: string
-  first_game_time: string
-  repeat_type: string
-  location: string
-  groups: {
-    name: string
-    whatsapp_group?: string
-  }
-  season_attendees?: {
-    id: string
-    player_id: string
-    payment_status: string
-    players?: {
-      name: string
-      photo_url?: string
-    }
-  }[]
-  season_game_attendance?: {
-    attendance_status: 'attending' | 'not_attending'
-    season_attendees: {
-      id: string
-      player_id: string
-      payment_status: string
-      players?: {
-        name: string
-        photo_url?: string
-      }
-    }
-  }[]
-}
+type Game = GameWithAttendance
+
+type Season = SeasonWithAttendance
 
 // SplitText component for word-by-word animation
 const SplitText = ({ children, className = "" }: { children: string; className?: string }) => {
@@ -162,162 +76,63 @@ export default function Home() {
   // Debug logging
   useEffect(() => {
     console.log('State update - loading:', loading, 'games:', games.length, 'seasons:', seasons.length)
-  }, [loading, games, seasons])
+  }, [loading, games, seasons, player])
 
   const fetchUpcomingGames = async () => {
     if (!supabase) {
+      console.log('Supabase not available')
       return
     }
 
     try {
-      // First, get all upcoming games
-      const { data: allGames, error: gamesError } = await supabase
-        .from('games')
-        .select(`
-          *,
-          groups (
-            name,
-            whatsapp_group
-          ),
-          seasons (
-            id,
-            season_signup_deadline
-          ),
-          game_attendees (
-            id,
-            player_id,
-            payment_status,
-            attendance_status,
-            players (
-              name,
-              photo_url
-            )
-          ),
-          season_game_attendance (
-            attendance_status,
-            season_attendees (
-              id,
-              player_id,
-              payment_status,
-              players (
-                name,
-                photo_url
-              )
-            )
-          )
-        `)
-        .gte('game_date', new Date().toISOString().split('T')[0])
-        .order('game_date', { ascending: true })
+      // Start with a very simple query to test
+      console.log('Fetching games with date filter:', new Date().toISOString().split('T')[0])
+      
+      // Use the centralized attendance service
+      const games = await fetchGamesWithAttendance({
+        dateFrom: new Date().toISOString().split('T')[0],
+        limit: 6
+      })
 
-      if (gamesError) {
-        console.error('Error fetching games:', gamesError)
-        setGames([]) // Set empty array on error
-      } else {
-        // For each game, if it's part of a season, fetch season attendees
-        const gamesWithSeasonAttendees = await Promise.all(
-          (allGames || []).map(async (game) => {
-            if (game.season_id) {
-              try {
-                // Fetch season attendees for this game's season
-                const { data: seasonAttendees, error: seasonError } = await supabase
-                  .from('season_attendees')
-                  .select(`
-                    id,
-                    created_at,
-                    player_id,
-                    players (
-                      name,
-                      photo_url
-                    )
-                  `)
-                  .eq('season_id', game.season_id)
-                  .eq('payment_status', 'completed')
+      setGames(games)
+      return
 
-                if (!seasonError && seasonAttendees) {
-                  // Fetch season game attendance for this specific game
-                  const { data: seasonGameAttendance } = await supabase
-                    .from('season_game_attendance')
-                    .select('season_attendee_id, attendance_status')
-                    .eq('game_id', game.id)
-
-                  // Combine season attendees with their attendance status for this game
-                  const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
-                    const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-                    return {
-                      id: attendee.id,
-                      player_id: attendee.player_id, // Use actual player_id
-                      payment_status: 'completed',
-                      attendance_status: gameAttendance?.attendance_status || 'attending',
-                      players: attendee.players // Include the players data for avatars
-                    }
-                  })
-
-                  // Combine individual game attendees with season attendees
-                  const allAttendees = [
-                    ...(game.game_attendees || []),
-                    ...seasonAttendeesWithStatus
-                  ]
-
-                  // Remove duplicates based on player_id (in case someone is both individual and season attendee)
-                  const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
-                    index === self.findIndex(a => a.player_id === attendee.player_id)
-                  )
-
-                  return {
-                    ...game,
-                    game_attendees: uniqueAttendees,
-                    season_attendees: seasonAttendees // Store season attendees for hasPurchasedSeason calculation
-                  }
-                }
-              } catch (err) {
-                console.error('Error fetching season attendees for game:', game.id, err)
-              }
-            }
-            return game
-          })
-        )
-        
-        console.log('Games loaded:', gamesWithSeasonAttendees.length)
-        setGames(gamesWithSeasonAttendees.slice(0, 6)) // Show only the first 6 games
-      }
     } catch (err) {
       console.error('Error fetching games:', err)
+      console.error('Games fetch error details:', JSON.stringify(err, null, 2))
+      setGames([]) // Set empty array on error
     }
   }
 
   const fetchUpcomingSeasons = async () => {
+    console.log('fetchUpcomingSeasons called')
     if (!supabase) {
+      console.log('Supabase not available for seasons')
       return
     }
 
     try {
-      const { data, error } = await supabase
-        .from('seasons')
-        .select(`
-          *,
-          groups (
-            name,
-            whatsapp_group
-          ),
-          season_attendees (
-            id,
-            player_id,
-            payment_status
-          )
-        `)
-        .gte('first_game_date', new Date().toISOString().split('T')[0])
-        .order('first_game_date', { ascending: true })
-        .limit(3) // Show only the first 3 upcoming seasons on homepage
+      console.log('Calling fetchSeasonsWithAttendance...')
+      // Use the centralized attendance service
+      const seasons = await fetchSeasonsWithAttendance({
+        dateFrom: new Date().toISOString().split('T')[0],
+        limit: 3
+      })
 
-      if (error) {
-        console.error('Error fetching seasons:', error)
-        setSeasons([]) // Set empty array on error
-      } else {
-        console.log('Seasons loaded:', data?.length || 0)
-        setSeasons(data || [])
-      }
+      console.log('Fetched seasons for homepage:', {
+        seasonsCount: seasons.length,
+        seasons: seasons.map(s => ({
+          id: s.id,
+          name: s.name,
+          seasonAttendeesCount: s.season_attendees?.length || 0,
+          seasonAttendees: s.season_attendees
+        }))
+      })
+
+      setSeasons(seasons)
     } catch (err) {
       console.error('Error fetching seasons:', err)
+      setSeasons([])
     }
   }
   return (
@@ -388,7 +203,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
               >
-                <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
                   Create a group or find games near you
                 </p>
                 <Button
@@ -422,7 +237,7 @@ export default function Home() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8, ease: "easeOut" }}
               >
-                <p className="text-sm md:text-base text-gray-600 mb-6 px-4">
+                <p className="text-gray-600 mb-6 px-4">
                   Create a group or find games near you
                 </p>
                 <Button
@@ -507,16 +322,12 @@ export default function Home() {
               {seasons.length > 0 && (
                 <div className="max-w-lg mx-auto mb-6 md:mb-8 mt-12 md:mt-24 space-y-4 md:space-y-6 px-4">
                     {seasons.map((season) => {
-                      // Calculate season attendees including organizer if they should be included
-                      const seasonAttendees = season.season_attendees?.filter(att => att.payment_status === 'completed').length || 0
+                      // Use the centralized attendance service
+                      const attendanceInfo = player ? isUserAttendingSeason(season, player.id) : { isAttending: false, hasPaid: false }
+                      const playerCount = getSeasonPlayerCount(season)
                       
-                      const seasonSpotsAvailable = season.season_spots - seasonAttendees
-                      const gameSpotsAvailable = season.game_spots // Individual game spots (not affected by season signups)
-                      
-                      // Check if current user is attending this season
-                      const isUserAttending = season.season_attendees?.some(att => 
-                        att.payment_status === 'completed' && att.player_id === player?.id
-                      ) || false
+                      const seasonSpotsAvailable = season.season_spots - playerCount
+                      const gameSpotsAvailable = season.game_spots
                       
                       return (
                         <SeasonCard
@@ -536,7 +347,7 @@ export default function Home() {
                           location={season.location}
                           seasonSpotsAvailable={seasonSpotsAvailable}
                           gameSpotsAvailable={gameSpotsAvailable}
-                          isUserAttending={isUserAttending}
+                          isUserAttending={attendanceInfo.isAttending}
                         />
                       )
                     })}
@@ -573,19 +384,10 @@ export default function Home() {
                       {/* Games for this date */}
                       <div className="space-y-4">
                         {dateGames.map((game) => {
+                          // Use the centralized attendance service
+                          const attendanceInfo = player ? isUserAttendingGame(game, player.id) : { isAttending: false, hasPaid: false }
+                          const playerCount = getGamePlayerCount(game)
                           
-                          // Check if current user is attending this game
-                          const isUserAttending = !!(player && game.game_attendees?.some(
-                            (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
-                          ))
-                          
-                          // Check if user has purchased the season (for season games)
-                          const hasPurchasedSeason = game.season_id && player && game.season_attendees?.some(
-                            (attendee) => attendee.player_id === player.id && attendee.payment_status === 'completed'
-                          ) || false
-
-                          // For season games, if they purchased the season, they're considered attending by default
-                          const isUserAttendingSeason = isUserAttending || hasPurchasedSeason
 
                           return (
                             <HomepageGameCard
@@ -599,9 +401,9 @@ export default function Home() {
                               gameId={game.id}
                               tags={['Intermediate', 'Outdoors']}
                               seasonId={game.season_id || game.seasons?.id}
-                              seasonSignupDeadline={game.season_signup_deadline || game.seasons?.season_signup_deadline}
-                              isUserAttending={isUserAttendingSeason}
-                              hasPurchasedSeason={hasPurchasedSeason}
+                              seasonSignupDeadline={game.seasons?.season_signup_deadline}
+                              isUserAttending={attendanceInfo.isAttending}
+                              hasPurchasedSeason={attendanceInfo.hasPaid}
                               gameAttendees={game.game_attendees}
                               seasonGameAttendance={game.season_game_attendance}
                             />

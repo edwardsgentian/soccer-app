@@ -5,12 +5,12 @@ import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
+import { fetchGameDetails as fetchOptimizedGameDetails } from '@/lib/optimized-queries'
 import { Header } from '@/components/header'
 import { Calendar, Clock, MapPin, DollarSign, ArrowLeft } from 'lucide-react'
 import { JoinModal } from '@/components/join-flow/join-modal'
 import { AttendanceToggle } from '@/components/attendance-toggle'
 import { useAuth } from '@/contexts/auth-context'
-import { AnimatedAvatarGroup } from '@/components/ui/animated-avatar-group'
 
 interface Game {
   id: string
@@ -81,6 +81,14 @@ export default function GameDetailPage() {
   const [showJoinModal, setShowJoinModal] = useState(false)
   const [userAttendanceStatus, setUserAttendanceStatus] = useState<'attending' | 'not_attending' | null>(null)
   const [hasPaid, setHasPaid] = useState(false)
+  const [hasAccess, setHasAccess] = useState(false)
+  const [accessChecked, setAccessChecked] = useState(false)
+
+  const handleStatusChange = async (status: 'attending' | 'not_attending') => {
+    setUserAttendanceStatus(status)
+    // Refresh the game details to update the attendees list
+    await fetchGameDetails()
+  }
 
   const fetchGameDetails = useCallback(async () => {
     if (!supabase) {
@@ -89,122 +97,48 @@ export default function GameDetailPage() {
     }
 
     try {
-      // Fetch game details
-      const { data: gameData, error: gameError } = await supabase
-        .from('games')
-        .select(`
-          *,
-          groups (
-            name,
-            whatsapp_group,
-            description
-          ),
-          organizer:players!created_by (
-            id,
-            name,
-            photo_url
-          ),
-          seasons (
-            id,
-            season_signup_deadline,
-            include_organizer_in_count
-          )
-        `)
-        .eq('id', gameId)
-        .single()
-
-      if (gameError) {
-        throw gameError
+      // Use the optimized function to fetch game details
+      const gameData = await fetchOptimizedGameDetails(gameId)
+      
+      if (!gameData) {
+        throw new Error('Game not found')
       }
+
 
       setGame(gameData)
 
-      // Fetch individual game attendees
-      const { data: attendeesData, error: attendeesError } = await supabase
-        .from('game_attendees')
-        .select(`
-          id,
-          created_at,
-          attendance_status,
-          players (
-            name,
-            photo_url
-          )
-        `)
-        .eq('game_id', gameId)
-        .eq('payment_status', 'completed')
-
-      if (attendeesError) {
-        console.error('Error fetching attendees:', attendeesError)
-      }
-
-      // Transform individual game attendees
-      const individualAttendees = (attendeesData || []).map((attendee: {
-        id: string;
-        created_at: string;
-        attendance_status: string;
-        players?: { name?: string; photo_url?: string }[];
-      }) => ({
-        id: attendee.id,
-        created_at: attendee.created_at,
-        attendance_status: attendee.attendance_status as 'attending' | 'not_attending',
-        players: {
-          name: attendee.players?.[0]?.name || 'Unknown Player',
-          photo_url: attendee.players?.[0]?.photo_url
-        }
-      }))
-
-      // If this is a season game, also fetch season attendees
-      let seasonAttendees: Attendee[] = []
-      if (gameData?.season_id) {
-        try {
-          // Fetch season attendees for this game's season
-          const { data: seasonAttendeesData, error: seasonError } = await supabase
-            .from('season_attendees')
-            .select(`
-              id,
-              created_at,
-              player_id,
-              players (
-                name,
-                photo_url
-              )
-            `)
-            .eq('season_id', gameData.season_id)
-            .eq('payment_status', 'completed')
-
-          if (!seasonError && seasonAttendeesData) {
-            // Fetch season game attendance for this specific game
-            const { data: seasonGameAttendance } = await supabase
-              .from('season_game_attendance')
-              .select('season_attendee_id, attendance_status')
-              .eq('game_id', gameId)
-
-            // Combine season attendees with their attendance status for this game
-            seasonAttendees = seasonAttendeesData.map((attendee: {
-              id: string;
-              player_id: string;
-              created_at: string;
-              players?: { name?: string; photo_url?: string }[];
-            }) => {
-              const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-              return {
-                id: attendee.id,
-                created_at: attendee.created_at,
-                attendance_status: (gameAttendance?.attendance_status as 'attending' | 'not_attending') || 'attending',
-                players: {
-                  name: attendee.players?.[0]?.name || 'Unknown Player',
-                  photo_url: attendee.players?.[0]?.photo_url
-                }
-              }
-            })
+      // Process attendees from the optimized data
+      const individualAttendees = (gameData.game_attendees || []).map((attendee: any) => {
+        const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
+        
+        return {
+          id: attendee.id,
+          created_at: attendee.created_at || new Date().toISOString(),
+          attendance_status: attendee.attendance_status as 'attending' | 'not_attending',
+          players: {
+            name: player?.name || 'Unknown Player',
+            photo_url: player?.photo_url
           }
-        } catch (err) {
-          console.error('Error fetching season attendees:', err)
         }
-      }
+      })
 
-      // Combine individual game attendees with season attendees
+      // Process season attendees
+      const seasonAttendees = (gameData.season_game_attendance || []).map((attendance: any) => {
+        const attendee = attendance.season_attendees
+        const player = Array.isArray(attendee.players) ? attendee.players[0] : attendee.players
+        
+        return {
+          id: attendee.id,
+          created_at: attendee.created_at || new Date().toISOString(),
+          attendance_status: attendance.attendance_status as 'attending' | 'not_attending',
+          players: {
+            name: player?.name || 'Unknown Player',
+            photo_url: player?.photo_url
+          }
+        }
+      })
+
+      // Combine all attendees
       const allAttendees = [...individualAttendees, ...seasonAttendees]
 
       // Remove duplicates based on player_id (in case someone is both individual and season attendee)
@@ -214,50 +148,41 @@ export default function GameDetailPage() {
 
       setAttendees(uniqueAttendees)
 
-      // Check if user has paid and their attendance status
+      // Check if user has paid and their attendance status using optimized data
       if (player || user) {
         const playerId = player?.id || user?.id
         
+        
         // Check individual game attendance
-        const { data: userAttendee } = await supabase
-          .from('game_attendees')
-          .select('payment_status, attendance_status')
-          .eq('game_id', gameId)
-          .eq('player_id', playerId)
-          .single()
+        const userAttendee = gameData.game_attendees?.find((attendee: any) => 
+          attendee.player_id === playerId && attendee.payment_status === 'completed'
+        )
 
         if (userAttendee) {
           setHasPaid(userAttendee.payment_status === 'completed')
           setUserAttendanceStatus(userAttendee.attendance_status || 'attending')
+          setHasAccess(true) // User is signed up for individual game
         } else if (gameData?.season_id) {
           // Check season attendance
-          const { data: seasonAttendee } = await supabase
-            .from('season_attendees')
-            .select('id, payment_status')
-            .eq('season_id', gameData.season_id)
-            .eq('player_id', playerId)
-            .single()
+          const seasonAttendee = (gameData.season_game_attendance as any)?.find((attendance: any) => 
+            attendance.season_attendees?.player_id === playerId && attendance.season_attendees?.payment_status === 'completed'
+          )
 
-          if (seasonAttendee && seasonAttendee.payment_status === 'completed') {
-            // Check specific game attendance for season
-            const { data: seasonGameAttendance } = await supabase
-              .from('season_game_attendance')
-              .select('attendance_status')
-              .eq('game_id', gameId)
-              .eq('season_attendee_id', seasonAttendee.id)
-              .single()
-
-            if (seasonGameAttendance) {
-              setHasPaid(true)
-              setUserAttendanceStatus(seasonGameAttendance.attendance_status)
-            } else {
-              // User has purchased season but hasn't set attendance for this specific game
-              setHasPaid(true)
-              setUserAttendanceStatus('attending') // Default to attending
-            }
+          if (seasonAttendee) {
+            setHasPaid(true)
+            setUserAttendanceStatus(seasonAttendee.attendance_status || 'attending')
+            setHasAccess(true) // User is signed up for season
+          } else {
+            setHasAccess(false) // User is not signed up for season
           }
+        } else {
+          setHasAccess(false) // User is not signed up for individual game and no season
         }
+      } else {
+        setHasAccess(false) // No user logged in
       }
+      
+      setAccessChecked(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Game not found')
     } finally {
@@ -335,6 +260,7 @@ export default function GameDetailPage() {
       </div>
     )
   }
+
 
   // Use actual attendee count from the fetched attendees data
   const attendingPlayers = attendees.filter(attendee => 
@@ -446,7 +372,7 @@ export default function GameDetailPage() {
                   </div>
                 </div>
 
-                {hasPaid ? (
+                {hasAccess ? (
                   <div className="space-y-4">
                     <AttendanceToggle
                       gameId={gameId}
@@ -455,7 +381,7 @@ export default function GameDetailPage() {
                       currentStatus={userAttendanceStatus || 'not_attending'}
                       hasPaid={hasPaid}
                       isGameFull={isFullyBooked}
-                      onStatusChange={setUserAttendanceStatus}
+                      onStatusChange={handleStatusChange}
                     />
                   </div>
                 ) : (
@@ -473,7 +399,7 @@ export default function GameDetailPage() {
                   </Button>
                 )}
 
-                {game.groups.whatsapp_group && (
+                {game.groups.whatsapp_group && hasAccess && (
                   <div className="mt-4">
                     <Button
                       asChild
@@ -500,18 +426,34 @@ export default function GameDetailPage() {
                   {attendingPlayers.length === 0 ? (
                     <p className="text-gray-500 text-sm">No players are attending yet.</p>
                   ) : (
-                    <AnimatedAvatarGroup
-                      avatars={attendingPlayers.map((attendee) => ({
-                        id: attendee.id,
-                        name: attendee.players.name,
-                        photo_url: attendee.players.photo_url,
-                        fallback: attendee.players.name.charAt(0).toUpperCase()
-                      }))}
-                      maxVisible={8}
-                      size="sm"
-                      overlap={8}
-                      hoverEffect="lift"
-                    />
+                    <div className="flex flex-wrap gap-2">
+                      {attendingPlayers.map((attendee) => (
+                        <div 
+                          key={attendee.id} 
+                          className="relative group"
+                        >
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 cursor-pointer">
+                            {attendee.players.photo_url ? (
+                              <Image
+                                src={attendee.players.photo_url}
+                                alt={attendee.players.name}
+                                width={40}
+                                height={40}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                            ) : (
+                              <span className="text-sm font-semibold text-gray-600">
+                                {attendee.players.name.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                            {attendee.players.name}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>

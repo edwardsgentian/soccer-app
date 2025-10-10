@@ -76,7 +76,6 @@ export const fetchOptimizedGames = async (limit: number = 20) => {
                 )
               `)
               .eq('game_id', game.id)
-              .eq('payment_status', 'completed')
 
             if (!gameAttendeesError && gameAttendeesData) {
               gameAttendeesWithPlayers = gameAttendeesData.map(attendee => ({
@@ -107,7 +106,6 @@ export const fetchOptimizedGames = async (limit: number = 20) => {
                 )
               `)
               .eq('season_id', game.season_id)
-              .eq('payment_status', 'completed')
 
             if (!seasonError && seasonAttendees) {
               // Fetch season game attendance for this specific game
@@ -343,7 +341,7 @@ export const fetchGroupsData = async (page: number = 1, pageSize: number = 12) =
   }
 }
 
-// Optimized group detail queries - reverted to original working structure
+// Lightweight group detail query for fast initial loading
 export const fetchGroupDetailData = async (groupId: string) => {
   try {
     // Check cache first
@@ -354,7 +352,7 @@ export const fetchGroupDetailData = async (groupId: string) => {
       return cachedData
     }
 
-    // Use the original working query structure but with caching
+    // Fetch basic group data
     const { data: groupData, error: groupError } = await supabase
       .from('groups')
       .select('*')
@@ -365,8 +363,125 @@ export const fetchGroupDetailData = async (groupId: string) => {
       throw new Error('Group not found')
     }
 
-    // Fetch games for this group with all the original nested data
-    const { data: gamesData } = await supabase
+    // Fetch game data with attendees (simplified to avoid 500 errors)
+    const { data: gamesData, error: gamesError } = await supabase
+      .from('games')
+      .select(`
+        *,
+        game_attendees (
+          player_id,
+          payment_status
+        ),
+        season_game_attendance (
+          attendance_status,
+          season_attendees (
+            id,
+            player_id,
+            payment_status
+          )
+        )
+      `)
+      .eq('group_id', groupId)
+      .order('game_date', { ascending: true })
+
+    if (gamesError) {
+      console.error('Error fetching games:', gamesError)
+    }
+
+    // Fetch season data with attendees (simplified to avoid 500 errors)
+    const { data: seasonsData, error: seasonsError } = await supabase
+      .from('seasons')
+      .select(`
+        *,
+        season_attendees (
+          player_id,
+          payment_status
+        )
+      `)
+      .eq('group_id', groupId)
+      .order('first_game_date', { ascending: true })
+
+    if (seasonsError) {
+      console.error('Error fetching seasons:', seasonsError)
+    }
+
+    // Get unique players count for display (lightweight query)
+    const playerIds = new Set()
+    
+    // Get player IDs from game attendees
+    if (gamesData && gamesData.length > 0) {
+      const { data: gameAttendees } = await supabase
+        .from('game_attendees')
+        .select('player_id')
+        .in('game_id', gamesData.map(game => game.id))
+      
+      gameAttendees?.forEach(attendee => playerIds.add(attendee.player_id))
+    }
+    
+    // Get player IDs from season attendees
+    if (seasonsData && seasonsData.length > 0) {
+      const { data: seasonAttendees } = await supabase
+        .from('season_attendees')
+        .select('player_id')
+        .in('season_id', seasonsData.map(season => season.id))
+      
+      seasonAttendees?.forEach(attendee => playerIds.add(attendee.player_id))
+    }
+
+    // Get basic player info for the unique players
+    const playersArray = []
+    if (playerIds.size > 0) {
+      const { data: playersData } = await supabase
+        .from('players')
+        .select('id, name, photo_url')
+        .in('id', Array.from(playerIds))
+      
+      playersArray.push(...(playersData || []))
+    }
+
+    // Return basic data without complex attendee processing
+    const gamesWithPlayerData = gamesData || []
+
+
+
+    const result = {
+      group: groupData,
+      games: gamesWithPlayerData,
+      seasons: seasonsData || [],
+      players: playersArray
+    }
+
+
+    // Cache for 3 minutes (group details change less frequently)
+    setCachedData(cacheKey, result, 3 * 60 * 1000)
+    
+    return result
+  } catch (error) {
+    console.error('Error fetching group detail data:', error)
+    throw error
+  }
+}
+
+// Unified function to fetch games with full attendee data for all pages
+export const fetchGamesWithAttendees = async (page: number = 1, pageSize: number = 20) => {
+  try {
+    const cacheKey = `games-with-attendees-${page}-${pageSize}`
+    const cachedData = getCachedData(cacheKey)
+    
+    if (cachedData) {
+      return cachedData
+    }
+
+    const offset = (page - 1) * pageSize
+
+    // First, get total count
+    const { count: totalCount } = await supabase
+      .from('games')
+      .select('*', { count: 'exact', head: true })
+      .gte('game_date', new Date().toISOString().split('T')[0])
+
+    // Fetch games with all attendee data
+    const { data: gamesData, error } = await supabase
       .from('games')
       .select(`
         *,
@@ -382,240 +497,104 @@ export const fetchGroupDetailData = async (groupId: string) => {
           id,
           player_id,
           payment_status,
-          attendance_status
+          attendance_status,
+          players (
+            name,
+            photo_url
+          )
+        ),
+        season_game_attendance (
+          attendance_status,
+          season_attendees (
+            id,
+            player_id,
+            payment_status,
+            players (
+              name,
+              photo_url
+            )
+          )
         )
       `)
-      .eq('group_id', groupId)
+      .gte('game_date', new Date().toISOString().split('T')[0])
       .order('game_date', { ascending: true })
+      .range(offset, offset + pageSize - 1)
 
-    // Fetch seasons for this group with all the original nested data
-    const { data: seasonsData } = await supabase
-      .from('seasons')
+    if (error) throw error
+
+    const result = {
+      games: gamesData || [],
+      totalCount: totalCount || 0,
+      hasMore: offset + pageSize < (totalCount || 0)
+    }
+
+
+    // Cache for 2 minutes
+    setCachedData(cacheKey, result, 2 * 60 * 1000)
+    
+    return result
+  } catch (error) {
+    console.error('Error fetching games with attendees:', error)
+    throw error
+  }
+}
+
+// Separate function to fetch detailed game data when needed
+export const fetchGameDetails = async (gameId: string) => {
+  try {
+    const cacheKey = `game-detail-${gameId}`
+    const cachedData = getCachedData(cacheKey)
+    
+    if (cachedData) {
+      return cachedData
+    }
+
+    const { data: gameData, error } = await supabase
+      .from('games')
       .select(`
         *,
         groups (
           name,
           whatsapp_group
         ),
-        season_attendees (
+        seasons (
+          id,
+          season_signup_deadline
+        ),
+        game_attendees (
           id,
           player_id,
           payment_status,
+          attendance_status,
           players (
             name,
             photo_url
           )
+        ),
+        season_game_attendance (
+          attendance_status,
+          season_attendees (
+            id,
+            player_id,
+            payment_status,
+            players (
+              name,
+              photo_url
+            )
+          )
         )
       `)
-      .eq('group_id', groupId)
-      .order('first_game_date', { ascending: true })
+      .eq('id', gameId)
+      .single()
 
-    // Process games with player data (original logic)
-    const gamesWithPlayerData = await Promise.all(
-      (gamesData || []).map(async (game) => {
-        // First, fetch player data for individual game attendees
-        let gameAttendeesWithPlayers = game.game_attendees || []
-        if (game.game_attendees && game.game_attendees.length > 0) {
-          try {
-            const { data: gameAttendeesData, error: gameAttendeesError } = await supabase
-              .from('game_attendees')
-              .select(`
-                id,
-                player_id,
-                payment_status,
-                attendance_status,
-                players (
-                  name,
-                  photo_url
-                )
-              `)
-              .eq('game_id', game.id)
-              .eq('payment_status', 'completed')
+    if (error) throw error
 
-            if (!gameAttendeesError && gameAttendeesData) {
-              gameAttendeesWithPlayers = gameAttendeesData.map(attendee => ({
-                id: attendee.id,
-                player_id: attendee.player_id,
-                payment_status: attendee.payment_status,
-                attendance_status: attendee.attendance_status,
-                players: attendee.players || { name: 'Unknown Player' }
-              }))
-            }
-          } catch (err) {
-            console.error('Error fetching game attendees for game:', game.id, err)
-          }
-        }
-
-        if (game.season_id) {
-          try {
-            // Fetch season attendees for this game's season
-            const { data: seasonAttendees, error: seasonError } = await supabase
-              .from('season_attendees')
-              .select(`
-                id,
-                created_at,
-                player_id,
-                players (
-                  name,
-                  photo_url
-                )
-              `)
-              .eq('season_id', game.season_id)
-              .eq('payment_status', 'completed')
-
-            if (!seasonError && seasonAttendees) {
-              // Fetch season game attendance for this specific game
-              const { data: seasonGameAttendance } = await supabase
-                .from('season_game_attendance')
-                .select('season_attendee_id, attendance_status')
-                .eq('game_id', game.id)
-
-              // Combine season attendees with their attendance status for this game
-              const seasonAttendeesWithStatus = seasonAttendees.map(attendee => {
-                const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
-                return {
-                  id: attendee.id,
-                  player_id: attendee.player_id,
-                  payment_status: 'completed',
-                  attendance_status: gameAttendance?.attendance_status || 'attending',
-                  players: attendee.players || { name: 'Unknown Player' }
-                }
-              })
-
-              // Combine individual game attendees with season attendees
-              const allAttendees = [
-                ...gameAttendeesWithPlayers,
-                ...seasonAttendeesWithStatus
-              ]
-
-              // Remove duplicates based on player_id
-              const uniqueAttendees = allAttendees.filter((attendee, index, self) =>
-                index === self.findIndex(a => a.player_id === attendee.player_id)
-              )
-
-              // Create season_game_attendance structure with player data
-              const seasonGameAttendanceWithPlayers = seasonAttendeesWithStatus.map(attendee => ({
-                attendance_status: attendee.attendance_status,
-                season_attendees: {
-                  id: attendee.id,
-                  player_id: attendee.player_id,
-                  payment_status: attendee.payment_status,
-                  players: attendee.players
-                }
-              }))
-
-              return {
-                ...game,
-                game_attendees: uniqueAttendees,
-                season_attendees: seasonAttendees,
-                season_game_attendance: seasonGameAttendanceWithPlayers
-              }
-            }
-          } catch (err) {
-            console.error('Error fetching season attendees for game:', game.id, err)
-          }
-        }
-        
-        // For non-season games, return with processed individual attendees
-        return {
-          ...game,
-          game_attendees: gameAttendeesWithPlayers
-        }
-      })
-    )
-
-    // Fetch players from both individual game attendees and season attendees (original logic)
-    const allPlayers = new Map<string, { name: string; photo_url?: string }>()
-
-    // Fetch individual game attendees (only if there are games)
-    let gameAttendeesData = null
-    let gameAttendeesError = null
+    // Cache for 2 minutes
+    setCachedData(cacheKey, gameData, 2 * 60 * 1000)
     
-    if (gamesData && gamesData.length > 0) {
-      const result = await supabase
-        .from('game_attendees')
-        .select(`
-          player_id,
-          players!inner (
-            id,
-            name,
-            email,
-            photo_url
-          )
-        `)
-        .eq('payment_status', 'completed')
-        .in('game_id', gamesData.map(game => game.id))
-      
-      gameAttendeesData = result.data
-      gameAttendeesError = result.error
-    }
-
-    if (!gameAttendeesError && gameAttendeesData) {
-      (gameAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-        if (attendee.players && attendee.players.name) {
-          const player = attendee.players
-          if (player && player.name) {
-            allPlayers.set(attendee.player_id, {
-              name: player.name,
-              photo_url: player.photo_url
-            })
-          }
-        }
-      })
-    }
-
-    // Fetch season attendees (only if there are seasons)
-    let seasonAttendeesData = null
-    let seasonAttendeesError = null
-    
-    if (seasonsData && seasonsData.length > 0) {
-      const result = await supabase
-        .from('season_attendees')
-        .select(`
-          player_id,
-          players!inner (
-            id,
-            name,
-            email,
-            photo_url
-          )
-        `)
-        .eq('payment_status', 'completed')
-        .in('season_id', seasonsData.map(season => season.id))
-      
-      seasonAttendeesData = result.data
-      seasonAttendeesError = result.error
-    }
-
-    if (!seasonAttendeesError && seasonAttendeesData) {
-      (seasonAttendeesData as unknown as { player_id: string; players: { id: string; name: string; email: string; photo_url?: string } }[]).forEach((attendee) => {
-        if (attendee.players && attendee.players.name) {
-          const player = attendee.players
-          if (player && player.name) {
-            allPlayers.set(attendee.player_id, {
-              name: player.name,
-              photo_url: player.photo_url
-            })
-          }
-        }
-      })
-    }
-
-    const playersArray = Array.from(allPlayers.values())
-
-    const result = {
-      group: groupData,
-      games: gamesWithPlayerData,
-      seasons: seasonsData || [],
-      players: playersArray
-    }
-
-    // Cache for 3 minutes (group details change less frequently)
-    setCachedData(cacheKey, result, 3 * 60 * 1000)
-    
-    return result
+    return gameData
   } catch (error) {
-    console.error('Error fetching group detail data:', error)
+    console.error('Error fetching game details:', error)
     throw error
   }
 }

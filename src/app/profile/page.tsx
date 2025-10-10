@@ -7,12 +7,15 @@ import { ProfileForm } from '@/components/profile/profile-form'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/auth-context'
 import { Header } from '@/components/header'
-import { Calendar, Edit, Trophy, Users, Component, Instagram, Globe } from 'lucide-react'
+import { Calendar, Edit, Trophy, Users, Component, Instagram, Globe, CalendarClock } from 'lucide-react'
 import Image from 'next/image'
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'framer-motion'
 import { HomepageGameCard } from '@/components/homepage-game-card'
 import { SeasonCard } from '@/components/season-card'
 import { AuthModal } from '@/components/auth/auth-modal'
+import { GroupCard } from '@/components/group-card'
+import { fetchSeasonsWithAttendance, isUserAttendingSeason, getSeasonPlayerCount } from '@/lib/attendance-service'
+import type { SeasonWithAttendance } from '@/lib/attendance-service'
 
 // Animated counter component
 function AnimatedCounter({ value }: { value: number }) {
@@ -109,6 +112,15 @@ interface CreatedGroup {
   games?: Array<{
     id: string
     game_date: string
+    game_attendees?: Array<{
+      player_id: string
+    }>
+  }>
+  seasons?: Array<{
+    id: string
+    season_attendees?: Array<{
+      player_id: string
+    }>
   }>
 }
 
@@ -152,8 +164,8 @@ export default function ProfilePage() {
   const [createdGroups, setCreatedGroups] = useState<CreatedGroup[]>([])
   const [memberGroups, setMemberGroups] = useState<CreatedGroup[]>([])
   const [upcomingGames, setUpcomingGames] = useState<GameHistory[]>([])
-  const [upcomingSeasons, setUpcomingSeasons] = useState<SeasonHistory[]>([])
-  const [pastSeasons, setPastSeasons] = useState<SeasonHistory[]>([])
+  const [upcomingSeasons, setUpcomingSeasons] = useState<SeasonWithAttendance[]>([])
+  const [pastSeasons, setPastSeasons] = useState<SeasonWithAttendance[]>([])
   const [loading, setLoading] = useState(true)
   const [showEditForm, setShowEditForm] = useState(false)
   const [activeTab, setActiveTab] = useState<'attended' | 'groups' | 'upcoming'>('upcoming')
@@ -448,9 +460,19 @@ export default function ProfilePage() {
               tags,
               instagram,
               website,
+              photo_url,
               games!inner (
                 id,
-                game_date
+                game_date,
+                game_attendees (
+                  player_id
+                )
+              ),
+              seasons!inner (
+                id,
+                season_attendees (
+                  player_id
+                )
               )
             )
           )
@@ -695,17 +717,20 @@ export default function ProfilePage() {
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: true })
 
-      if (error) {
-        console.error('Error fetching upcoming seasons:', error)
-      } else {
-        // Filter upcoming seasons on the client side
-        const today = new Date().toISOString().split('T')[0]
-        const upcomingSeasons = (data as unknown as SeasonHistory[])?.filter(
-          (item) => item.seasons.first_game_date >= today
-        ) || []
-        
-        setUpcomingSeasons(upcomingSeasons)
-      }
+      // Use the centralized attendance service
+      const seasons = await fetchSeasonsWithAttendance({
+        dateFrom: new Date().toISOString().split('T')[0]
+      })
+
+      // Filter to only seasons where the user is attending
+      const userSeasons = seasons.filter(season => 
+        season.season_attendees?.some(attendee => 
+          attendee.player_id === (player?.id || user.id) && 
+          attendee.payment_status === 'completed'
+        )
+      )
+
+      setUpcomingSeasons(userSeasons)
     } catch (err) {
       console.error('Error fetching upcoming seasons:', err)
     }
@@ -745,63 +770,20 @@ export default function ProfilePage() {
         .eq('payment_status', 'completed')
         .order('created_at', { ascending: false })
 
-      if (error) {
-        console.error('Error fetching past seasons:', error)
-        setPastSeasons([])
-      } else {
-        // Filter past seasons on the client side
-        const today = new Date().toISOString().split('T')[0]
-        const pastSeasons = (data as unknown as SeasonHistory[])?.filter(
-          (item) => item.seasons.first_game_date < today
-        ) || []
-        
-        // Fetch season attendees separately to avoid complex nested queries
-        const seasonsWithAttendees = await Promise.all(
-          pastSeasons.map(async (season) => {
-            try {
-              const { data: attendeesData } = await supabase
-                .from('season_attendees')
-                .select(`
-                  id,
-                  player_id,
-                  payment_status,
-                  players (
-                    name,
-                    photo_url
-                  )
-                `)
-                .eq('season_id', season.seasons.id)
-                .eq('payment_status', 'completed')
+      // Use the centralized attendance service
+      const seasons = await fetchSeasonsWithAttendance()
 
-              return {
-                ...season,
-                seasons: {
-                  ...season.seasons,
-                  season_attendees: (attendeesData || []).map((attendee: {
-                    id: string;
-                    player_id: string;
-                    payment_status: string;
-                    players?: { name?: string; photo_url?: string }[];
-                  }) => ({
-                    id: attendee.id,
-                    player_id: attendee.player_id,
-                    payment_status: attendee.payment_status,
-                    players: {
-                      name: attendee.players?.[0]?.name || 'Unknown Player',
-                      photo_url: attendee.players?.[0]?.photo_url
-                    }
-                  }))
-                }
-              }
-            } catch (err) {
-              console.error('Error fetching season attendees for season:', season.seasons.id, err)
-              return season
-            }
-          })
+      // Filter to past seasons where the user is attending
+      const today = new Date().toISOString().split('T')[0]
+      const userPastSeasons = seasons.filter(season => 
+        season.first_game_date < today &&
+        season.season_attendees?.some(attendee => 
+          attendee.player_id === (player?.id || user.id) && 
+          attendee.payment_status === 'completed'
         )
-        
-        setPastSeasons(seasonsWithAttendees)
-      }
+      )
+
+      setPastSeasons(userPastSeasons)
     } catch (err) {
       console.error('Error fetching past seasons:', err)
       setPastSeasons([])
@@ -867,88 +849,6 @@ export default function ProfilePage() {
     })
   }
 
-  // GroupCard component for profile page
-  const GroupCard = ({ group }: { group: CreatedGroup }) => {
-    return (
-      <Link href={`/groups/${group.id}`} className="block">
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:border-gray-300 hover:shadow-lg transition-all duration-300 cursor-pointer">
-          {/* Group Header */}
-          <div className="h-32 bg-gray-50 flex items-center justify-center overflow-hidden">
-            {group.photo_url ? (
-              <Image
-                src={group.photo_url}
-                alt={group.name}
-                width={400}
-                height={128}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <Component className="w-8 h-8 text-gray-400" />
-            )}
-          </div>
-
-          <div className="p-6">
-            {/* Group Name */}
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{group.name}</h3>
-            
-            {/* Tags */}
-            {group.tags && group.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {group.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Upcoming Games Count */}
-            <div className="flex items-center text-gray-600 text-sm mb-4">
-              <Calendar className="w-4 h-4 mr-2" />
-              <span>{group.games?.length || 0} upcoming games</span>
-            </div>
-
-            {/* Social Links */}
-            <div className="flex items-center gap-4 mb-4">
-              {group.instagram && (
-                <a
-                  href={`https://instagram.com/${group.instagram.replace('@', '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-600 hover:text-pink-600 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Instagram className="w-4 h-4 mr-1" />
-                  <span className="text-sm">{group.instagram}</span>
-                </a>
-              )}
-              {group.website && (
-                <a
-                  href={group.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Globe className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Website</span>
-                </a>
-              )}
-            </div>
-
-            {/* Created Date */}
-            <div className="flex items-center text-gray-500 text-sm">
-              <Calendar className="w-4 h-4 mr-1" />
-              <span>Created {formatDate(group.created_at)}</span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    )
-  }
 
 
   const calculateTotalHoursPlayed = () => {
@@ -1293,29 +1193,35 @@ export default function ProfilePage() {
                             </h3>
                           </div>
                           <div className="space-y-4">
-                            {pastSeasons.map((season) => (
-                              <SeasonCard
-                                key={season.id}
-                                seasonId={season.seasons.id}
-                                seasonName={season.seasons.name}
-                                description={season.seasons.description}
-                                seasonPrice={season.seasons.season_price}
-                                individualGamePrice={season.seasons.individual_game_price}
-                                totalGames={season.seasons.total_games}
-                                seasonSpots={season.seasons.season_spots}
-                                gameSpots={season.seasons.game_spots}
-                                firstGameDate={season.seasons.first_game_date}
-                                firstGameTime={season.seasons.first_game_time}
-                                repeatType={season.seasons.repeat_type}
-                                groupName={season.seasons.groups.name}
-                                location={season.seasons.location}
-                                seasonSpotsAvailable={season.seasons.season_spots - 1} // User attended
-                                gameSpotsAvailable={season.seasons.game_spots}
-                                isUserAttending={true}
-                                isPastSeason={true}
-                                seasonAttendees={season.seasons.season_attendees}
-                              />
-                            ))}
+                            {pastSeasons.map((season) => {
+                              // Use the centralized attendance service
+                              const attendanceInfo = player ? isUserAttendingSeason(season, player.id) : { isAttending: false, hasPaid: false }
+                              const playerCount = getSeasonPlayerCount(season)
+                              
+                              return (
+                                <SeasonCard
+                                  key={season.id}
+                                  seasonId={season.id}
+                                  seasonName={season.name}
+                                  description={season.description}
+                                  seasonPrice={season.season_price}
+                                  individualGamePrice={season.individual_game_price}
+                                  totalGames={season.total_games}
+                                  seasonSpots={season.season_spots}
+                                  gameSpots={season.game_spots}
+                                  firstGameDate={season.first_game_date}
+                                  firstGameTime={season.first_game_time}
+                                  repeatType={season.repeat_type}
+                                  groupName={season.groups?.name || 'Unknown Group'}
+                                  location={season.location}
+                                  seasonSpotsAvailable={season.season_spots - playerCount}
+                                  gameSpotsAvailable={season.game_spots}
+                                  isUserAttending={attendanceInfo.isAttending}
+                                  isPastSeason={true}
+                                  seasonAttendees={season.season_attendees}
+                                />
+                              )
+                            })}
                           </div>
                         </div>
                       )}
@@ -1444,28 +1350,34 @@ export default function ProfilePage() {
                             </h3>
                           </div>
                           <div className="space-y-4">
-                            {upcomingSeasons.map((season) => (
-                              <SeasonCard
-                                key={season.id}
-                                seasonId={season.seasons.id}
-                                seasonName={season.seasons.name}
-                                description={season.seasons.description}
-                                seasonPrice={season.seasons.season_price}
-                                individualGamePrice={season.seasons.individual_game_price}
-                                totalGames={season.seasons.total_games}
-                                seasonSpots={season.seasons.season_spots}
-                                gameSpots={season.seasons.game_spots}
-                                firstGameDate={season.seasons.first_game_date}
-                                firstGameTime={season.seasons.first_game_time}
-                                repeatType={season.seasons.repeat_type}
-                                groupName={season.seasons.groups.name}
-                                location={season.seasons.location}
-                                seasonSpotsAvailable={season.seasons.season_spots - 1} // User is attending
-                                gameSpotsAvailable={season.seasons.game_spots}
-                                isUserAttending={true}
-                                seasonAttendees={season.seasons.season_attendees}
-                              />
-                            ))}
+                            {upcomingSeasons.map((season) => {
+                              // Use the centralized attendance service
+                              const attendanceInfo = player ? isUserAttendingSeason(season, player.id) : { isAttending: false, hasPaid: false }
+                              const playerCount = getSeasonPlayerCount(season)
+                              
+                              return (
+                                <SeasonCard
+                                  key={season.id}
+                                  seasonId={season.id}
+                                  seasonName={season.name}
+                                  description={season.description}
+                                  seasonPrice={season.season_price}
+                                  individualGamePrice={season.individual_game_price}
+                                  totalGames={season.total_games}
+                                  seasonSpots={season.season_spots}
+                                  gameSpots={season.game_spots}
+                                  firstGameDate={season.first_game_date}
+                                  firstGameTime={season.first_game_time}
+                                  repeatType={season.repeat_type}
+                                  groupName={season.groups?.name || 'Unknown Group'}
+                                  location={season.location}
+                                  seasonSpotsAvailable={season.season_spots - playerCount}
+                                  gameSpotsAvailable={season.game_spots}
+                                  isUserAttending={attendanceInfo.isAttending}
+                                  seasonAttendees={season.season_attendees}
+                                />
+                              )
+                            })}
                           </div>
                         </div>
                       )}
