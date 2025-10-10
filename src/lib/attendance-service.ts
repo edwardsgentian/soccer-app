@@ -40,7 +40,7 @@ export interface SeasonGameAttendanceRaw {
     id: string
     player_id: string
     payment_status: string
-  }
+  }[]
 }
 
 export interface GameWithAttendance {
@@ -234,7 +234,9 @@ export async function fetchGamesWithAttendance(filters?: {
       })
       // Add season attendees
       game.season_game_attendance?.forEach((attendance: SeasonGameAttendanceRaw) => {
-        playerIds.add(attendance.season_attendees?.player_id)
+        attendance.season_attendees?.forEach((attendee) => {
+          playerIds.add(attendee.player_id)
+        })
       })
     })
 
