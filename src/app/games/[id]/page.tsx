@@ -139,10 +139,15 @@ export default function GameDetailPage() {
       }
 
       // Transform individual game attendees
-      const individualAttendees = (attendeesData || []).map((attendee: any) => ({
+      const individualAttendees = (attendeesData || []).map((attendee: {
+        id: string;
+        created_at: string;
+        attendance_status: string;
+        players?: { name?: string; photo_url?: string }[];
+      }) => ({
         id: attendee.id,
         created_at: attendee.created_at,
-        attendance_status: attendee.attendance_status,
+        attendance_status: attendee.attendance_status as 'attending' | 'not_attending',
         players: {
           name: attendee.players?.[0]?.name || 'Unknown Player',
           photo_url: attendee.players?.[0]?.photo_url
@@ -176,7 +181,12 @@ export default function GameDetailPage() {
               .eq('game_id', gameId)
 
             // Combine season attendees with their attendance status for this game
-            seasonAttendees = seasonAttendeesData.map((attendee: any) => {
+            seasonAttendees = seasonAttendeesData.map((attendee: {
+              id: string;
+              player_id: string;
+              created_at: string;
+              players?: { name?: string; photo_url?: string }[];
+            }) => {
               const gameAttendance = seasonGameAttendance?.find(ga => ga.season_attendee_id === attendee.id)
               return {
                 id: attendee.id,

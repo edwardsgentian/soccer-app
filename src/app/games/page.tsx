@@ -108,7 +108,7 @@ export default function GamesPage() {
   const CACHE_DURATION = 2 * 60 * 1000 // 2 minutes
 
   // Simple cache functions
-  const getCachedData = () => {
+  const getCachedData = useCallback(() => {
     try {
       const cached = localStorage.getItem(CACHE_KEY)
       if (cached) {
@@ -121,9 +121,9 @@ export default function GamesPage() {
       console.error('Error reading cache:', error)
     }
     return null
-  }
+  }, [])
 
-  const setCachedData = (data: {
+  const setCachedData = useCallback((data: {
     games: Game[];
     totalGames: number;
     hasMoreGames: boolean;
@@ -136,7 +136,7 @@ export default function GamesPage() {
     } catch (error) {
       console.error('Error setting cache:', error)
     }
-  }
+  }, [])
 
   const fetchGames = useCallback(async (page: number = 1, append: boolean = false) => {
     if (!supabase) {
