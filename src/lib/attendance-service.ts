@@ -233,10 +233,16 @@ export async function fetchGamesWithAttendance(filters?: {
         playerIds.add(attendee.player_id)
       })
       // Add season attendees
-      game.season_game_attendance?.forEach((attendance: SeasonGameAttendanceRaw) => {
-        attendance.season_attendees?.forEach((attendee) => {
-          playerIds.add(attendee.player_id)
-        })
+      game.season_game_attendance?.forEach((attendance: any) => {
+        if (attendance.season_attendees) {
+          if (Array.isArray(attendance.season_attendees)) {
+            attendance.season_attendees.forEach((attendee: any) => {
+              playerIds.add(attendee.player_id)
+            })
+          } else {
+            playerIds.add(attendance.season_attendees.player_id)
+          }
+        }
       })
     })
 
@@ -250,16 +256,25 @@ export async function fetchGamesWithAttendance(filters?: {
         game.game_attendees || [],
         playersMap
       ),
-      season_game_attendance: (game.season_game_attendance || []).map((attendance: SeasonGameAttendance) => ({
+      season_game_attendance: (game.season_game_attendance || []).map((attendance: any) => ({
         ...attendance,
-        season_attendees: {
-          ...attendance.season_attendees,
-          players: playersMap.get(attendance.season_attendees?.player_id) || {
-            id: attendance.season_attendees?.player_id,
-            name: 'Unknown Player',
-            photo_url: undefined
-          }
-        }
+        season_attendees: Array.isArray(attendance.season_attendees) 
+          ? attendance.season_attendees.map((attendee: any) => ({
+              ...attendee,
+              players: playersMap.get(attendee.player_id) || {
+                id: attendee.player_id,
+                name: 'Unknown Player',
+                photo_url: undefined
+              }
+            }))
+          : attendance.season_attendees ? {
+              ...attendance.season_attendees,
+              players: playersMap.get(attendance.season_attendees.player_id) || {
+                id: attendance.season_attendees.player_id,
+                name: 'Unknown Player',
+                photo_url: undefined
+              }
+            } : null
       }))
     }))
 
