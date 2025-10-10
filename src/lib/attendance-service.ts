@@ -224,7 +224,7 @@ export async function fetchGamesWithAttendance(filters?: {
         playerIds.add(attendee.player_id)
       })
       // Add season attendees
-      game.season_game_attendance?.forEach((attendance: SeasonGameAttendance) => {
+      game.season_game_attendance?.forEach((attendance: any) => {
         playerIds.add(attendance.season_attendees?.player_id)
       })
     })
