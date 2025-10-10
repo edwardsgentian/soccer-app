@@ -43,6 +43,17 @@ export interface SeasonGameAttendanceRaw {
   }[]
 }
 
+export interface SeasonAttendeeRaw {
+  id: string
+  player_id: string
+  payment_status: string
+}
+
+export interface SeasonGameAttendanceFlexible {
+  attendance_status: string
+  season_attendees: SeasonAttendeeRaw | SeasonAttendeeRaw[]
+}
+
 export interface GameWithAttendance {
   id: string
   name: string
@@ -233,10 +244,10 @@ export async function fetchGamesWithAttendance(filters?: {
         playerIds.add(attendee.player_id)
       })
       // Add season attendees
-      game.season_game_attendance?.forEach((attendance: any) => {
+      game.season_game_attendance?.forEach((attendance: SeasonGameAttendanceFlexible) => {
         if (attendance.season_attendees) {
           if (Array.isArray(attendance.season_attendees)) {
-            attendance.season_attendees.forEach((attendee: any) => {
+            attendance.season_attendees.forEach((attendee: SeasonAttendeeRaw) => {
               playerIds.add(attendee.player_id)
             })
           } else {
@@ -256,10 +267,10 @@ export async function fetchGamesWithAttendance(filters?: {
         game.game_attendees || [],
         playersMap
       ),
-      season_game_attendance: (game.season_game_attendance || []).map((attendance: any) => ({
+      season_game_attendance: (game.season_game_attendance || []).map((attendance: SeasonGameAttendanceFlexible) => ({
         ...attendance,
         season_attendees: Array.isArray(attendance.season_attendees) 
-          ? attendance.season_attendees.map((attendee: any) => ({
+          ? attendance.season_attendees.map((attendee: SeasonAttendeeRaw) => ({
               ...attendee,
               players: playersMap.get(attendee.player_id) || {
                 id: attendee.player_id,
