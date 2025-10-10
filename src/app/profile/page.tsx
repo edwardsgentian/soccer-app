@@ -777,7 +777,12 @@ export default function ProfilePage() {
                 ...season,
                 seasons: {
                   ...season.seasons,
-                  season_attendees: (attendeesData || []).map((attendee: any) => ({
+                  season_attendees: (attendeesData || []).map((attendee: {
+                    id: string;
+                    player_id: string;
+                    payment_status: string;
+                    players?: { name?: string; photo_url?: string }[];
+                  }) => ({
                     id: attendee.id,
                     player_id: attendee.player_id,
                     payment_status: attendee.payment_status,
