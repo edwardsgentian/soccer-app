@@ -193,7 +193,11 @@ export default function GroupDetailPage() {
 
     try {
       // Use optimized query with caching for detailed data
-      const result = await fetchGroupDetailData(groupId) as { games: any[]; seasons: any[]; players: any[] } | null
+      const result = await fetchGroupDetailData(groupId) as { 
+        games: Game[]; 
+        seasons: Season[]; 
+        players: Player[] 
+      } | null
       const { games = [], seasons = [], players = [] } = result || {}
       
       setGames(games as unknown as Game[])
