@@ -777,7 +777,15 @@ export default function ProfilePage() {
                 ...season,
                 seasons: {
                   ...season.seasons,
-                  season_attendees: attendeesData || []
+                  season_attendees: (attendeesData || []).map((attendee: any) => ({
+                    id: attendee.id,
+                    player_id: attendee.player_id,
+                    payment_status: attendee.payment_status,
+                    players: {
+                      name: attendee.players?.[0]?.name || 'Unknown Player',
+                      photo_url: attendee.players?.[0]?.photo_url
+                    }
+                  }))
                 }
               }
             } catch (err) {
