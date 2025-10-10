@@ -121,7 +121,7 @@ export default function GamesPage() {
       console.error('Error reading cache:', error)
     }
     return null
-  }, [])
+  }, [CACHE_DURATION])
 
   const setCachedData = useCallback((data: {
     games: Game[];
@@ -317,13 +317,24 @@ export default function GamesPage() {
         setGames(prevGames => [...prevGames, ...gamesWithPlayerData])
       } else {
         setGames(gamesWithPlayerData)
-        // Cache the first page data
+        // Cache the first page data (reduced size to avoid quota issues)
         if (page === 1) {
-          setCachedData({
-            games: gamesWithPlayerData,
+          const cacheData = {
+            games: gamesWithPlayerData.map(game => ({
+              id: game.id,
+              name: game.name,
+              game_date: game.game_date,
+              game_time: game.game_time,
+              location: game.location,
+              price: game.price,
+              total_tickets: game.total_tickets,
+              available_tickets: game.available_tickets,
+              season_id: game.season_id
+            })),
             totalGames: totalCount || 0,
             hasMoreGames: offset + GAMES_PER_PAGE < (totalCount || 0)
-          })
+          }
+          setCachedData(cacheData as { games: Game[]; totalGames: number; hasMoreGames: boolean })
         }
       }
     } catch (err) {

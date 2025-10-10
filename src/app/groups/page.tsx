@@ -45,6 +45,7 @@ export default function GroupsPage() {
   const [loading, setLoading] = useState(true)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [totalCount, setTotalCount] = useState(0)
+  const [creatingGroup, setCreatingGroup] = useState(false)
   
   // Use server-side pagination hook
   const pagination = useServerPagination({ pageSize: 12 })
@@ -99,7 +100,10 @@ export default function GroupsPage() {
           </div>
           <div className="flex justify-center">
             <LoadingButton 
-              onClick={() => setShowCreateModal(true)}
+              onClick={() => {
+                setCreatingGroup(true)
+                setShowCreateModal(true)
+              }}
               loading={creatingGroup}
               loadingText="Creating..."
             >
@@ -157,7 +161,10 @@ export default function GroupsPage() {
 
       <GroupManagementModal
         isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
+        onClose={() => {
+          setShowCreateModal(false)
+          setCreatingGroup(false)
+        }}
         onGroupCreated={handleGroupCreated}
       />
     </div>
