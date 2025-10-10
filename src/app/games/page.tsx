@@ -333,7 +333,7 @@ export default function GamesPage() {
       setLoadingMore(false)
       setDataFetched(true)
     }
-  }, [currentPage, setCachedData, getCachedData])
+  }, [setCachedData, getCachedData])
 
   const loadMoreGames = async () => {
     if (loadingMore || !hasMoreGames) return
