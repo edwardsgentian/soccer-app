@@ -131,3 +131,113 @@ export function AvatarGroupSkeleton() {
     </div>
   )
 }
+
+// Homepage Game Card Skeleton - matches the actual HomepageGameCard design
+export function HomepageGameCardSkeleton() {
+  return (
+    <div className="max-w-lg mx-auto">
+      <div className="bg-white rounded-lg border border-gray-200 flex flex-row">
+        {/* Image Section - Left Side */}
+        <div className="w-12 h-12 sm:w-24 sm:h-24 bg-gray-200 rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0">
+          <Skeleton className="w-8 h-8 sm:w-16 sm:h-16 rounded-full" />
+        </div>
+
+        {/* Content Section - Right Side */}
+        <div className="flex-1 p-4 pt-4">
+          {/* Top Row: Game Name + Price */}
+          <div className="flex items-start justify-between mb-2">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-6 w-12 rounded" />
+          </div>
+
+          {/* Time and Location */}
+          <div className="space-y-1 mb-3">
+            <div className="flex items-center">
+              <Skeleton className="h-4 w-4 mr-2 rounded-full" />
+              <Skeleton className="h-4 w-20" />
+            </div>
+            <div className="flex items-center">
+              <Skeleton className="h-4 w-4 mr-2 rounded-full" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          </div>
+
+          {/* Spots Available */}
+          <div className="flex items-center mb-3">
+            <div className="flex items-center -space-x-2 mr-2">
+              <AvatarGroupSkeleton />
+            </div>
+            <Skeleton className="h-4 w-24" />
+          </div>
+
+          {/* Group Name */}
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Homepage Season Card Skeleton - matches the actual SeasonCard design
+export function HomepageSeasonCardSkeleton() {
+  return (
+    <div className="max-w-lg mx-auto">
+      <div className="relative">
+        {/* Stack of cards effect - positioned below main card */}
+        <div className="absolute top-2 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
+        <div className="absolute top-1 left-0 w-full h-full border border-gray-300 rounded-lg"></div>
+        <div className="relative bg-white rounded-lg border border-gray-200 flex flex-row">
+          {/* Image Section - Left Side */}
+          <div className="w-12 h-12 sm:w-24 sm:h-24 bg-gray-200 rounded-lg ml-4 mt-4 flex items-center justify-center relative flex-shrink-0">
+            <Skeleton className="w-8 h-8 sm:w-16 sm:h-16 rounded-full" />
+          </div>
+
+          {/* Content Section - Right Side */}
+          <div className="flex-1 p-4 pt-4">
+            {/* Top Row: Season Name + Price */}
+            <div className="flex items-start justify-between mb-3">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-6 w-12 rounded" />
+            </div>
+
+            {/* Time and Location */}
+            <div className="space-y-1 mb-3">
+              <div className="flex items-center">
+                <Skeleton className="h-4 w-4 mr-2 rounded-full" />
+                <Skeleton className="h-4 w-20" />
+              </div>
+              <div className="flex items-center">
+                <Skeleton className="h-4 w-4 mr-2 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+              </div>
+            </div>
+
+            {/* Season Details */}
+            <div className="grid grid-cols-2 gap-4 mb-3">
+              <div>
+                <Skeleton className="h-3 w-12 mb-1" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+              <div>
+                <Skeleton className="h-3 w-16 mb-1" />
+                <Skeleton className="h-4 w-8" />
+              </div>
+            </div>
+
+            {/* Spots Available */}
+            <div className="flex items-center mb-3">
+              <div className="flex items-center -space-x-2 mr-2">
+                <AvatarGroupSkeleton />
+              </div>
+              <Skeleton className="h-4 w-24" />
+            </div>
+
+            {/* Group Name */}
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
