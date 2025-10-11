@@ -115,11 +115,19 @@ export function HomepageGameCard({
     // Prioritize season attendance over individual attendance
     const allAttendees = [...individualAttendees, ...seasonAttendees]
     const uniqueAttendees = allAttendees.filter((attendee, index, self) => {
-      const attendeePlayerId = 'player_id' in attendee ? attendee.player_id : attendee.season_attendees?.player_id
+      const attendeePlayerId = 'player_id' in attendee 
+        ? attendee.player_id 
+        : Array.isArray(attendee.season_attendees) 
+          ? attendee.season_attendees[0]?.player_id
+          : attendee.season_attendees?.player_id
       
       // Find all attendees with the same player_id
       const duplicates = self.filter(a => {
-        const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
+        const aPlayerId = 'player_id' in a 
+          ? a.player_id 
+          : Array.isArray(a.season_attendees) 
+            ? a.season_attendees[0]?.player_id
+            : a.season_attendees?.player_id
         return aPlayerId === attendeePlayerId
       })
       
@@ -134,7 +142,11 @@ export function HomepageGameCard({
       
       // If no duplicates or no season attendance, keep the first occurrence
       return index === self.findIndex(a => {
-        const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
+        const aPlayerId = 'player_id' in a 
+          ? a.player_id 
+          : Array.isArray(a.season_attendees) 
+            ? a.season_attendees[0]?.player_id
+            : a.season_attendees?.player_id
         return aPlayerId === attendeePlayerId
       })
     })
@@ -166,13 +178,22 @@ export function HomepageGameCard({
           playerName = 'Player'
           fallbackLetter = '?'
         }
-      } else if ('season_attendees' in attendee && attendee.season_attendees?.players) {
-        // Handle both array and object cases for season attendees players
-        const player = Array.isArray(attendee.season_attendees.players) ? attendee.season_attendees.players[0] : attendee.season_attendees.players
-        if (player && player.name && player.name !== 'Unknown Player') {
-          playerName = player.name
-          playerPhoto = player.photo_url
-          fallbackLetter = player.name.charAt(0).toUpperCase()
+      } else if ('season_attendees' in attendee && attendee.season_attendees) {
+        // Handle both array and object cases for season attendees
+        const seasonAttendee = Array.isArray(attendee.season_attendees) 
+          ? attendee.season_attendees[0] 
+          : attendee.season_attendees
+        
+        if (seasonAttendee?.players) {
+          const player = Array.isArray(seasonAttendee.players) ? seasonAttendee.players[0] : seasonAttendee.players
+          if (player && player.name && player.name !== 'Unknown Player') {
+            playerName = player.name
+            playerPhoto = player.photo_url
+            fallbackLetter = player.name.charAt(0).toUpperCase()
+          } else {
+            playerName = 'Player'
+            fallbackLetter = '?'
+          }
         } else {
           playerName = 'Player'
           fallbackLetter = '?'
@@ -184,7 +205,11 @@ export function HomepageGameCard({
       }
       
       return {
-        id: 'id' in attendee ? attendee.id : attendee.season_attendees?.id || `attendee-${index}`,
+        id: 'id' in attendee 
+          ? attendee.id 
+          : Array.isArray(attendee.season_attendees) 
+            ? attendee.season_attendees[0]?.id || `attendee-${index}`
+            : attendee.season_attendees?.id || `attendee-${index}`,
         name: playerName,
         photo_url: playerPhoto,
         fallback: fallbackLetter
