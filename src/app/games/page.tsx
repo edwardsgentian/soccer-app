@@ -195,7 +195,7 @@ export default function GamesPage() {
                                 price={game.price}
                                 location={game.location}
                                 maxAttendees={game.total_tickets}
-                                groupName={game.groups?.name || 'Unknown Group'}
+                                groupName={Array.isArray(game.groups) ? game.groups[0]?.name : game.groups?.name || 'Unknown Group'}
                                 gameId={game.id}
                                 tags={[]}
                                 seasonId={game.season_id || game.seasons?.id}
