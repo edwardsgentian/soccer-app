@@ -1212,7 +1212,7 @@ export default function ProfilePage() {
                                   firstGameDate={season.first_game_date}
                                   firstGameTime={season.first_game_time}
                                   repeatType={season.repeat_type}
-                                  groupName={season.groups?.name || 'Unknown Group'}
+                                  groupName={Array.isArray(season.groups) ? season.groups[0]?.name : season.groups?.name || 'Unknown Group'}
                                   location={season.location}
                                   seasonSpotsAvailable={season.season_spots - playerCount}
                                   gameSpotsAvailable={season.game_spots}
@@ -1369,7 +1369,7 @@ export default function ProfilePage() {
                                   firstGameDate={season.first_game_date}
                                   firstGameTime={season.first_game_time}
                                   repeatType={season.repeat_type}
-                                  groupName={season.groups?.name || 'Unknown Group'}
+                                  groupName={Array.isArray(season.groups) ? season.groups[0]?.name : season.groups?.name || 'Unknown Group'}
                                   location={season.location}
                                   seasonSpotsAvailable={season.season_spots - playerCount}
                                   gameSpotsAvailable={season.game_spots}
