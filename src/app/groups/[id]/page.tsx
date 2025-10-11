@@ -144,8 +144,18 @@ export default function GroupDetailPage() {
         
         // Get player IDs from season game attendance
         game.season_game_attendance?.forEach(attendance => {
-          if (attendance.season_attendees?.player_id) {
-            playerIds.add(attendance.season_attendees.player_id)
+          if (attendance.season_attendees) {
+            if (Array.isArray(attendance.season_attendees)) {
+              attendance.season_attendees.forEach(attendee => {
+                if (attendee.player_id) {
+                  playerIds.add(attendee.player_id)
+                }
+              })
+            } else {
+              if (attendance.season_attendees.player_id) {
+                playerIds.add(attendance.season_attendees.player_id)
+              }
+            }
           }
         })
       })
