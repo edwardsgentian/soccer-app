@@ -106,9 +106,11 @@ export function HomepageGameCard({
     // Count season attendees who are attending this specific game
     const seasonAttendees = seasonGameAttendance?.filter(att => 
       att.attendance_status === 'attending' && 
-      (Array.isArray(att.season_attendees) 
-        ? att.season_attendees.some(attendee => attendee.payment_status === 'completed')
-        : att.season_attendees.payment_status === 'completed')
+      att.season_attendees && (
+        Array.isArray(att.season_attendees) 
+          ? att.season_attendees.some(attendee => attendee.payment_status === 'completed')
+          : att.season_attendees.payment_status === 'completed'
+      )
     ) || []
     
     // Remove duplicates - if someone is both an individual and season attendee, only count them once
@@ -236,9 +238,11 @@ export function HomepageGameCard({
   // Count season attendees who are attending this specific game
   const seasonAttendees = seasonGameAttendance?.filter(att => 
     att.attendance_status === 'attending' && 
-    (Array.isArray(att.season_attendees) 
-      ? att.season_attendees.some(attendee => attendee.payment_status === 'completed')
-      : att.season_attendees.payment_status === 'completed')
+    att.season_attendees && (
+      Array.isArray(att.season_attendees) 
+        ? att.season_attendees.some(attendee => attendee.payment_status === 'completed')
+        : att.season_attendees.payment_status === 'completed'
+    )
   ) || []
   
   // Remove duplicates - if someone is both an individual and season attendee, only count them once
