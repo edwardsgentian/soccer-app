@@ -31,7 +31,7 @@ export interface SeasonAttendee {
 }
 
 export interface SeasonGameAttendance {
-  attendance_status: 'attending' | 'not_attending'
+  attendance_status: string
   season_attendees: SeasonAttendee
 }
 
@@ -68,7 +68,7 @@ export interface GameWithAttendance {
   available_tickets: number
   created_at: string
   game_attendees: GameAttendee[]
-  season_game_attendance: SeasonGameAttendance[]
+  season_game_attendance: SeasonGameAttendanceFlexible[]
   groups?: {
     name: string
     whatsapp_group?: string
