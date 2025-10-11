@@ -4,6 +4,7 @@
  * This service provides consistent data fetching for attendance across all views.
  * It handles the complexity of fetching player data separately to avoid 500 errors
  * while maintaining consistent data structures.
+ * Updated to use proper TypeScript interfaces.
  */
 
 import { supabase } from './supabase'
