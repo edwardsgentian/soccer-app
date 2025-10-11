@@ -499,8 +499,18 @@ export function getGamePlayerCount(game: GameWithAttendance): number {
   
   // Add season attendees
   game.season_game_attendance?.forEach(attendance => {
-    if (attendance.season_attendees?.payment_status === 'completed') {
-      playerIds.add(attendance.season_attendees.player_id)
+    if (attendance.season_attendees) {
+      if (Array.isArray(attendance.season_attendees)) {
+        attendance.season_attendees.forEach(attendee => {
+          if (attendee.payment_status === 'completed') {
+            playerIds.add(attendee.player_id)
+          }
+        })
+      } else {
+        if (attendance.season_attendees.payment_status === 'completed') {
+          playerIds.add(attendance.season_attendees.player_id)
+        }
+      }
     }
   })
   
