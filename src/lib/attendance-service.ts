@@ -72,7 +72,10 @@ export interface GameWithAttendance {
   groups?: {
     name: string
     whatsapp_group?: string
-  }
+  } | {
+    name: string
+    whatsapp_group?: string
+  }[]
   seasons?: {
     id: string
     name: string
