@@ -47,7 +47,7 @@ interface HomepageGameCardProps {
         name: string
         photo_url?: string
       }
-    }[]
+    }[] | null
   }[]
   isPastGame?: boolean
 }

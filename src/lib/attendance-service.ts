@@ -52,7 +52,7 @@ export interface SeasonAttendeeRaw {
 
 export interface SeasonGameAttendanceFlexible {
   attendance_status: string
-  season_attendees: SeasonAttendeeRaw | SeasonAttendeeRaw[]
+  season_attendees: SeasonAttendeeRaw | SeasonAttendeeRaw[] | null
 }
 
 export interface GameWithAttendance {
