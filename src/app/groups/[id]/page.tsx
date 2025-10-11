@@ -531,7 +531,7 @@ export default function GroupDetailPage() {
                         gameAttendees={game.game_attendees || []}
                         seasonGameAttendance={game.season_game_attendance || []}
                         seasonId={game.season_id}
-                        seasonSignupDeadline={game.seasons?.season_signup_deadline}
+                        seasonSignupDeadline={Array.isArray(game.seasons) ? game.seasons[0]?.season_signup_deadline : game.seasons?.season_signup_deadline}
                         groupName={group.name}
                         tags={[]}
                         isUserAttending={attendanceInfo.isAttending}
