@@ -105,7 +105,10 @@ export interface SeasonWithAttendance {
   groups?: {
     name: string
     whatsapp_group?: string
-  }
+  } | {
+    name: string
+    whatsapp_group?: string
+  }[]
 }
 
 /**
