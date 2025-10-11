@@ -80,7 +80,11 @@ export interface GameWithAttendance {
     id: string
     name: string
     season_signup_deadline?: string
-  }
+  } | {
+    id: string
+    name: string
+    season_signup_deadline?: string
+  }[]
 }
 
 export interface SeasonWithAttendance {

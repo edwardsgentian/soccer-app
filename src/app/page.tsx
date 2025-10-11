@@ -400,8 +400,8 @@ export default function Home() {
                               groupName={Array.isArray(game.groups) ? game.groups[0]?.name : game.groups?.name || 'Unknown Group'}
                               gameId={game.id}
                               tags={['Intermediate', 'Outdoors']}
-                              seasonId={game.season_id || game.seasons?.id}
-                              seasonSignupDeadline={game.seasons?.season_signup_deadline}
+                              seasonId={game.season_id || (Array.isArray(game.seasons) ? game.seasons[0]?.id : game.seasons?.id)}
+                              seasonSignupDeadline={Array.isArray(game.seasons) ? game.seasons[0]?.season_signup_deadline : game.seasons?.season_signup_deadline}
                               isUserAttending={attendanceInfo.isAttending}
                               hasPurchasedSeason={attendanceInfo.hasPaid}
                               gameAttendees={game.game_attendees}
