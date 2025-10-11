@@ -245,11 +245,19 @@ export function HomepageGameCard({
   // Prioritize season attendance over individual attendance
   const allAttendees = [...individualAttendees, ...seasonAttendees]
   const uniqueAttendees = allAttendees.filter((attendee, index, self) => {
-    const attendeePlayerId = 'player_id' in attendee ? attendee.player_id : attendee.season_attendees?.player_id
+    const attendeePlayerId = 'player_id' in attendee 
+      ? attendee.player_id 
+      : Array.isArray(attendee.season_attendees) 
+        ? attendee.season_attendees[0]?.player_id
+        : attendee.season_attendees?.player_id
     
     // Find all attendees with the same player_id
     const duplicates = self.filter(a => {
-      const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
+      const aPlayerId = 'player_id' in a 
+        ? a.player_id 
+        : Array.isArray(a.season_attendees) 
+          ? a.season_attendees[0]?.player_id
+          : a.season_attendees?.player_id
       return aPlayerId === attendeePlayerId
     })
     
@@ -264,7 +272,11 @@ export function HomepageGameCard({
     
     // If no duplicates or no season attendance, keep the first occurrence
     return index === self.findIndex(a => {
-      const aPlayerId = 'player_id' in a ? a.player_id : a.season_attendees?.player_id
+      const aPlayerId = 'player_id' in a 
+        ? a.player_id 
+        : Array.isArray(a.season_attendees) 
+          ? a.season_attendees[0]?.player_id
+          : a.season_attendees?.player_id
       return aPlayerId === attendeePlayerId
     })
   })
