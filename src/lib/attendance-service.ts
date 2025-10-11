@@ -442,8 +442,18 @@ export function isUserAttendingGame(
 
   // Check season attendance
   const seasonAttendee = game.season_game_attendance?.find(
-    attendance => attendance.season_attendees?.player_id === userId && 
-                 attendance.season_attendees?.payment_status === 'completed'
+    attendance => {
+      if (!attendance.season_attendees) return false
+      
+      if (Array.isArray(attendance.season_attendees)) {
+        return attendance.season_attendees.some(attendee => 
+          attendee.player_id === userId && attendee.payment_status === 'completed'
+        )
+      } else {
+        return attendance.season_attendees.player_id === userId && 
+               attendance.season_attendees.payment_status === 'completed'
+      }
+    }
   )
 
   if (seasonAttendee) {
